@@ -102,7 +102,7 @@ line-ending = "auto"
 
 
 [tool.setuptools.packages.find]
-include = ["src"]
+where = ["src"]
 
 [tool.setuptools.package-data]
 nomadschemaexample = ['*/nomad_plugin.yaml']
