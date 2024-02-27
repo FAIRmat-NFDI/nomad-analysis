@@ -13,6 +13,7 @@ jobs:
       run: |
         pip install --upgrade pip
         pip install '.[dev]' --index-url https://gitlab.mpcdf.mpg.de/api/v4/projects/2187/packages/pypi/simple
+        export PYTHONPATH=./src
         pip install coverage coveralls
     - name: Test with pytest
       run: |
@@ -44,6 +45,7 @@ jobs:
         pip install dist/*.tar.gz --index-url https://gitlab.mpcdf.mpg.de/api/v4/projects/2187/packages/pypi/simple
     - name: Test with nomad
       run: |
+        export PYTHONPATH=./src
         python -m nomad.cli parse tests/data/test.archive.yaml
   ruff-linting:
     runs-on: ubuntu-latest
