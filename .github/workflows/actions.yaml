@@ -26,6 +26,7 @@ jobs:
         coveralls --service=github
     - name: Test with nomad
       run: |
+        export PYTHONPATH=./src
         python -m nomad.cli parse tests/data/test.archive.yaml
   build-and-install:
     runs-on: ubuntu-latest
