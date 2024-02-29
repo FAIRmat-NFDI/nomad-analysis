@@ -1,0 +1,33 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "nomad-analysis tests",
+            "type": "python",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/.pyenv/bin/pytest",
+            "justMyCode": false,
+            "env": {
+                "_PYTEST_RAISE": "1"
+            },
+            "args": [
+                "-sv",
+                "/home/josepizarro/nomad-analysis/tests/test_schema.py"
+            ]
+        },
+        {
+            "name": "nomad-analysis parse",
+            "type": "python",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/.pyenv/bin/nomad",
+            "justMyCode": false,
+            "args": [
+                "parse",
+                // "--show-archive",
+                "/home/josepizarro/nomad-analysis/tests/data/test.archive.yaml"
+            ]
+        }
+    ]
+}
