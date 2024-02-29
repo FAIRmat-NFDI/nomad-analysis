@@ -109,4 +109,4 @@ line-ending = "auto"
 where = ["src"]
 
 [tool.setuptools.package-data]
-analysis = ['*/nomad_plugin.yaml']
+nomad_analysis = ['*/nomad_plugin.yaml']
