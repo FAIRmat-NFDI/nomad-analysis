@@ -1,0 +1,4 @@
+plugin_type: schema
+name: analysis
+description: |
+  This plugin is used to analyze parsed raw data for spectral profiles in the standard NOMAD schema.

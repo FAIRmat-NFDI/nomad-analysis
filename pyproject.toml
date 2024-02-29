@@ -106,11 +106,7 @@ line-ending = "auto"
 
 
 [tool.setuptools.packages.find]
-<<<<<<< HEAD
 where = ["src"]
-=======
-include = ["analysis"]
->>>>>>> Fix pyproject.toml
 
 [tool.setuptools.package-data]
 analysis = ['*/nomad_plugin.yaml']
