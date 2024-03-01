@@ -31,10 +31,16 @@ sure to include NOMAD's internal package registry (via `--index-url` in the abov
 
 ### Run the tests
 
-You can run automated tests with `pytest`:
+You can the unit testing using the `pytest` package:
 
 ```sh
-pytest -svx tests
+python -m pytest -sv
+```
+
+We recommend to install the `coverage` and `coveralls` packages for a more comprehensive output of the testing:
+```sh
+pip install coverage coveralls
+python -m coverage run -m pytest -sv
 ```
 
 
@@ -44,7 +50,7 @@ Read the [NOMAD plugin documentation](https://nomad-lab.eu/prod/v1/staging/docs/
 You need to modify the ```analysis/nomad_plugin.yaml``` to define the plugin adding the following content:
 ```yaml
 plugin_type: schema
-name: schemas/analysis
+name: schema/nomad_analysis
 description: |
   This plugin is used to analyze parsed raw data for spectral profiles in the standard NOMAD schema.
 ```
@@ -52,10 +58,10 @@ description: |
 and define the ```nomad.yaml``` configuration file of your NOMAD instance in the root folder with the following content:
 ```yaml
 plugins:
-  include: 'schemas/analysis'
+  include: 'schema/nomad_analysis'
   options:
-    schemas/analysis:
-      python_package: analysis
+    schema/nomad_analysis:
+      python_package: nomad_analysis
 ```
 
 You also need to add the package folder to the `PYTHONPATH` of the Python environment of your local NOMAD installation. This can be done by specifying the relative path to this repository. Either run the following command every time you start a new terminal for running the appworker, or add it to your virtual environment in `<path-to-local-nomad-installation>/.pyenv/bin/activate` file:
@@ -71,6 +77,8 @@ If you are working in this repository, you just need to activate the environment
 ruff check .
 ```
 ```sh
-ruff format .
+ruff format . --check
 ```
-Ruff auto-formatting is also a part of the GitHub workflow actions. Make sure that before you make a Pull Request, `ruff format .` runs in your local without any errors otherwise the workflow action will fail.
+Ruff auto-formatting is also a part of the GitHub workflow actions. Make sure that before you make a Pull Request, `ruff format . --check` runs in your local without any errors otherwise the workflow action will fail.
+
+Alternatively, if you are using VSCode as your IDE, we added the settings configuration file, `.vscode/settings.json`, such that it performs `ruff format` whenever you save progress in a file.
