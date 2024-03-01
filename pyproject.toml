@@ -39,12 +39,12 @@ dev = [
 
 [tool.ruff]
 include = ["analysis/*.py", "tests/*.py"]
-select = [
+lint.select = [
     "E", # pycodestyle
     "W", # pycodestyle
     "PL", # pylint
 ]
-ignore = [
+lint.ignore = [
     "E501", # Line too long ({width} > {limit} characters)
     "E701", # Multiple statements on one line (colon)
     "E731", # Do not assign a lambda expression, use a def
@@ -59,6 +59,7 @@ ignore = [
     "PLR1714", # consider-using-in
     "PLR5501", # else-if-used
 ]
+lint.fixable = ["ALL"]
 
 # Same as Black.
 line-length = 88
@@ -66,26 +67,6 @@ indent-width = 4
 
 # Assume Python 3.9
 target-version = "py39"
-
-[tool.ruff.lint]
-select = [
-    # pycodestyle
-    "E",
-    # Pyflakes
-    "F",
-    # pyupgrade
-    "UP",
-   # isort
-    "I",
-    # pylint 
-    "PL"
-]
-
-ignore = [
-    "F403", # 'from module import *' used; unable to detect undefined names
-]
-    
-fixable = ["ALL"]
 
 # Allow unused variables when underscore-prefixed.
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
