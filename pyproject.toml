@@ -1,13 +1,14 @@
 [build-system]
 requires = [
     "setuptools>=61.0.0",
+    "setuptools-scm>=8.0",
 ]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "nomad-analysis"
-version = '0.1.0'
-description = "A standard NOMAD plugin for analysis."
+dynamic = ["version"]
+description = "A NOMAD plugin for analysis of FAIR data."
 readme = "README.md"
 authors = [
     { name = "Sarthak Kapoor", email = "sarthak.kapoor@physik.hu-berlin.de" }
@@ -24,6 +25,12 @@ dependencies = [
     "nomad-lab>=1.2.2dev457",
     "nbformat>=5.9.2",
 ]
+
+[project.urls]
+"Homepage" = "https://github.com/FAIRmat-NFDI/nomad-analysis"
+"Bug Tracker" = "https://github.com/FAIRmat-NFDI/nomad-analysis/issues"
+"Documentation" = "https://fairmat-nfdi.github.io/nomad-analysis/"
+
 [project.optional-dependencies]
 dev = [
     "ruff>=0.2.0",
