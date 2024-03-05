@@ -45,7 +45,7 @@ dev = [
 ]
 
 [tool.ruff]
-include = ["analysis/*.py", "tests/*.py"]
+include = ["src/nomad_analysis/*.py", "tests/*.py"]
 lint.select = [
     "E", # pycodestyle
     "W", # pycodestyle
