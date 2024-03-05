@@ -57,10 +57,10 @@ pip install -e .[dev] --index-url https://gitlab.mpcdf.mpg.de/api/v4/projects/21
 ### Setting up plugin on your local installation
 Read the [NOMAD plugin documentation](https://nomad-lab.eu/prod/v1/staging/docs/howto/oasis/plugins_install.html) for all details on how to deploy the plugin on your NOMAD instance.
 
-You need to modify the ```analysis/nomad_plugin.yaml``` to define the plugin adding the following content:
+You need to modify the ```src/nomad_analysis/nomad_plugin.yaml``` to define the plugin adding the following content:
 ```yaml
 plugin_type: schema
-name: schema/nomad_analysis
+name: schemas/nomad_analysis
 description: |
   This plugin is used to analyze parsed raw data for spectral profiles in the standard NOMAD schema.
 ```
@@ -68,9 +68,9 @@ description: |
 and define the ```nomad.yaml``` configuration file of your NOMAD instance in the root folder with the following content:
 ```yaml
 plugins:
-  include: 'schema/nomad_analysis'
+  include: 'schemas/nomad_analysis'
   options:
-    schema/nomad_analysis:
+    schemas/nomad_analysis:
       python_package: nomad_analysis
 ```
 
