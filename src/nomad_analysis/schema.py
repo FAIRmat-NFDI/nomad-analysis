@@ -32,6 +32,7 @@ Upcoming features:
 - Link the output section of the analysis schema to a sub-section of the input.
 - Write the analysis results back to the output section.
 """
+
 import json
 import os
 from typing import TYPE_CHECKING
