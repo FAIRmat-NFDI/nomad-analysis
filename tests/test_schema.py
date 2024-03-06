@@ -9,3 +9,4 @@ def test_schema(capture_from_logger, clean_up):
     normalize_all(entry_archive)
 
     assert entry_archive.data.analysis_type == 'test'
+    # TODO: Add tests for generated jupyter notebook
