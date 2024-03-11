@@ -151,6 +151,7 @@ class ELNJupyterAnalysis(JupyterAnalysis):
     )
     analysis_type = Quantity(
         type=str,
+        default='Generic',
         description=(
             'Based on the analysis type, code cells will be added to the Jupyter '
             'notebook. Code cells from **Generic** are always included.'
@@ -204,8 +205,8 @@ class ELNJupyterAnalysis(JupyterAnalysis):
         """
         if self.name:
             file_name = (
-                self.name.replace(' ', '_')
-                + f'_{self.analysis_type.lower()}_notebook.ipynb'
+                self.name.replace(' ', '_') + '_' +
+                self.analysis_type.lower() + '_notebook.ipynb'
             )
         else:
             file_name = 'untitled.ipynb'
@@ -397,7 +398,6 @@ class ELNGenericJupyterAnalysis(ELNJupyterAnalysis, EntryData):
     )
 
     def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger'):
-        self.analysis_type = 'Generic'
         super().normalize(archive, logger)
 
 

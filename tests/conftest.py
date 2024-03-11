@@ -7,7 +7,7 @@ from nomad.utils import structlogging
 
 
 @pytest.fixture(scope='function')
-def capture_from_logger(caplog):
+def capture_error_from_logger(caplog):
     """
     Extracts log messages from the logger and raises an assertion error if any
     ERROR messages are found.
