@@ -1,6 +1,7 @@
 """
-    Utility functions for the analysis plugin.
+Utility functions for the analysis plugin.
 """
+
 import importlib
 import inspect
 
