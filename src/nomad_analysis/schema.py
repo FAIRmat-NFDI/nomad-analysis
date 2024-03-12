@@ -494,7 +494,6 @@ class ELNJupyterAnalysis(JupyterAnalysis):
         """
         Normalizes the ELN entry to generate a Jupyter notebook.
         """
-        print('testing the pipeline!')
         self.write_results(archive, logger)
         super().normalize(archive, logger)
 
