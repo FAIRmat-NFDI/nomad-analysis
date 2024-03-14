@@ -75,9 +75,6 @@ indent-width = 4
 # Assume Python 3.9
 target-version = "py39"
 
-# Allow unused variables when underscore-prefixed.
-dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
-
 # this is entirely optional, you can remove this if you wish to
 [tool.ruff.format]
 # use single quotes for strings.
