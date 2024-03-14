@@ -302,7 +302,9 @@ class ELNJupyterAnalysis(JupyterAnalysis):
             return
         for entry in search_result.data:
             ref = {
-                'm_proxy_value': f'../uploads/{entry["upload_id"]}/raw/{entry["entry_name"]}#/data',
+                'm_proxy_value': (
+                    f'../uploads/{entry["upload_id"]}/raw/{entry["entry_name"]}#/data'
+                ),
                 'lab_id': self.get_lab_id(
                     f'../uploads/{entry["upload_id"]}/raw/{entry["entry_name"]}#/data',
                     entry['upload_id'],
