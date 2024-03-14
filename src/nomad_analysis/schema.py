@@ -35,7 +35,7 @@ Upcoming features:
 
 import json
 import os
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 import nbformat as nbf
 from nomad.datamodel.data import (
@@ -46,6 +46,7 @@ from nomad.datamodel.metainfo.annotations import (
     BrowserAnnotation,
     ELNAnnotation,
     ELNComponentEnum,
+    SectionProperties,
 )
 from nomad.datamodel.metainfo.basesections import (
     Analysis,
@@ -192,6 +193,14 @@ class ELNJupyterAnalysis(JupyterAnalysis):
         ),
         a_browser=BrowserAnnotation(adaptor='RawFileAdaptor'),
     )
+    input_entry_class = Quantity(
+        type=str,
+        description='Reference all the available entries of this EntryClass as inputs.',
+        a_eln=ELNAnnotation(
+            label='Input Entry Class',
+            component=ELNComponentEnum.StringEditQuantity,
+        ),
+    )
 
     def set_jupyter_notebook_name(
         self, archive: 'EntryArchive', logger: 'BoundLogger'
@@ -223,6 +232,110 @@ class ELNJupyterAnalysis(JupyterAnalysis):
             )
             archive.m_context.process_updated_raw_file(file_name, allow_modify=True)
             self.notebook = file_name
+
+    def get_lab_id(
+        self,
+        m_proxy_value: str,
+        upload_id: str,
+        archive: 'EntryArchive',
+        logger: 'BoundLogger',
+    ) -> Union[str, None]:
+        """
+        Get the lab_id from the reference. Returns None if lab_id is not found or the
+        code encounters an exception.
+
+        Args:
+            m_proxy_value (str): The m_proxy_value of the reference.
+            upload_id (str): The upload_id of the reference.
+            archive (EntryArchive): The archive containing the section.
+            logger (BoundLogger): A structlog logger.
+
+        Returns:
+            str/None: The lab_id of the reference.
+        """
+        from nomad.app.v1.models.models import User
+        from nomad.app.v1.routers.uploads import get_upload_with_read_access
+        from nomad.datamodel.context import ServerContext
+
+        # TODO: Currently, lab_id is None in the resolved reference. Investigate!
+        try:
+            reference = SectionReference(reference=m_proxy_value)
+            context = ServerContext(
+                get_upload_with_read_access(
+                    upload_id,
+                    User(
+                        is_admin=True,
+                        user_id=archive.metadata.main_author.user_id,
+                    ),
+                )
+            )
+            reference.reference.m_proxy_context = context
+            return reference.reference.lab_id
+        except Exception as e:
+            logger.warning(f'lab_id not found in the reference.\n{e}')
+            return None
+
+    def get_inputs_from_entry_class(
+        self, archive: 'EntryArchive', logger: 'BoundLogger'
+    ):
+        """
+        Get the input entries based on the input_entry_class quantity.
+
+        Args:
+            archive (EntryArchive): The archive containing the section.
+            logger (BoundLogger): A structlog logger.
+        """
+        from nomad.search import search
+
+        if self.input_entry_class is None:
+            return
+
+        ref_list = []
+        # get the references from based on input_entry_class
+        search_result = search(
+            owner='user',
+            query={'results.eln.sections:any': [self.input_entry_class]},
+            user_id=archive.metadata.main_author.user_id,
+        )
+        if not search_result.data:
+            return
+        for entry in search_result.data:
+            ref = {
+                'm_proxy_value': f'../uploads/{entry["upload_id"]}/raw/{entry["entry_name"]}#/data',
+                'lab_id': self.get_lab_id(
+                    f'../uploads/{entry["upload_id"]}/raw/{entry["entry_name"]}#/data',
+                    entry['upload_id'],
+                    archive,
+                    logger,
+                ),
+            }
+            ref_list.append(ref)
+
+        # get the existing input references
+        for input_ref in self.inputs:
+            ref = dict(
+                m_proxy_value=input_ref.reference.m_proxy_value,
+                lab_id=self.get_lab_id(
+                    input_ref.reference.m_proxy_value,
+                    input_ref.reference.m_context.upload_id,
+                    archive,
+                    logger,
+                ),
+            )
+            ref_list.append(ref)
+
+        # filter based on m_proxy_value and lab_id
+        self.inputs = []
+        ref_hash_map = {}
+        for ref in ref_list:
+            if ref['m_proxy_value'] in ref_hash_map:
+                continue
+            if ref['lab_id'] is not None and ref['lab_id'] in ref_hash_map.values():
+                continue
+            ref_hash_map[ref['m_proxy_value']] = ref['lab_id']
+
+        for m_proxy_value in ref_hash_map:
+            self.inputs.append(SectionReference(reference=m_proxy_value))
 
     def write_predefined_cells(
         self, archive: 'EntryArchive', logger: 'BoundLogger'
@@ -382,6 +495,8 @@ class ELNJupyterAnalysis(JupyterAnalysis):
         super().normalize(archive, logger)
 
         self.set_jupyter_notebook_name(archive, logger)
+        self.get_inputs_from_entry_class(archive, logger)
+
         if self.reset_notebook:
             self.write_jupyter_notebook(archive, logger)
             self.reset_notebook = False
