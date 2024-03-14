@@ -46,7 +46,6 @@ from nomad.datamodel.metainfo.annotations import (
     BrowserAnnotation,
     ELNAnnotation,
     ELNComponentEnum,
-    SectionProperties,
 )
 from nomad.datamodel.metainfo.basesections import (
     Analysis,
@@ -512,6 +511,21 @@ class ELNGenericJupyterAnalysis(ELNJupyterAnalysis, EntryData):
     m_def = Section(
         categories=[JupyterAnalysisCategory],
         label='Generic Jupyter Notebook Analysis',
+        a_eln=ELNAnnotation(
+            properties={
+                'order': [
+                    'name',
+                    'datetime',
+                    'lab_id',
+                    'location',
+                    'description',
+                    'analysis_type',
+                    'notebook',
+                    'reset_notebook',
+                    'input_entry_class',
+                ],
+            },
+        ),
     )
 
     def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger'):
@@ -526,6 +540,21 @@ class ELNXRDJupyterAnalysis(ELNJupyterAnalysis, EntryData):
     m_def = Section(
         categories=[JupyterAnalysisCategory],
         label='XRD Jupyter Notebook Analysis',
+        a_eln=ELNAnnotation(
+            properties={
+                'order': [
+                    'name',
+                    'datetime',
+                    'lab_id',
+                    'location',
+                    'description',
+                    'analysis_type',
+                    'notebook',
+                    'reset_notebook',
+                    'input_entry_class',
+                ],
+            },
+        ),
     )
 
     def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger'):
