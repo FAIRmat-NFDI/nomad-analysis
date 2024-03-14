@@ -301,12 +301,12 @@ class ELNJupyterAnalysis(JupyterAnalysis):
         if not search_result.data:
             return
         for entry in search_result.data:
+            entry_id = entry['entry_id']
+            upload_id = entry['upload_id']
             ref = {
-                'm_proxy_value': (
-                    f'../uploads/{entry["upload_id"]}/raw/{entry["entry_name"]}#/data'
-                ),
+                'm_proxy_value': f'../uploads/{upload_id}/archive/{entry_id}#/data',
                 'lab_id': self.get_lab_id(
-                    f'../uploads/{entry["upload_id"]}/raw/{entry["entry_name"]}#/data',
+                    f'../uploads/{upload_id}/archive/{entry_id}#/data',
                     entry['upload_id'],
                     archive,
                     logger,
