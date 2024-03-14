@@ -66,6 +66,14 @@ def get_input_data(token_header: dict, base_url: str, analysis_entry_id: str) ->
     for entry in referred_entries:
         entry_ids.append(entry_id_from_reference(entry['reference']))
 
+    query = {
+        'required': {
+            'data': '*',
+            'workflow2': '*',
+            'metadata': '*',
+            'results': '*',
+        }
+    }
     entry_archive_data_list = []
     for entry_id in entry_ids:
         response = requests.post(
