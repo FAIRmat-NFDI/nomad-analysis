@@ -1,19 +1,20 @@
 """
-    Contains analysis functions which will be included in the Jupyter analysis notebook.
+Contains analysis functions which will be included in the Jupyter analysis notebook.
 
-    The functions should be added along its category using the `category` decorator. The
-    category should be correspond to `analysis_type` in the schema.
+The functions should be added along its category using the `category` decorator. The
+category should be correspond to `analysis_type` in the schema.
 
-    At present, the experiment specific categories includes `XRD`.
-    For e.g., when adding an analysis function for XRD, use `@category('XRD')` 
-    decorator.
+At present, the experiment specific categories includes `XRD`.
+For e.g., when adding an analysis function for XRD, use `@category('XRD')`
+decorator.
 
-    Use `@category('Generic')` for functions which should always be included.
+Use `@category('Generic')` for functions which should always be included.
 
-    Important:
-        Necessary library or module imports should be included inside the function.
-        This will allow the imports to be specified in the generated Jupyter notebook.
+Important:
+    Necessary library or module imports should be included inside the function.
+    This will allow the imports to be specified in the generated Jupyter notebook.
 """
+
 from nomad_analysis.utils import category
 
 

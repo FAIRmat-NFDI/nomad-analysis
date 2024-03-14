@@ -214,8 +214,10 @@ class ELNJupyterAnalysis(JupyterAnalysis):
         """
         if self.name:
             file_name = (
-                self.name.replace(' ', '_') + '_' +
-                self.analysis_type.lower() + '_notebook.ipynb'
+                self.name.replace(' ', '_')
+                + '_'
+                + self.analysis_type.lower()
+                + '_notebook.ipynb'
             )
         else:
             file_name = 'untitled.ipynb'
