@@ -3,7 +3,7 @@ FROM gitlab-registry.mpcdf.mpg.de/nomad-lab/nomad-fair:latest
 RUN pip install build
 
 COPY \
-    analysis \
+    src/nomad-analysis \
     tests \
     README.md \
     LICENSE \
