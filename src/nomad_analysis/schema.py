@@ -35,6 +35,7 @@ Upcoming features:
 
 import json
 import os
+import numpy as np
 from typing import TYPE_CHECKING, Union
 
 import nbformat as nbf
@@ -82,6 +83,39 @@ class JupyterAnalysisCategory(EntryDataCategory):
         label='Jupyter Notebook Analysis',
         categories=[EntryDataCategory],
     )
+
+
+class XRDAnalysisOutput(AnalysisResult):
+    """
+    Section for collecting XRD analysis outputs.
+    It is a non-editable section that is populated programmatically.
+    """
+
+    m_def = Section(
+        label='XRD Analysis Outputs',
+    )
+    peak_positions = Quantity(
+        type=np.dtype(np.float64),
+        shape=['*'],
+        unit='degree',
+        description='List of peak positions',
+    )
+    peak_intensities = Quantity(
+        type=np.dtype(np.float64),
+        shape=['*'],
+        unit='dimensionless',
+        description='List of peak intensities',
+    )
+
+    def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger'):
+        """
+        The normalize function for `XRDAnalysisOutput` section.
+
+        Args:
+            archive (EntryArchive): The archive containing the section.
+            logger (BoundLogger): A structlog logger.
+        """
+        super().normalize(archive, logger)
 
 
 class JupyterAnalysisResult(AnalysisResult):
