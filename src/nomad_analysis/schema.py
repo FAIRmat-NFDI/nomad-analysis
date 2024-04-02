@@ -98,13 +98,13 @@ class XRDAnalysisOutput(AnalysisResult):
         type=np.dtype(np.float64),
         shape=['*'],
         unit='degree',
-        description='List of peak positions',
+        description='List of peak positions.',
     )
     peak_intensities = Quantity(
         type=np.dtype(np.float64),
         shape=['*'],
         unit='dimensionless',
-        description='List of peak intensities',
+        description='List of peak intensities.',
     )
 
     def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger'):
