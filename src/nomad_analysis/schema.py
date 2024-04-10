@@ -65,6 +65,7 @@ from nomad_analysis.utils import get_function_source, list_to_string
 if TYPE_CHECKING:
     from nomad.datamodel.datamodel import (
         EntryArchive,
+        ArchiveSection,
     )
     from structlog.stdlib import (
         BoundLogger,
@@ -234,16 +235,15 @@ class ELNJupyterAnalysis(JupyterAnalysis):
             archive.m_context.process_updated_raw_file(file_name, allow_modify=True)
             self.notebook = file_name
 
-    def get_lab_id(
+    def get_resolved_section(
         self,
         m_proxy_value: str,
         upload_id: str,
         archive: 'EntryArchive',
         logger: 'BoundLogger',
-    ) -> Union[str, None]:
+    ) -> Union['ArchiveSection', None]:
         """
-        Get the lab_id from the reference. Returns None if lab_id is not found or the
-        code encounters an exception.
+        Get the resolved reference of the input entry class.
 
         Args:
             m_proxy_value (str): The m_proxy_value of the reference.
@@ -252,13 +252,12 @@ class ELNJupyterAnalysis(JupyterAnalysis):
             logger (BoundLogger): A structlog logger.
 
         Returns:
-            str/None: The lab_id of the reference.
+            Union[ArchiveSection, None]: The resolved archive or None.
         """
         from nomad.app.v1.models.models import User
         from nomad.app.v1.routers.uploads import get_upload_with_read_access
         from nomad.datamodel.context import ServerContext
 
-        # TODO: Currently, lab_id is None in the resolved reference. Investigate!
         try:
             reference = SectionReference(reference=m_proxy_value)
             context = ServerContext(
@@ -271,10 +270,12 @@ class ELNJupyterAnalysis(JupyterAnalysis):
                 )
             )
             reference.reference.m_proxy_context = context
-            return reference.reference.lab_id
+            return reference.reference
+
         except Exception as e:
-            logger.warning(f'lab_id not found in the reference.\n{e}')
-            return None
+            logger.warning(f'Could not resolve the reference {m_proxy_value}.\n{e}')
+
+        return None
 
     def get_inputs_from_entry_class(
         self, archive: 'EntryArchive', logger: 'BoundLogger'
@@ -304,28 +305,24 @@ class ELNJupyterAnalysis(JupyterAnalysis):
         for entry in search_result.data:
             entry_id = entry['entry_id']
             upload_id = entry['upload_id']
+            resolved_section = self.get_resolved_section(
+                f'../uploads/{upload_id}/archive/{entry_id}#/data',
+                entry['upload_id'],
+                archive,
+                logger,
+            )
             ref = {
                 'm_proxy_value': f'../uploads/{upload_id}/archive/{entry_id}#/data',
-                'lab_id': self.get_lab_id(
-                    f'../uploads/{upload_id}/archive/{entry_id}#/data',
-                    entry['upload_id'],
-                    archive,
-                    logger,
-                ),
+                'lab_id': resolved_section.get('lab_id'),
             }
             ref_list.append(ref)
 
         # get the existing input references
         for input_ref in self.inputs:
-            ref = dict(
-                m_proxy_value=input_ref.reference.m_proxy_value,
-                lab_id=self.get_lab_id(
-                    input_ref.reference.m_proxy_value,
-                    input_ref.reference.m_context.upload_id,
-                    archive,
-                    logger,
-                ),
-            )
+            ref = {
+                'm_proxy_value': input_ref.reference.m_proxy_value,
+                'lab_id': input_ref.reference.get('lab_id'),
+            }
             ref_list.append(ref)
 
         # filter based on m_proxy_value and lab_id
