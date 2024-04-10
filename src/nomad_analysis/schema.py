@@ -286,7 +286,7 @@ class ELNJupyterAnalysis(JupyterAnalysis):
             archive (EntryArchive): The archive containing the section.
             logger (BoundLogger): A structlog logger.
         """
-        from nomad.search import search
+        from nomad.search import search, MetadataPagination
 
         if self.input_entry_class is None:
             return
@@ -294,8 +294,9 @@ class ELNJupyterAnalysis(JupyterAnalysis):
         ref_list = []
         # get the references from based on input_entry_class
         search_result = search(
-            owner='user',
+            owner='visible',
             query={'results.eln.sections:any': [self.input_entry_class]},
+            pagination=MetadataPagination(page_size=10000),
             user_id=archive.metadata.main_author.user_id,
         )
         if not search_result.data:
