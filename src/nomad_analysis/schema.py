@@ -338,6 +338,18 @@ class ELNJupyterAnalysis(JupyterAnalysis):
         for m_proxy_value in ref_hash_map:
             self.inputs.append(SectionReference(reference=m_proxy_value))
 
+    def set_name_for_inputs(self, archive: 'EntryArchive', logger: 'BoundLogger'):
+        """
+        Set the name of the input references based on the lab_id or name of the referenced
+        section. If lab_id, it is preferred over the name. If both are not available, the
+        reference name remains the default: None.
+        """
+        for input_ref in self.inputs:
+            if input_ref.reference.get('lab_id') is not None:
+                input_ref.name = input_ref.reference.lab_id
+            elif input_ref.reference.get('name') is not None:
+                input_ref.name = input_ref.reference.name
+
     def write_predefined_cells(
         self, archive: 'EntryArchive', logger: 'BoundLogger'
     ) -> list:
@@ -497,6 +509,7 @@ class ELNJupyterAnalysis(JupyterAnalysis):
 
         self.set_jupyter_notebook_name(archive, logger)
         self.get_inputs_from_entry_class(archive, logger)
+        self.set_name_for_inputs(archive, logger)
 
         if self.reset_notebook:
             self.write_jupyter_notebook(archive, logger)
