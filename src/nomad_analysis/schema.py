@@ -279,18 +279,21 @@ class ELNJupyterAnalysis(JupyterAnalysis):
 
     def get_inputs_from_entry_class(
         self, archive: 'EntryArchive', logger: 'BoundLogger'
-    ):
+    ) -> list:
         """
         Get the input entries based on the input_entry_class quantity.
 
         Args:
             archive (EntryArchive): The archive containing the section.
             logger (BoundLogger): A structlog logger.
+
+        Returns:
+            list: The list of references.
         """
         from nomad.search import search, MetadataPagination
 
         if self.input_entry_class is None:
-            return
+            return []
 
         ref_list = []
         # get the references from based on input_entry_class
@@ -300,8 +303,6 @@ class ELNJupyterAnalysis(JupyterAnalysis):
             pagination=MetadataPagination(page_size=10000),
             user_id=archive.metadata.main_author.user_id,
         )
-        if not search_result.data:
-            return
         for entry in search_result.data:
             entry_id = entry['entry_id']
             upload_id = entry['upload_id']
@@ -311,44 +312,95 @@ class ELNJupyterAnalysis(JupyterAnalysis):
                 archive,
                 logger,
             )
+            if resolved_section is None:
+                continue
             ref = {
                 'm_proxy_value': f'../uploads/{upload_id}/archive/{entry_id}#/data',
+                'name': resolved_section.get('name'),
                 'lab_id': resolved_section.get('lab_id'),
             }
             ref_list.append(ref)
+        return ref_list
 
+    def reset_input_references(self, archive: 'EntryArchive', logger: 'BoundLogger'):
+        """
+        Collects input references based on self.input_entry_class.
+        Creates a new set of input references by filtering out unique references from
+        existing references, manually added references, and newly collected references.
+        Filtering unique references is based on m_proxy_value and lab_id.
+        Sets the name of the input references.
+        """
+
+        def normalize_m_proxy_value(m_proxy_value):
+            """
+            Normalize the m_proxy_value (in-place) by adding forward slash in the
+            beginning of section path. For e.g., '../uploads/1234/archive/5678#data' will
+            be modified to '../uploads/1234/archive/5678#/data'.
+
+            Args:
+                m_proxy_value (str): The m_proxy_value to be normalized.
+            """
+            try:
+                entry_path, section_path = m_proxy_value.split('#')
+                if not section_path.startswith('/'):
+                    return f'{entry_path}#/{section_path}'
+            except Exception as e:
+                logger.warning(
+                    f'Error in normalizing the m_proxy_value "{m_proxy_value}".\n{e}'
+                )
+            return m_proxy_value
+
+        def set_name_for_inputs():
+            """
+            Set the name of the input references based on the lab_id or name of the referenced
+            section. If lab_id, it is preferred over the name. If both are not available, the
+            reference name remains the default: None.
+            """
+            for input_ref in self.inputs:
+                if input_ref.name is not None:
+                    continue
+                if input_ref.reference.name is None:
+                    continue
+                if input_ref.reference.get('lab_id') is not None:
+                    input_ref.name = input_ref.reference.lab_id
+                elif input_ref.reference.get('name') is not None:
+                    input_ref.name = input_ref.reference.name
+
+        ref_list = []
         # get the existing input references
         for input_ref in self.inputs:
+            if input_ref.reference is None:
+                continue
             ref = {
-                'm_proxy_value': input_ref.reference.m_proxy_value,
+                'm_proxy_value': normalize_m_proxy_value(
+                    input_ref.reference.m_proxy_value
+                ),
+                'name': input_ref.name,
                 'lab_id': input_ref.reference.get('lab_id'),
             }
             ref_list.append(ref)
 
-        # filter based on m_proxy_value and lab_id
-        self.inputs = []
+        # get the references from based on input_entry_class
+        ref_list.extend(self.get_inputs_from_entry_class(archive, logger))
+
+        # filter based on m_proxy_value, and lab_id (if available)
         ref_hash_map = {}
+        filtered_ref_list = []
         for ref in ref_list:
             if ref['m_proxy_value'] in ref_hash_map:
                 continue
             if ref['lab_id'] is not None and ref['lab_id'] in ref_hash_map.values():
                 continue
             ref_hash_map[ref['m_proxy_value']] = ref['lab_id']
+            filtered_ref_list.append(ref)
 
-        for m_proxy_value in ref_hash_map:
-            self.inputs.append(SectionReference(reference=m_proxy_value))
+        self.inputs = []
+        for ref in filtered_ref_list:
+            self.inputs.append(
+                SectionReference(reference=ref['m_proxy_value'], name=ref['name'])
+            )
 
-    def set_name_for_inputs(self, archive: 'EntryArchive', logger: 'BoundLogger'):
-        """
-        Set the name of the input references based on the lab_id or name of the referenced
-        section. If lab_id, it is preferred over the name. If both are not available, the
-        reference name remains the default: None.
-        """
-        for input_ref in self.inputs:
-            if input_ref.reference.get('lab_id') is not None:
-                input_ref.name = input_ref.reference.lab_id
-            elif input_ref.reference.get('name') is not None:
-                input_ref.name = input_ref.reference.name
+        set_name_for_inputs()
 
     def write_predefined_cells(
         self, archive: 'EntryArchive', logger: 'BoundLogger'
@@ -508,8 +560,7 @@ class ELNJupyterAnalysis(JupyterAnalysis):
         super().normalize(archive, logger)
 
         self.set_jupyter_notebook_name(archive, logger)
-        self.get_inputs_from_entry_class(archive, logger)
-        self.set_name_for_inputs(archive, logger)
+        self.reset_input_references(archive, logger)
 
         if self.reset_notebook:
             self.write_jupyter_notebook(archive, logger)
