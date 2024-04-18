@@ -319,6 +319,8 @@ class ELNJupyterAnalysis(JupyterAnalysis):
                 'name': resolved_section.get('name'),
                 'lab_id': resolved_section.get('lab_id'),
             }
+            if resolved_section.get('lab_id') is not None:
+                ref['name'] = resolved_section.get('lab_id')
             ref_list.append(ref)
         return ref_list
 
