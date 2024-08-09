@@ -200,7 +200,7 @@ class ELNJupyterAnalysis(JupyterAnalysis):
         a_eln=ELNAnnotation(
             label='Query for Inputs',
             component=ELNComponentEnum.QueryEditQuantity,
-            props = dict(
+            props=dict(
                 storeInArchive=True,
             ),
         ),
@@ -307,6 +307,7 @@ class ELNJupyterAnalysis(JupyterAnalysis):
         # get the entries from search based on input_entry_class
         if self.input_entry_class is not None:
             from nomad.search import search, MetadataPagination, MetadataRequired
+
             search_result = search(
                 owner='visible',
                 query={'results.eln.sections:any': [self.input_entry_class]},
@@ -314,7 +315,7 @@ class ELNJupyterAnalysis(JupyterAnalysis):
                 user_id=archive.metadata.main_author.user_id,
                 required=MetadataRequired(
                     include=['entry_id', 'upload_id', 'mainfile'],
-                )
+                ),
             )
             entries = search_result.data
 
