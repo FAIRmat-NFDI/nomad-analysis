@@ -41,6 +41,7 @@ import nbformat as nbf
 from nomad.datamodel.data import (
     EntryData,
     EntryDataCategory,
+    Query,
 )
 from nomad.datamodel.metainfo.annotations import (
     BrowserAnnotation,
@@ -193,6 +194,17 @@ class ELNJupyterAnalysis(JupyterAnalysis):
         ),
         a_browser=BrowserAnnotation(adaptor='RawFileAdaptor'),
     )
+    query_for_inputs = Quantity(
+        type=Query,
+        description='Query to get the input entries for the analysis',
+        a_eln=ELNAnnotation(
+            label='Query for Inputs',
+            component=ELNComponentEnum.QueryEditQuantity,
+            props = dict(
+                storeInArchive=True,
+            ),
+        ),
+    )
     input_entry_class = Quantity(
         type=str,
         description='Reference all the available entries of this EntryClass as inputs.',
@@ -324,6 +336,31 @@ class ELNJupyterAnalysis(JupyterAnalysis):
             ref_list.append(ref)
         return ref_list
 
+    def get_inputs_from_query(self, archive, logger):
+        ref_list = []
+        if self.query_for_inputs is None:
+            return ref_list
+        for entry in self.query_for_inputs['data']:
+            entry_id = entry['entry_id']
+            upload_id = entry['upload_id']
+            resolved_section = self.get_resolved_section(
+                f'../uploads/{upload_id}/archive/{entry_id}#/data',
+                entry['upload_id'],
+                archive,
+                logger,
+            )
+            if resolved_section is None:
+                continue
+            ref = {
+                'm_proxy_value': f'../uploads/{upload_id}/archive/{entry_id}#/data',
+                'name': resolved_section.get('name'),
+                'lab_id': resolved_section.get('lab_id'),
+            }
+            if resolved_section.get('lab_id') is not None:
+                ref['name'] = resolved_section.get('lab_id')
+            ref_list.append(ref)
+        return ref_list
+
     def reset_input_references(self, archive: 'EntryArchive', logger: 'BoundLogger'):
         """
         Collects input references based on self.input_entry_class.
@@ -384,6 +421,9 @@ class ELNJupyterAnalysis(JupyterAnalysis):
 
         # get the references from based on input_entry_class
         ref_list.extend(self.get_inputs_from_entry_class(archive, logger))
+
+        # get the input references from the query
+        ref_list.extend(self.get_inputs_from_query(archive, logger))
 
         # filter based on m_proxy_value, and lab_id (if available)
         ref_hash_map = {}
