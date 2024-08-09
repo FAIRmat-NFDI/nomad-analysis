@@ -187,7 +187,7 @@ class ELNJupyterAnalysis(JupyterAnalysis):
     )
     notebook = Quantity(
         type=str,
-        description='Generated Jupyter notebook file',
+        description='Generated Jupyter notebook file.',
         a_eln=ELNAnnotation(
             label='Jupyter Notebook',
             component=ELNComponentEnum.FileEditQuantity,
@@ -196,7 +196,7 @@ class ELNJupyterAnalysis(JupyterAnalysis):
     )
     query_for_inputs = Quantity(
         type=Query,
-        description='Query to get the input entries for the analysis',
+        description='Query to get the input entries for the analysis.',
         a_eln=ELNAnnotation(
             label='Query for Inputs',
             component=ELNComponentEnum.QueryEditQuantity,
@@ -289,11 +289,11 @@ class ELNJupyterAnalysis(JupyterAnalysis):
 
         return None
 
-    def get_inputs_from_entry_class(
+    def get_inputs_from_search(
         self, archive: 'EntryArchive', logger: 'BoundLogger'
     ) -> list:
         """
-        Get the input entries based on the input_entry_class quantity.
+        Get the input entries based on the `input_entry_class` and `query_for_inputs`.
 
         Args:
             archive (EntryArchive): The archive containing the section.
@@ -302,45 +302,27 @@ class ELNJupyterAnalysis(JupyterAnalysis):
         Returns:
             list: The list of references.
         """
-        from nomad.search import search, MetadataPagination
-
-        if self.input_entry_class is None:
-            return []
-
         ref_list = []
-        # get the references from based on input_entry_class
-        search_result = search(
-            owner='visible',
-            query={'results.eln.sections:any': [self.input_entry_class]},
-            pagination=MetadataPagination(page_size=10000),
-            user_id=archive.metadata.main_author.user_id,
-        )
-        for entry in search_result.data:
-            entry_id = entry['entry_id']
-            upload_id = entry['upload_id']
-            resolved_section = self.get_resolved_section(
-                f'../uploads/{upload_id}/archive/{entry_id}#/data',
-                entry['upload_id'],
-                archive,
-                logger,
+        entries = []
+        # get the entries from search based on input_entry_class
+        if self.input_entry_class is not None:
+            from nomad.search import search, MetadataPagination, MetadataRequired
+            search_result = search(
+                owner='visible',
+                query={'results.eln.sections:any': [self.input_entry_class]},
+                pagination=MetadataPagination(page_size=10000),
+                user_id=archive.metadata.main_author.user_id,
+                required=MetadataRequired(
+                    include=['entry_id', 'upload_id', 'mainfile'],
+                )
             )
-            if resolved_section is None:
-                continue
-            ref = {
-                'm_proxy_value': f'../uploads/{upload_id}/archive/{entry_id}#/data',
-                'name': resolved_section.get('name'),
-                'lab_id': resolved_section.get('lab_id'),
-            }
-            if resolved_section.get('lab_id') is not None:
-                ref['name'] = resolved_section.get('lab_id')
-            ref_list.append(ref)
-        return ref_list
+            entries = search_result.data
 
-    def get_inputs_from_query(self, archive, logger):
-        ref_list = []
-        if self.query_for_inputs is None:
-            return ref_list
-        for entry in self.query_for_inputs['data']:
+        # extend the entries with the data from query_for_inputs
+        if self.query_for_inputs is not None:
+            entries.extend(self.query_for_inputs['data'])
+
+        for entry in entries:
             entry_id = entry['entry_id']
             upload_id = entry['upload_id']
             resolved_section = self.get_resolved_section(
@@ -419,11 +401,8 @@ class ELNJupyterAnalysis(JupyterAnalysis):
             }
             ref_list.append(ref)
 
-        # get the references from based on input_entry_class
-        ref_list.extend(self.get_inputs_from_entry_class(archive, logger))
-
-        # get the input references from the query
-        ref_list.extend(self.get_inputs_from_query(archive, logger))
+        # get the references from based on input_entry_class and query_for_inputs
+        ref_list.extend(self.get_inputs_from_search(archive, logger))
 
         # filter based on m_proxy_value, and lab_id (if available)
         ref_hash_map = {}
