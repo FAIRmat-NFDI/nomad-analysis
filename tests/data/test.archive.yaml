@@ -1,2 +1,2 @@
 data:
-  m_def: nomad_analysis.ELNJupyterAnalysis
+  m_def: nomad_analysis.jupyter.schema.ELNJupyterAnalysis
