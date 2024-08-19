@@ -120,4 +120,5 @@ where = ["src"]
 skip = [".github/*"]
 
 [project.entry-points.'nomad.plugin']
-mypackage = "nomad_analysis.schema_packages:mypackage"
+general_analysis_schema = "nomad_analysis.general:schema"
+jupyter_analysis_schema = "nomad_analysis.jupyter:schema"

@@ -292,6 +292,7 @@ def xrd_voila_analysis(input_data) -> None:  # noqa: PLR0915
         """
         names = []
         for entry in input_data:
+            # TODO: Update the class name after the new plugin mechanism is implemented
             if entry['m_def'] == 'nomad_measurements.xrd.schema.ELNXRayDiffraction':
                 names.append(entry['name'])
         return names
@@ -399,8 +400,7 @@ def xrd_voila_analysis(input_data) -> None:  # noqa: PLR0915
         entry_name = dropdown.value
         entry_index = get_input_entry_names(input_data).index(entry_name)
         input_data_entry = input_data[entry_index]
-        if find_peak_parameters[2].value < 1:
-            find_peak_parameters[2].value = 1
+        find_peak_parameters[2].value = max(find_peak_parameters[2].value, 1)
         options = {
             'height': find_peak_parameters[0].value,
             'threshold': find_peak_parameters[1].value,

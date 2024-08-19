@@ -65,14 +65,14 @@ from nomad_analysis.utils import get_function_source, list_to_string
 
 if TYPE_CHECKING:
     from nomad.datamodel.datamodel import (
-        EntryArchive,
         ArchiveSection,
+        EntryArchive,
     )
     from structlog.stdlib import (
         BoundLogger,
     )
 
-m_package = Package(name='analysis_jupyter')
+m_package = Package()
 
 
 class JupyterAnalysisCategory(EntryDataCategory):
@@ -306,7 +306,7 @@ class ELNJupyterAnalysis(JupyterAnalysis):
         entries = []
         # get the entries from search based on input_entry_class
         if self.input_entry_class is not None:
-            from nomad.search import search, MetadataPagination, MetadataRequired
+            from nomad.search import MetadataPagination, MetadataRequired, search
 
             search_result = search(
                 owner='visible',
