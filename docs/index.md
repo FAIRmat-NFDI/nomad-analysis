@@ -1,20 +1,18 @@
-# Welcome to the `nomad-schema-plugin-example` documentation
+# Welcome to the `nomad-analysis` documentation
 
-Short summary about your plugin
+A NOMAD plugin for analysis.
 
 ## Introduction
 
-This is a example plugin.
-
 !!! note "Attention"
-    Please update the document with relevant information specific to your plugin.
+    TODO
 
 <div markdown="block" class="home-grid">
 <div markdown="block">
 
 ### Tutorial
 
-A series of tutorials will guide you through the main functionality of `nomad-schema-plugin-example`.
+TODO
 
 - [Tutorial](tutorial/tutorial.md)
 
