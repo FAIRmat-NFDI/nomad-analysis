@@ -1,0 +1,26 @@
+{
+  "template": "https://github.com/FAIRmat-NFDI/cookiecutter-nomad-plugin",
+  "commit": "c40010ce548126347c5fd7b36c2a5031bcd0b34b",
+  "checkout": null,
+  "context": {
+    "cookiecutter": {
+      "full_name": "Sarthak Kapoor",
+      "email": "sarthakkapoor@hotmail.com",
+      "github_username": "ka-sarthak",
+      "plugin_name": "nomad-analysis",
+      "module_name": "nomad_analysis",
+      "short_description": "A NOMAD plugin for analysis.",
+      "version": "0.0.1",
+      "license": "Apache Software License 2.0",
+      "include_schema_package": true,
+      "include_normalizer": false,
+      "include_parser": false,
+      "include_app": false,
+      "_copy_without_render": [
+        "*.html"
+      ],
+      "_template": "https://github.com/FAIRmat-NFDI/cookiecutter-nomad-plugin"
+    }
+  },
+  "directory": null
+}
