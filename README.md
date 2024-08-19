@@ -53,36 +53,23 @@ pip install -e .[dev] --index-url https://gitlab.mpcdf.mpg.de/api/v4/projects/21
 
 
 ### Setting up the plugin on your local installation
-Read the [NOMAD plugin documentation](https://nomad-lab.eu/prod/v1/staging/docs/howto/oasis/plugins_install.html) for all details on how to deploy the plugin on your local NOMAD installation.
+Read the [NOMAD plugin documentation](https://nomad-lab.eu/prod/v1/staging/docs/howto/plugins/plugins.html#controlling-loading-of-plugin-entry-points) for all details on how to deploy the
+plugin on your local NOMAD installation. In summary:
 
-To deploy the plugin in your local NOMAD installation, follow the next steps:
-
-1. Add the configurations related to NOMAD. This is already implemented through the plugin definition file ```src/nomad_analysis/nomad_plugin.yaml```:
-
-    ```yaml
-    plugin_type: schema
-    name: schemas/nomad_analysis
-    description: |
-      This plugin is used to analyze parsed raw data from the NOMAD standard schema.
+1. Install the plugin repo in your local installation environment
+    ```sh
+    pip install -e <path to the plugin repo>
     ```
-    and the ```nomad.yaml``` configuration file:
+
+2. From the following available entry points, include the ones you want (or all) in the
+nomad.yaml of your local installation:
 
     ```yaml
     plugins:
       include:
-        - 'schemas/nomad_analysis'
-      options:
-        schemas/nomad_analysis:
-          python_package: nomad_analysis
+        - nomad_analysis.general:schema
+        - nomad_analysis.jupyter:schema
     ```
-3. Add to your local NOMAD installation the same lines of your plugin ```nomad.yaml``` file.
-4. Add to your local NOMAD installation environment the `PYTHONPATH` to your plugin. This can be done either by running the following command every time you start a new terminal for running the appworker, or by adding it to your virtual environment in the `<path-to-local-nomad-installation>/.pyenv/bin/activate` file:
-
-    ```sh
-    export PYTHONPATH="$PYTHONPATH:<path-to-nomad-analysis-cloned-repo>/src"
-    ```
-
-If you are working in this repository, you just need to activate the environment to start working using the ```nomad-analysis``` package locally in your own Python scripts.
 
 ### Run linting and auto-formatting
 Ruff auto-formatting is also a part of the GitHub workflow actions. Make sure that before you make a Pull Request to add your contributions to this repo, the following commands run in your local without any errors otherwise the workflow action will fail.
