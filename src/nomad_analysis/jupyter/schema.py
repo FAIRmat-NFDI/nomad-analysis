@@ -72,7 +72,7 @@ if TYPE_CHECKING:
         BoundLogger,
     )
 
-m_package = Package()
+m_package = SchemaPackage()
 
 
 class JupyterAnalysisCategory(EntryDataCategory):
