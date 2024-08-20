@@ -55,8 +55,8 @@ from nomad.datamodel.metainfo.basesections import (
 )
 from nomad.metainfo import (
     Category,
-    Package,
     Quantity,
+    SchemaPackage,
     Section,
     SubSection,
 )
@@ -356,8 +356,8 @@ class ELNJupyterAnalysis(JupyterAnalysis):
         def normalize_m_proxy_value(m_proxy_value):
             """
             Normalize the m_proxy_value (in-place) by adding forward slash in the
-            beginning of section path. For e.g., '../uploads/1234/archive/5678#data' will
-            be modified to '../uploads/1234/archive/5678#/data'.
+            beginning of section path. For e.g., '../uploads/1234/archive/5678#data'
+            will be modified to '../uploads/1234/archive/5678#/data'.
 
             Args:
                 m_proxy_value (str): The m_proxy_value to be normalized.
@@ -374,9 +374,9 @@ class ELNJupyterAnalysis(JupyterAnalysis):
 
         def set_name_for_inputs():
             """
-            Set the name of the input references based on the lab_id or name of the referenced
-            section. If lab_id, it is preferred over the name. If both are not available, the
-            reference name remains the default: None.
+            Set the name of the input references based on the lab_id or name of the
+            referenced section. If lab_id, it is preferred over the name. If both are
+            not available, the reference name remains the default: None.
             """
             for input_ref in self.inputs:
                 if input_ref.name is not None:

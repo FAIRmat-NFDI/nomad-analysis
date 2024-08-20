@@ -17,10 +17,10 @@
 #
 
 from nomad.metainfo import (
-    Package,
+    SchemaPackage,
 )
 
-m_package = Package()
+m_package = SchemaPackage()
 
 
 m_package.__init_metainfo__()
