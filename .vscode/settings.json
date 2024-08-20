@@ -1,7 +1,7 @@
 {
     "python.defaultInterpreterPath": ".pyenv/bin/python",
     "python.terminal.activateEnvInCurrentTerminal": true,
-    "editor.rulers": [90],
+    "editor.rulers": [88],
     "editor.renderWhitespace": "all",
     "editor.tabSize": 4,
     "[python]": {

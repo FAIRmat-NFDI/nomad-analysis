@@ -14,10 +14,11 @@ authors = [
     { name = "Sarthak Kapoor", email = "sarthak.kapoor@physik.hu-berlin.de" },
 ]
 maintainers = [
-    { name = "Sarthak Kapoor", email = "sarthakkapoor@hotmail.com" },
-    { name = "Hampus Näsström", email = 'hampus.naesstroem@physik.hu-berlin.de' },
-    { name = "Andrea Albino", email = 'andrea.albino@physik.hu-berlin.de' },
-    { name = "Sebastian Brückner", email = 'sebastian.brueckner@ikz-berlin.de' },
+    { name = "Sarthak Kapoor", email = "sarthak.kapoor@physik.hu-berlin.de" },
+    { name = "Jose M. Pizarro", email = "jose.pizarro@physik.hu-berlin.de" },
+    { name = "Andrea Albino", email = "andrea.albino@physik.hu-berlin.de" },
+    { name = "Hampus Näsström", email = "hampus.naesstroem@physik.hu-berlin.de" },
+    { name = "Sebastian Brückner", email = "sebastian.brueckner@ikz-berlin.de" },
 ]
 license = { file = "LICENSE" }
 requires-python = ">=3.9"
@@ -37,7 +38,7 @@ dependencies = [
 
 [project.urls]
 Repository = "https://github.com/ka-sarthak/nomad-analysis"
-"Documentation" = "https://fairmat-nfdi.github.io/nomad-analysis/"
+Documentation = "https://fairmat-nfdi.github.io/nomad-analysis/"
 
 [project.optional-dependencies]
 dev = [
@@ -65,7 +66,6 @@ indent-width = 4
 select = [
     # pycodestyle
     "E",
-    "W",
     # Pyflakes
     "F",
     # pyupgrade
@@ -78,19 +78,6 @@ select = [
 
 ignore = [
     "F403", # 'from module import *' used; unable to detect undefined names
-    "E501", # Line too long ({width} > {limit} characters)
-    "E701", # Multiple statements on one line (colon)
-    "E731", # Do not assign a lambda expression, use a def
-    "E402",  # Module level import not at top of file
-    "PLR0911", # Too many return statements
-    "PLR0912", # Too many branches
-    "PLR0913", # Too many arguments in function definition
-    "PLR0915", # Too many statements
-    "PLR2004", # Magic value used instead of constant
-    "PLW0603", # Using the global statement
-    "PLW2901", # redefined-loop-name
-    "PLR1714", # consider-using-in
-    "PLR5501", # else-if-used
 ]
 
 fixable = ["ALL"]
