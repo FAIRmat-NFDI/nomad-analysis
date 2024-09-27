@@ -16,16 +16,11 @@
 # limitations under the License.
 #
 
-from nomad.datamodel.metainfo.annotations import (
-    ELNAnnotation,
-)
 from nomad.datamodel.metainfo.basesections import (
     ActivityStep,
     Entity,
-    SectionReference,
 )
 from nomad.metainfo import (
-    Quantity,
     SchemaPackage,
     SubSection,
 )
@@ -40,21 +35,6 @@ class AnalysisResult(Entity):
     """
 
 
-class AnalysisResultReference(SectionReference):
-    """
-    A reference to a NOMAD AnalysisResult section.
-    """
-
-    reference = Quantity(
-        type=AnalysisResult,
-        description='A reference to a NOMAD AnalysisResult section.',
-        a_eln=ELNAnnotation(
-            component='ReferenceEditQuantity',
-            label='section reference',
-        ),
-    )
-
-
 class AnalysisStep(ActivityStep):
     """
     An abstract class representing the step of an analysis. It contains the results of
@@ -63,7 +43,7 @@ class AnalysisStep(ActivityStep):
     """
 
     results = SubSection(
-        section_def=AnalysisResultReference,
+        section_def=AnalysisResult,
         repeats=True,
     )
 
