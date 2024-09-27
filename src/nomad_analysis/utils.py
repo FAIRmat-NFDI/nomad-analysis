@@ -168,20 +168,6 @@ def create_entry_with_api(
     return reference
 
 
-def process_upload_with_api(base_url: str, upload_id: str):
-    """
-    Uses the NOMAD API endpoint `/uploads/{upload_id}/action/process` to manually
-    trigger processing of an upload.
-
-    Args:
-        base_url (str): Base URL of the NOMAD installation.
-        upload_id (str): Upload ID of the upload to be processed
-    """
-    endpoint = base_url + f'/uploads/{upload_id}/action/process'
-
-    post_nomad_request(url=endpoint)
-
-
 def put_nomad_request(
     url: str,
     data: Any = None,
@@ -218,46 +204,6 @@ def put_nomad_request(
         timeout=timeout,
     )
 
-    if not response.ok:
-        raise ValueError(f'Unexpected response {response.json()}')
-
-    return response.json()
-
-
-def post_nomad_request(
-    url: str,
-    data: Any = None,
-    json_dict: dict = None,
-    params: dict = None,
-    timeout: int = None,
-) -> json:
-    """
-    Sends a post request to the NOMAD API.
-
-    Args:
-        url (str): Endpoint of the API.
-        data (Any, optional): Dictionary, list of tuples, bytes, or file-like object to
-            send in the body of the `Request`.
-        json_dict (dict, optional): A JSON serializable Python object to send in the
-            body of the `Request`.
-        params (dict, optional): Parameters for the request.
-        timeout (int, optional): Timeout for the request in seconds.
-
-    Returns:
-        json: Response from the API in JSON serializable Python object.
-    """
-    headers = {**Auth().headers()}
-
-    print(f'Sending post request @ {url}')
-
-    response = requests.post(
-        url,
-        headers=headers,
-        json=json_dict,
-        params=params,
-        data=data,
-        timeout=timeout,
-    )
     if not response.ok:
         raise ValueError(f'Unexpected response {response.json()}')
 
