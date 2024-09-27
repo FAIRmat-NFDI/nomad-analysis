@@ -129,7 +129,8 @@ def create_entry_with_api(
 ) -> str:
     """
     Uses the NOMAD API endpoint `/uploads/{upload_id}/raw/{path}` to create an entry
-    for the given NOMAD section. Returns the proxy value for referencing the entry.
+    for the given NOMAD section. If an entry already exists with the same name, it
+    will be overwritten. Returns the proxy value for referencing the entry.
 
     Args:
         section (MSection): The entry data sections to be used for entry creation.
@@ -147,6 +148,8 @@ def create_entry_with_api(
     params['file_name'] = file_name
     if 'wait_for_processing' not in params:
         params['wait_for_processing'] = True
+    if 'overwrite_if_exists' not in params:
+        params['overwrite_if_exists'] = True
 
     if not isinstance(section, EntryArchive):
         entry = EntryArchive(data=section)
