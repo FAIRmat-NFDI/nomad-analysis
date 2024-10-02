@@ -16,11 +16,36 @@
 # limitations under the License.
 #
 
+from nomad.datamodel.metainfo.basesections import (
+    ActivityStep,
+    Entity,
+)
 from nomad.metainfo import (
     SchemaPackage,
+    SubSection,
 )
 
 m_package = SchemaPackage()
+
+
+class AnalysisResult(Entity):
+    """
+    An abstract class representing the results of an analysis. The data model is
+    intended to be extended for specific analysis methods.
+    """
+
+
+class AnalysisStep(ActivityStep):
+    """
+    An abstract class representing the step of an analysis. It contains the results of
+    the analysis step. The data model is intended to be extended for specific analysis
+    methods.
+    """
+
+    results = SubSection(
+        section_def=AnalysisResult,
+        repeats=True,
+    )
 
 
 m_package.__init_metainfo__()

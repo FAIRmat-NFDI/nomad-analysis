@@ -461,15 +461,11 @@ class ELNJupyterAnalysis(JupyterAnalysis):
         code = (
             '# Pre-defined block\n'
             '\n'
-            'import requests\n'
-            'from nomad.client import Auth\n'
-            '\n'
-            f'base_url = "{archive.m_context.installation_url}"\n'
-            'token_header = Auth().headers()\n'
             f'analysis_entry_id = "{archive.entry_id}"\n'
             '\n'
             f'{generic_analysis_functions}'
-            'input_data = get_input_data(token_header, base_url, analysis_entry_id)\n'
+            'analysis = get_analysis_entry(analysis_entry_id)\n'
+            'analysis\n'
         )
         cells.append(nbf.v4.new_code_cell(source=code))
 

@@ -38,73 +38,43 @@ from nomad_analysis.utils import category
 
 
 @category('Generic')
-def get_input_data(token_header: dict, base_url: str, analysis_entry_id: str) -> list:
+def get_analysis_entry(entry_id: str, url: str = None):
     """
-    Gets the archive data of all the referenced input entries.
+    Gets the entry archive of the analysis entry.
 
     Args:
-        token_header (dict): Authentication token.
-        base_url (str): Base URL of the NOMAD API.
-        analysis_entry_id (str): Entry ID of the analysis ELN.
+        entry_id (str): Entry ID of the analysis ELN.
+        url (str): URL of the NOMAD server.
 
     Returns:
-        list: List of data from all the referenced entries.
+        EntryArchive: Entry archive of the analysis entry.
     """
-    from http import HTTPStatus
 
-    import requests
+    from nomad.client import ArchiveQuery
+    from nomad.config import config
 
-    def entry_id_from_reference(reference: str):
-        return reference.split('#')[0].split('/')[-1]
+    if url is None:
+        url = config.client.url
 
-    query = {
-        'required': {
-            'data': '*',
-        }
-    }
-    try:
-        response = requests.post(
-            f'{base_url}/entries/{analysis_entry_id}/archive/query',
-            headers={**token_header, 'Accept': 'application/json'},
-            json=query,
-            timeout=20,
+    a_query = ArchiveQuery(
+        query={
+            'entry_id:any': [entry_id],
+        },
+        required='*',
+        url=url,
+    )
+    entry_list = a_query.download()
+
+    if not entry_list:
+        print(
+            f'Analysis entry with id "{entry_id}" not '
+            f'found at the given URL "{url}".'
         )
-        if response.status_code == HTTPStatus.UNAUTHORIZED:
-            print(
-                'Authentication failed as the token expired.'
-                'Please re-launch JupyterHub or Voila.'
-            )
-    except requests.exceptions.RequestException as e:
-        print(f'Error occurred while fetching the data: {e}')
-        return []
+        return None
+    if len(entry_list) > 1:
+        print('Multiple entries found. Picking the first one.')
 
-    response = response.json()
-    referred_entries = response['data']['archive']['data']['inputs']
-
-    entry_ids = []
-    for entry in referred_entries:
-        entry_ids.append(entry_id_from_reference(entry['reference']))
-
-    query = {
-        'required': {
-            'data': '*',
-            'workflow2': '*',
-            'metadata': '*',
-            'results': '*',
-        }
-    }
-    entry_archive_data_list = []
-    for entry_id in entry_ids:
-        response = requests.post(
-            f'{base_url}/entries/{entry_id}/archive/query',
-            headers={**token_header, 'Accept': 'application/json'},
-            json=query,
-            timeout=20,
-        ).json()
-        if 'data' in response.keys():
-            entry_archive_data_list.append(response['data']['archive']['data'])
-
-    return entry_archive_data_list
+    return entry_list[0]
 
 
 @category('XRD')
