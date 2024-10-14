@@ -141,15 +141,30 @@ class JupyterAnalysis(Analysis):
         super().normalize(archive, logger)
 
 
-class ELNJupyterAnalysis(JupyterAnalysis):
+class ELNJupyterAnalysis(JupyterAnalysis, EntryData):
     """
     Base section for ELN Jupyter notebook analysis.
     """
 
     m_def = Section(
-        # TODO: add category when shifted to a specific plugin
-        category=None,
+        categories=[JupyterAnalysisCategory],
         label='Jupyter Notebook Analysis',
+        a_eln=ELNAnnotation(
+            properties={
+                'order': [
+                    'name',
+                    'datetime',
+                    'lab_id',
+                    'location',
+                    'notebook',
+                    'reset_notebook',
+                    'query_for_inputs',
+                    'input_entry_class',
+                    'description',
+                    'analysis_type',
+                ],
+            },
+        ),
     )
     analysis_type = Quantity(
         type=str,
@@ -165,10 +180,6 @@ class ELNJupyterAnalysis(JupyterAnalysis):
             | **XRD**             | Adds XRD related analysis functions.            |
             """
         ),
-        # TODO uncomment when issue related to having a 'label' annotation is resolved
-        # a_eln = ELNAnnotation(
-        #     label = 'Analysis Type',
-        # ),
     )
     reset_notebook = Quantity(
         type=bool,
@@ -585,43 +596,12 @@ class ELNJupyterAnalysis(JupyterAnalysis):
             self.reset_notebook = False
 
 
-class ELNGenericJupyterAnalysis(ELNJupyterAnalysis, EntryData):
-    """
-    Entry section for Jupyter notebook analysis with `Generic` analysis type.
-    """
-
-    m_def = Section(
-        categories=[JupyterAnalysisCategory],
-        label='Generic Jupyter Notebook Analysis',
-        a_eln=ELNAnnotation(
-            properties={
-                'order': [
-                    'name',
-                    'datetime',
-                    'lab_id',
-                    'location',
-                    'notebook',
-                    'reset_notebook',
-                    'query_for_inputs',
-                    'input_entry_class',
-                    'description',
-                    'analysis_type',
-                ],
-            },
-        ),
-    )
-
-    def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger'):
-        super().normalize(archive, logger)
-
-
 class ELNXRDJupyterAnalysis(ELNJupyterAnalysis, EntryData):
     """
     Entry section for Jupyter notebook analysis with `XRD` analysis type.
     """
 
     m_def = Section(
-        categories=[JupyterAnalysisCategory],
         label='XRD Jupyter Notebook Analysis',
         a_eln=ELNAnnotation(
             properties={
@@ -645,5 +625,7 @@ class ELNXRDJupyterAnalysis(ELNJupyterAnalysis, EntryData):
         self.analysis_type = 'XRD'
         super().normalize(archive, logger)
 
+
+ELNGenericJupyterAnalysis = ELNJupyterAnalysis
 
 m_package.__init_metainfo__()
