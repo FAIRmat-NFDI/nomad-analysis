@@ -53,6 +53,9 @@ dev = [
     "zipstream-new==1.1.5",
 ]
 
+[tool.uv]
+index-url = "https://gitlab.mpcdf.mpg.de/api/v4/projects/2187/packages/pypi/simple"
+
 [tool.ruff]
 include = ["src/nomad_analysis/*.py", "tests/*.py"]
 
