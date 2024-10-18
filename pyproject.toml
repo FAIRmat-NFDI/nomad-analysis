@@ -6,22 +6,6 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "nomad-analysis"
-dynamic = ["version"]
-description = "A NOMAD plugin for analysis of FAIR data."
-readme = "README.md"
-authors = [
-    { name = "Sarthak Kapoor", email = "sarthak.kapoor@physik.hu-berlin.de" },
-]
-maintainers = [
-    { name = "Sarthak Kapoor", email = "sarthak.kapoor@physik.hu-berlin.de" },
-    { name = "Jose M. Pizarro", email = "jose.pizarro@physik.hu-berlin.de" },
-    { name = "Andrea Albino", email = "andrea.albino@physik.hu-berlin.de" },
-    { name = "Hampus Näsström", email = "hampus.naesstroem@physik.hu-berlin.de" },
-    { name = "Sebastian Brückner", email = "sebastian.brueckner@ikz-berlin.de" },
-]
-license = { file = "LICENSE" }
-requires-python = ">=3.9"
 classifiers = [
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
@@ -29,13 +13,29 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "License :: OSI Approved :: Apache Software License",
 ]
+name = "nomad-analysis"
+dynamic = ["version"]
+description = "A NOMAD plugin for analysis of FAIR data."
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+    { name = "Sarthak Kapoor", email = "sarthak.kapoor@physik.hu-berlin.de" },
+    { name = "Jose M. Pizarro", email = "jose.pizarro@physik.hu-berlin.de" },
+    { name = "Andrea Albino", email = "andrea.albino@physik.hu-berlin.de" },
+    { name = "Hampus Näsström", email = "hampus.naesstroem@physik.hu-berlin.de" },
+    { name = "Sebastian Brückner", email = "sebastian.brueckner@ikz-berlin.de" },
+]
+maintainers = [
+    { name = "FAIRmat", email = "fairmat@physik.hu-berlin.de" },
+]
+license = { file = "LICENSE" }
 dependencies = [
     "nomad-lab>=1.3.0",
     "nbformat>=5.9.2",
 ]
-
 [project.urls]
 Repository = "https://github.com/ka-sarthak/nomad-analysis"
 Documentation = "https://fairmat-nfdi.github.io/nomad-analysis/"
