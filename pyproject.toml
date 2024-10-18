@@ -115,3 +115,5 @@ skip = [".github/*"]
 [project.entry-points.'nomad.plugin']
 general_analysis_schema = "nomad_analysis.general:schema"
 jupyter_analysis_schema = "nomad_analysis.jupyter:schema"
+
+[tool.setuptools_scm]
