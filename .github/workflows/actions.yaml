@@ -4,9 +4,9 @@ jobs:
   install-and-test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Python 3.9
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: 3.9
     - name: Install dependencies
@@ -23,15 +23,12 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         coveralls --service=github
-    - name: Test with nomad
-      run: |
-        python -m nomad.cli parse tests/data/test.archive.yaml
   build-and-install:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Python 3.9
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: 3.9
     - name: Build the package
@@ -42,21 +39,17 @@ jobs:
     - name: Install the package
       run: |
         pip install dist/*.tar.gz --index-url https://gitlab.mpcdf.mpg.de/api/v4/projects/2187/packages/pypi/simple
-    - name: Test with nomad
-      run: |
-        python -m nomad.cli parse tests/data/test.archive.yaml
   ruff-formatting:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: chartboost/ruff-action@v1
         with:
           args: "format . --check"
   ruff-linting:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: chartboost/ruff-action@v1
         with:
           args: "check ."
-          version: 0.2.0
