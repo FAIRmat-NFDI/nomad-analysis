@@ -208,3 +208,30 @@ def put_nomad_request(
         raise ValueError(f'Unexpected response {response.json()}')
 
     return response.json()
+
+
+def create_unique_filename(
+    archive: 'EntryArchive',
+    prefix: str = 'unnamed',
+    suffix: str = 'archive.json',
+):
+    """
+    Create a unique filename of the form '{prefix}_{iterator}.{suffix}'. If the filename
+    already exists, the iterator is incremented until a unique filename is found.
+
+    Args:
+        archive: The archive object.
+        prefix: Part of the filename before the iterator. Default is 'Unnamed'.
+        suffix: Usually the file extension. Default is 'archive.json'.
+    """
+    i = 0
+
+    def template(i):
+        return f'{prefix}_{i}.{suffix}'
+
+    if not archive.m_context.raw_path_exists(template(i)):
+        return template(i)
+    while True:
+        i += 1
+        if not archive.m_context.raw_path_exists(template(i)):
+            return template(i)
