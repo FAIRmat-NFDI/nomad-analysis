@@ -48,6 +48,8 @@ from nomad.datamodel.metainfo.annotations import (
     BrowserAnnotation,
     ELNAnnotation,
     ELNComponentEnum,
+    Filter,
+    SectionProperties,
 )
 from nomad.datamodel.metainfo.basesections import (
     Analysis,
@@ -169,8 +171,11 @@ class ELNJupyterAnalysis(JupyterAnalysis, EntryData):
         categories=[JupyterAnalysisCategory],
         label='Jupyter Notebook Analysis',
         a_eln=ELNAnnotation(
-            properties={
-                'order': [
+            properties=SectionProperties(
+                visible=Filter(
+                    exclude=['input_entry_class'],
+                ),
+                order=[
                     'name',
                     'datetime',
                     'lab_id',
@@ -178,11 +183,10 @@ class ELNJupyterAnalysis(JupyterAnalysis, EntryData):
                     'notebook',
                     'reset_notebook',
                     'query_for_inputs',
-                    'input_entry_class',
                     'description',
                     'analysis_type',
                 ],
-            },
+            ),
         ),
     )
     analysis_type = Quantity(
@@ -235,9 +239,14 @@ class ELNJupyterAnalysis(JupyterAnalysis, EntryData):
             ),
         ),
     )
+
+    # deprecated in favor of `query_for_inputs`; non-functional
     input_entry_class = Quantity(
         type=str,
-        description='Reference all the available entries of this EntryClass as inputs.',
+        description="""
+        (Deprecated in favor of `query_for_inputs`)
+        Reference all the available entries of this EntryClass as inputs.
+        """,
         a_eln=ELNAnnotation(
             label='Input Entry Class',
             component=ELNComponentEnum.StringEditQuantity,
@@ -319,35 +328,21 @@ class ELNJupyterAnalysis(JupyterAnalysis, EntryData):
 
         return None
 
-    def get_inputs_from_search(
+    def process_query_for_inputs(
         self, archive: 'EntryArchive', logger: 'BoundLogger'
-    ) -> list:
+    ) -> list[ReferencedEntry]:
         """
-        Get the input entries based on the `input_entry_class` and `query_for_inputs`.
+        Get the input entries based on the `query_for_inputs`.
 
         Args:
             archive (EntryArchive): The archive containing the section.
             logger (BoundLogger): A structlog logger.
 
         Returns:
-            list: The list of references.
+            list[ReferencedEntry]: The list of input entries.
         """
         ref_list = []
         entries = []
-        # get the entries from search based on input_entry_class
-        if self.input_entry_class is not None:
-            from nomad.search import MetadataPagination, MetadataRequired, search
-
-            search_result = search(
-                owner='visible',
-                query={'results.eln.sections:any': [self.input_entry_class]},
-                pagination=MetadataPagination(page_size=10000),
-                user_id=archive.metadata.main_author.user_id,
-                required=MetadataRequired(
-                    include=['entry_id', 'upload_id', 'mainfile'],
-                ),
-            )
-            entries = search_result.data
 
         # extend the entries with the data from query_for_inputs
         if self.query_for_inputs is not None:
@@ -611,7 +606,7 @@ class ELNJupyterAnalysis(JupyterAnalysis, EntryData):
 
         self.set_jupyter_notebook_name(archive, logger)
         self.normalize_input_references(
-            self.get_inputs_from_search(archive, logger), logger
+            self.process_query_for_inputs(archive, logger), logger
         )
 
         if self.reset_notebook:
