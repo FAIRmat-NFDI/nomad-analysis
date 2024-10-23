@@ -64,7 +64,11 @@ from nomad.metainfo import (
     SubSection,
 )
 
-from nomad_analysis.utils import get_function_source, list_to_string
+from nomad_analysis.utils import (
+    create_unique_filename,
+    get_function_source,
+    list_to_string,
+)
 
 if TYPE_CHECKING:
     from nomad.datamodel.datamodel import (
@@ -267,7 +271,9 @@ class ELNJupyterAnalysis(JupyterAnalysis, EntryData):
                 + '_notebook.ipynb'
             )
         else:
-            file_name = 'untitled.ipynb'
+            file_name = create_unique_filename(
+                archive=archive, prefix='untitled', suffix='.ipynb'
+            )
 
         if self.notebook is None:
             self.notebook = file_name
