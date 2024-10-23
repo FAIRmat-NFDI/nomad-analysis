@@ -215,7 +215,6 @@ class ELNJupyterAnalysis(JupyterAnalysis, EntryData):
         ),
         default=True,
         a_eln=ELNAnnotation(
-            label='Reset pre-defined cells in Notebook',
             component=ELNComponentEnum.BoolEditQuantity,
         ),
     )
@@ -223,7 +222,6 @@ class ELNJupyterAnalysis(JupyterAnalysis, EntryData):
         type=str,
         description='Generated Jupyter notebook file.',
         a_eln=ELNAnnotation(
-            label='Jupyter Notebook',
             component=ELNComponentEnum.FileEditQuantity,
         ),
         a_browser=BrowserAnnotation(adaptor='RawFileAdaptor'),
@@ -232,7 +230,6 @@ class ELNJupyterAnalysis(JupyterAnalysis, EntryData):
         type=Query,
         description='Query to get the input entries for the analysis.',
         a_eln=ELNAnnotation(
-            label='Query for Inputs',
             component=ELNComponentEnum.QueryEditQuantity,
             props=dict(
                 storeInArchive=True,
@@ -244,11 +241,10 @@ class ELNJupyterAnalysis(JupyterAnalysis, EntryData):
     input_entry_class = Quantity(
         type=str,
         description="""
-        (Deprecated in favor of `query_for_inputs`)
         Reference all the available entries of this EntryClass as inputs.
+        (Deprecated in favor of `query_for_inputs`)
         """,
         a_eln=ELNAnnotation(
-            label='Input Entry Class',
             component=ELNComponentEnum.StringEditQuantity,
         ),
     )
