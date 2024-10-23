@@ -33,7 +33,6 @@ Upcoming features:
 - Write the analysis results back to the output section.
 """
 
-import json
 import os
 from typing import TYPE_CHECKING, Union
 
@@ -588,24 +587,10 @@ class ELNJupyterAnalysis(JupyterAnalysis, EntryData):
         else:
             self.overwrite_jupyter_notebook(archive, logger)
 
-    def write_results(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:
-        """
-        Writes the results of the analysis to the output section.
-
-        Args:
-            archive (EntryArchive): The archive containing the section.
-            logger (BoundLogger): A structlog logger.
-        """
-        if archive.m_context.raw_path_exists('tmp_analysis_results.json'):
-            with archive.m_context.raw_file('tmp_analysis_results.json', 'r') as f:
-                json.load(f)
-            # TODO add results to output, delete tmp_analysis_results.json
-
     def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger'):
         """
         Normalizes the ELN entry to generate a Jupyter notebook.
         """
-        self.write_results(archive, logger)
         super().normalize(archive, logger)
 
         self.set_jupyter_notebook_name(archive, logger)
