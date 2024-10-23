@@ -39,6 +39,7 @@ from typing import TYPE_CHECKING, Union
 
 import nbformat as nbf
 from nomad.datamodel.data import (
+    ArchiveSection,
     EntryData,
     EntryDataCategory,
     Query,
@@ -65,7 +66,6 @@ from nomad_analysis.utils import get_function_source, list_to_string
 
 if TYPE_CHECKING:
     from nomad.datamodel.datamodel import (
-        ArchiveSection,
         EntryArchive,
     )
     from structlog.stdlib import (
@@ -73,6 +73,25 @@ if TYPE_CHECKING:
     )
 
 m_package = SchemaPackage()
+
+
+class ReferencedEntry(ArchiveSection):
+    """
+    Section for referenced entry.
+    """
+
+    m_proxy_value = Quantity(
+        type=str,
+        description='The m_proxy_value of the referenced entry.',
+    )
+    name = Quantity(
+        type=str,
+        description='The name of the referenced entry.',
+    )
+    lab_id = Quantity(
+        type=str,
+        description='The lab_id of the referenced entry.',
+    )
 
 
 class JupyterAnalysisCategory(EntryDataCategory):
@@ -345,14 +364,15 @@ class ELNJupyterAnalysis(JupyterAnalysis, EntryData):
             )
             if resolved_section is None:
                 continue
-            ref = {
-                'm_proxy_value': f'../uploads/{upload_id}/archive/{entry_id}#/data',
-                'name': resolved_section.get('name'),
-                'lab_id': resolved_section.get('lab_id'),
-            }
+            ref = ReferencedEntry(
+                m_proxy_value=f'../uploads/{upload_id}/archive/{entry_id}#/data',
+                name=resolved_section.get('name'),
+                lab_id=resolved_section.get('lab_id'),
+            )
             if resolved_section.get('lab_id') is not None:
-                ref['name'] = resolved_section.get('lab_id')
+                ref.name = resolved_section.get('lab_id')
             ref_list.append(ref)
+
         return ref_list
 
     def reset_input_references(self, archive: 'EntryArchive', logger: 'BoundLogger'):
@@ -404,13 +424,13 @@ class ELNJupyterAnalysis(JupyterAnalysis, EntryData):
         for input_ref in self.inputs:
             if input_ref.reference is None:
                 continue
-            ref = {
-                'm_proxy_value': normalize_m_proxy_value(
+            ref = ReferencedEntry(
+                m_proxy_value=normalize_m_proxy_value(
                     input_ref.reference.m_proxy_value
                 ),
-                'name': input_ref.name,
-                'lab_id': input_ref.reference.get('lab_id'),
-            }
+                name=input_ref.name,
+                lab_id=input_ref.reference.get('lab_id'),
+            )
             ref_list.append(ref)
 
         # get the references from based on input_entry_class and query_for_inputs
@@ -420,17 +440,17 @@ class ELNJupyterAnalysis(JupyterAnalysis, EntryData):
         ref_hash_map = {}
         filtered_ref_list = []
         for ref in ref_list:
-            if ref['m_proxy_value'] in ref_hash_map:
+            if ref.m_proxy_value in ref_hash_map:
                 continue
-            if ref['lab_id'] is not None and ref['lab_id'] in ref_hash_map.values():
+            if ref.lab_id is not None and ref.lab_id in ref_hash_map.values():
                 continue
-            ref_hash_map[ref['m_proxy_value']] = ref['lab_id']
+            ref_hash_map[ref.m_proxy_value] = ref.lab_id
             filtered_ref_list.append(ref)
 
         self.inputs = []
         for ref in filtered_ref_list:
             self.inputs.append(
-                SectionReference(reference=ref['m_proxy_value'], name=ref['name'])
+                SectionReference(reference=ref.m_proxy_value, name=ref.name)
             )
 
         set_name_for_inputs()
