@@ -375,12 +375,14 @@ class ELNJupyterAnalysis(JupyterAnalysis, EntryData):
 
         return ref_list
 
-    def reset_input_references(self, archive: 'EntryArchive', logger: 'BoundLogger'):
+    def normalize_input_references(
+        self,
+        ref_list: list[ReferencedEntry] = None,
+        logger: 'BoundLogger' = None,
+    ):
         """
-        Collects input references based on self.input_entry_class.
-        Creates a new set of input references by filtering out unique references from
-        existing references, manually added references, and newly collected references.
-        Filtering unique references is based on m_proxy_value and lab_id.
+        Combines the existing input references with provided list of references.
+        Filters out duplicates based on m_proxy_value and lab_id.
         Sets the name of the input references.
         """
 
@@ -419,8 +421,10 @@ class ELNJupyterAnalysis(JupyterAnalysis, EntryData):
                 elif input_ref.reference.get('name') is not None:
                     input_ref.name = input_ref.reference.name
 
-        ref_list = []
-        # get the existing input references
+        if ref_list is None:
+            ref_list = []
+
+        # add the existing input references
         for input_ref in self.inputs:
             if input_ref.reference is None:
                 continue
@@ -432,9 +436,6 @@ class ELNJupyterAnalysis(JupyterAnalysis, EntryData):
                 lab_id=input_ref.reference.get('lab_id'),
             )
             ref_list.append(ref)
-
-        # get the references from based on input_entry_class and query_for_inputs
-        ref_list.extend(self.get_inputs_from_search(archive, logger))
 
         # filter based on m_proxy_value, and lab_id (if available)
         ref_hash_map = {}
@@ -609,7 +610,9 @@ class ELNJupyterAnalysis(JupyterAnalysis, EntryData):
         super().normalize(archive, logger)
 
         self.set_jupyter_notebook_name(archive, logger)
-        self.reset_input_references(archive, logger)
+        self.normalize_input_references(
+            self.get_inputs_from_search(archive, logger), logger
+        )
 
         if self.reset_notebook:
             self.write_jupyter_notebook(archive, logger)
