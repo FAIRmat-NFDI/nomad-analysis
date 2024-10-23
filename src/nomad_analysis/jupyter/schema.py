@@ -424,13 +424,15 @@ class ELNJupyterAnalysis(JupyterAnalysis, EntryData):
             if input_ref.reference is None:
                 continue
             ref = ReferencedEntry(
-                m_proxy_value=normalize_m_proxy_value(
-                    input_ref.reference.m_proxy_value
-                ),
+                m_proxy_value=input_ref.reference.m_proxy_value,
                 name=input_ref.name,
                 lab_id=input_ref.reference.get('lab_id'),
             )
             ref_list.append(ref)
+
+        # normalize m_proxy_value
+        for ref in ref_list:
+            ref.m_proxy_value = normalize_m_proxy_value(ref.m_proxy_value)
 
         # filter based on m_proxy_value, and lab_id (if available)
         ref_hash_map = {}
