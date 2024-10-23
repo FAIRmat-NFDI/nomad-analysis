@@ -114,9 +114,9 @@ def get_reference(upload_id: str, entry_id: str) -> str:
         entry_id (str): Entry ID of the entry.
 
     Returns:
-        str: Proxy value of the form '../uploads/{upload_id}/archive/{entry_id}'
+        str: Proxy value of the form '../uploads/{upload_id}/archive/{entry_id}#/data'
     """
-    return f'../uploads/{upload_id}/archive/{entry_id}'
+    return f'../uploads/{upload_id}/archive/{entry_id}#/data'
 
 
 def create_entry_with_api(
@@ -141,7 +141,7 @@ def create_entry_with_api(
         params (dict): Additional parameters for the request.
 
     Returns:
-        str: proxy value of the form '../uploads/{upload_id}/archive/{entry_id}'
+        str: proxy value of the form '../uploads/{upload_id}/archive/{entry_id}#/data'
     """
     endpoint = base_url + f'/uploads/{upload_id}/raw/{path}'
 
