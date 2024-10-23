@@ -602,6 +602,8 @@ class ELNJupyterAnalysis(JupyterAnalysis, EntryData):
             self.write_jupyter_notebook(archive, logger)
             self.reset_notebook = False
 
+        super().normalize(archive, logger)
+
 
 class ELNXRDJupyterAnalysis(ELNJupyterAnalysis, EntryData):
     """
