@@ -18,11 +18,18 @@
 
 import os.path
 
+import pytest
 from nomad.client import normalize_all, parse
 
+test_archives_dir = os.path.join(os.path.dirname(__file__), 'data')
+test_archives_path = []
+for path in os.listdir(test_archives_dir):
+    if path.endswith('.archive.yaml'):
+        test_archives_path.append(os.path.join(os.path.dirname(__file__), 'data', path))
 
-def test_schema(capture_error_from_logger, clean_up):
-    test_file = os.path.join(os.path.dirname(__file__), 'data', 'test.archive.yaml')
+
+@pytest.mark.parametrize('test_file', test_archives_path)
+def test_schema(test_file, capture_error_from_logger, clean_up):
     entry_archive = parse(test_file)[0]
     normalize_all(entry_archive)
 
