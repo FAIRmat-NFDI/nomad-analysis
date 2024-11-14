@@ -43,7 +43,7 @@ Documentation = "https://fairmat-nfdi.github.io/nomad-analysis/"
 [project.optional-dependencies]
 dev = [
     "ruff",
-    "pytest",
+    "pytest>=5.0",
     "structlog",
     "python-logstash==0.4.6",
     # "mongoengine>=0.4",
