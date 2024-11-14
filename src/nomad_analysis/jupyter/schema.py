@@ -77,7 +77,11 @@ if TYPE_CHECKING:
         BoundLogger,
     )
 
-m_package = SchemaPackage()
+m_package = SchemaPackage(
+    aliases=[
+        'nomad_analysis.schema',
+    ]
+)
 
 
 class ReferencedEntry(ArchiveSection):
