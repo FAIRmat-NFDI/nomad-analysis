@@ -262,7 +262,7 @@ def xrd_voila_analysis(input_data) -> None:  # noqa: PLR0915
         names = []
         for entry in input_data:
             if isinstance(entry.reference, ELNXRayDiffraction):
-                names.append(entry.name)
+                names.append(entry.reference.name)
         return names
 
     available_entries = get_input_entry_names(input_data)
