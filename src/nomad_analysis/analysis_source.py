@@ -260,8 +260,8 @@ def xrd_voila_analysis(input_data) -> None:  # noqa: PLR0915
         names = []
         for entry in input_data:
             # TODO: Update the class name after the new plugin mechanism is implemented
-            if entry.m_def == 'nomad_measurements.xrd.schema.ELNXRayDiffraction':
-                names.append(entry.name)
+            if entry.data.m_def == 'nomad_measurements.xrd.schema.ELNXRayDiffraction':
+                names.append(entry.data.name)
         return names
 
     available_entries = get_input_entry_names(input_data)
