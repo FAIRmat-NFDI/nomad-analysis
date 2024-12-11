@@ -78,19 +78,18 @@ def get_analysis_entry(entry_id: str, url: str = None):
 
 
 @category('XRD')
-def xrd_plot_intensity_two_theta(archive_data: dict, peak_indices=None) -> None:
+def xrd_plot_intensity_two_theta(archive, peak_indices=None) -> None:
     """
     Generates a 2D plot of intensity vs 2θ with linear x and y axis.
 
     Args:
-        archive_data (dict): Archive data of the entry.
+        archive (EntryArchive): A NOMAD entry archive.
         peak_indices (np.array): Indices of peaks found in the intensity data.
     """
-    import numpy as np
     import plotly.express as px
 
-    intensity = np.array(archive_data['results'][0]['intensity'])
-    two_theta = np.array(archive_data['results'][0]['two_theta'])
+    intensity = archive.data.results[0].intensity.magnitude
+    two_theta = archive.data.results[0].two_theta.magnitude
 
     line_linear = px.line(
         x=two_theta,
@@ -115,19 +114,18 @@ def xrd_plot_intensity_two_theta(archive_data: dict, peak_indices=None) -> None:
 
 
 @category('XRD')
-def xrd_plot_logy_intensity_two_theta(archive_data: dict, peak_indices=None) -> None:
+def xrd_plot_logy_intensity_two_theta(archive, peak_indices=None) -> None:
     """
     Generates a 2D plot of intensity vs 2θ with linear x and log y axis.
 
     Args:
-        archive_data (dict): Archive data of the entry.
+        archive (EntryArchive): A NOMAD entry archive.
         peak_indices (np.array): Indices of peaks found in the intensity data.
     """
-    import numpy as np
     import plotly.express as px
 
-    intensity = np.array(archive_data['results'][0]['intensity'])
-    two_theta = np.array(archive_data['results'][0]['two_theta'])
+    intensity = archive.data.results[0].intensity.magnitude
+    two_theta = archive.data.results[0].two_theta.magnitude
 
     line_log = px.line(
         x=two_theta,
@@ -153,23 +151,22 @@ def xrd_plot_logy_intensity_two_theta(archive_data: dict, peak_indices=None) -> 
 
 
 @category('XRD')
-def xrd_find_peaks(archive_data: dict, options: dict = None) -> dict:
+def xrd_find_peaks(archive, options: dict = None) -> dict:
     """
     Finds the peaks in the intensity vs 2θ plot.
 
     Args:
-        archive_data (dict): Archive data of the entry.
+        archive (EntryArchive): A NOMAD entry archive.
         options (dict): Options for the peak finding algorithm
             `scipy.signal.find_peaks`.
 
     Returns:
         dict: Peaks found in the intensity vs 2θ plot.
     """
-    import numpy as np
     from scipy.signal import find_peaks
 
-    intensity = np.array(archive_data['results'][0]['intensity'])
-    two_theta = np.array(archive_data['results'][0]['two_theta'])
+    intensity = archive.data.results[0].intensity.magnitude
+    two_theta = archive.data.results[0].two_theta.magnitude
 
     if options:
         peak_indices, _ = find_peaks(intensity, **options)
@@ -208,7 +205,7 @@ def xrd_save_analysis_results(
 
 @category('XRD')
 def xrd_conduct_analysis(
-    archive_data: dict,
+    archive,
     options: dict = None,
     plot: bool = True,
 ) -> None:
@@ -217,7 +214,7 @@ def xrd_conduct_analysis(
     a json file which can be used to fill `analysis_results` section.
 
     Args:
-        archive_data (dict): Archive data of the entry.
+        archive (EntryArchive): A NOMAD entry archive.
         plot (bool): If True, plots the intensity vs 2θ plot.
     """
     if options is None:
@@ -226,10 +223,10 @@ def xrd_conduct_analysis(
             'threshold': 30,
             'distance': 1,
         }
-    peaks, peak_indices = xrd_find_peaks(archive_data, options=options)
+    peaks, peak_indices = xrd_find_peaks(archive, options=options)
     if plot:
-        xrd_plot_intensity_two_theta(archive_data, peak_indices)
-        xrd_plot_logy_intensity_two_theta(archive_data, peak_indices)
+        xrd_plot_intensity_two_theta(archive, peak_indices)
+        xrd_plot_logy_intensity_two_theta(archive, peak_indices)
 
     results = peaks
 
@@ -263,8 +260,8 @@ def xrd_voila_analysis(input_data) -> None:  # noqa: PLR0915
         names = []
         for entry in input_data:
             # TODO: Update the class name after the new plugin mechanism is implemented
-            if entry['m_def'] == 'nomad_measurements.xrd.schema.ELNXRayDiffraction':
-                names.append(entry['name'])
+            if entry.m_def == 'nomad_measurements.xrd.schema.ELNXRayDiffraction':
+                names.append(entry.name)
         return names
 
     available_entries = get_input_entry_names(input_data)
@@ -377,7 +374,7 @@ def xrd_voila_analysis(input_data) -> None:  # noqa: PLR0915
             'distance': find_peak_parameters[2].value,
         }
         peaks, peak_indices = xrd_find_peaks(
-            archive_data=input_data_entry,
+            archive=input_data_entry,
             options=options,
         )
         peaks_table = pd.DataFrame(
@@ -412,8 +409,8 @@ def xrd_voila_analysis(input_data) -> None:  # noqa: PLR0915
         entry_name = dropdown.value
         entry_index = get_input_entry_names(input_data).index(entry_name)
         input_data_entry = input_data[entry_index]
-        intensity = input_data_entry['results'][0]['intensity']
-        two_theta = input_data_entry['results'][0]['two_theta']
+        intensity = input_data_entry.data.results[0].intensity.magnitude
+        two_theta = input_data_entry.data.results[0].two_theta.magnitude
         if input_data_entry:
             peaks_table = pd.DataFrame(
                 {
