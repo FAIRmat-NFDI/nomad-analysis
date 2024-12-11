@@ -88,8 +88,8 @@ def xrd_plot_intensity_two_theta(archive, peak_indices=None) -> None:
     """
     import plotly.express as px
 
-    intensity = archive.data.results[0].intensity.magnitude
-    two_theta = archive.data.results[0].two_theta.magnitude
+    intensity = archive.results[0].intensity.magnitude
+    two_theta = archive.results[0].two_theta.magnitude
 
     line_linear = px.line(
         x=two_theta,
@@ -124,8 +124,8 @@ def xrd_plot_logy_intensity_two_theta(archive, peak_indices=None) -> None:
     """
     import plotly.express as px
 
-    intensity = archive.data.results[0].intensity.magnitude
-    two_theta = archive.data.results[0].two_theta.magnitude
+    intensity = archive.results[0].intensity.magnitude
+    two_theta = archive.results[0].two_theta.magnitude
 
     line_log = px.line(
         x=two_theta,
@@ -165,8 +165,8 @@ def xrd_find_peaks(archive, options: dict = None) -> dict:
     """
     from scipy.signal import find_peaks
 
-    intensity = archive.data.results[0].intensity.magnitude
-    two_theta = archive.data.results[0].two_theta.magnitude
+    intensity = archive.results[0].intensity.magnitude
+    two_theta = archive.results[0].two_theta.magnitude
 
     if options:
         peak_indices, _ = find_peaks(intensity, **options)
@@ -257,11 +257,12 @@ def xrd_voila_analysis(input_data) -> None:  # noqa: PLR0915
         Returns:
             list: Names of the input entries.
         """
+        from nomad_measurements.xrd.schema import ELNXRayDiffraction
+
         names = []
         for entry in input_data:
-            # TODO: Update the class name after the new plugin mechanism is implemented
-            if entry.data.m_def == 'nomad_measurements.xrd.schema.ELNXRayDiffraction':
-                names.append(entry.data.name)
+            if isinstance(entry.reference, ELNXRayDiffraction):
+                names.append(entry.name)
         return names
 
     available_entries = get_input_entry_names(input_data)
@@ -344,7 +345,7 @@ def xrd_voila_analysis(input_data) -> None:  # noqa: PLR0915
     results = collections.defaultdict(None)
     entry_name = dropdown.value
     entry_index = get_input_entry_names(input_data).index(entry_name)
-    input_data_entry = input_data[entry_index]
+    input_data_entry = input_data[entry_index].reference
     with out:
         xrd_plot_logy_intensity_two_theta(input_data_entry, None)
         clear_output(wait=True)
@@ -355,7 +356,7 @@ def xrd_voila_analysis(input_data) -> None:  # noqa: PLR0915
         """
         entry_name = dropdown.value
         entry_index = get_input_entry_names(input_data).index(entry_name)
-        input_data_entry = input_data[entry_index]
+        input_data_entry = input_data[entry_index].reference
         with out:
             xrd_plot_logy_intensity_two_theta(input_data_entry, None)
             clear_output(wait=True)
@@ -366,7 +367,7 @@ def xrd_voila_analysis(input_data) -> None:  # noqa: PLR0915
         """
         entry_name = dropdown.value
         entry_index = get_input_entry_names(input_data).index(entry_name)
-        input_data_entry = input_data[entry_index]
+        input_data_entry = input_data[entry_index].reference
         find_peak_parameters[2].value = max(find_peak_parameters[2].value, 1)
         options = {
             'height': find_peak_parameters[0].value,
@@ -408,9 +409,9 @@ def xrd_voila_analysis(input_data) -> None:  # noqa: PLR0915
         """
         entry_name = dropdown.value
         entry_index = get_input_entry_names(input_data).index(entry_name)
-        input_data_entry = input_data[entry_index]
-        intensity = input_data_entry.data.results[0].intensity.magnitude
-        two_theta = input_data_entry.data.results[0].two_theta.magnitude
+        input_data_entry = input_data[entry_index].reference
+        intensity = input_data_entry.results[0].intensity.magnitude
+        two_theta = input_data_entry.results[0].two_theta.magnitude
         if input_data_entry:
             peaks_table = pd.DataFrame(
                 {
