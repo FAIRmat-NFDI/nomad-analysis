@@ -78,18 +78,18 @@ def get_analysis_entry(entry_id: str, url: str = None):
 
 
 @category('XRD')
-def xrd_plot_intensity_two_theta(archive, peak_indices=None) -> None:
+def xrd_plot_intensity_two_theta(entry, peak_indices=None) -> None:
     """
     Generates a 2D plot of intensity vs 2θ with linear x and y axis.
 
     Args:
-        archive (EntryArchive): A NOMAD entry archive.
+        entry (EntryData): A NOMAD entry data.
         peak_indices (np.array): Indices of peaks found in the intensity data.
     """
     import plotly.express as px
 
-    intensity = archive.results[0].intensity.magnitude
-    two_theta = archive.results[0].two_theta.magnitude
+    intensity = entry.results[0].intensity.magnitude
+    two_theta = entry.results[0].two_theta.magnitude
 
     line_linear = px.line(
         x=two_theta,
@@ -114,18 +114,18 @@ def xrd_plot_intensity_two_theta(archive, peak_indices=None) -> None:
 
 
 @category('XRD')
-def xrd_plot_logy_intensity_two_theta(archive, peak_indices=None) -> None:
+def xrd_plot_logy_intensity_two_theta(entry, peak_indices=None) -> None:
     """
     Generates a 2D plot of intensity vs 2θ with linear x and log y axis.
 
     Args:
-        archive (EntryArchive): A NOMAD entry archive.
+        entry (EntryData): A NOMAD entry data.
         peak_indices (np.array): Indices of peaks found in the intensity data.
     """
     import plotly.express as px
 
-    intensity = archive.results[0].intensity.magnitude
-    two_theta = archive.results[0].two_theta.magnitude
+    intensity = entry.results[0].intensity.magnitude
+    two_theta = entry.results[0].two_theta.magnitude
 
     line_log = px.line(
         x=two_theta,
@@ -151,12 +151,12 @@ def xrd_plot_logy_intensity_two_theta(archive, peak_indices=None) -> None:
 
 
 @category('XRD')
-def xrd_find_peaks(archive, options: dict = None) -> dict:
+def xrd_find_peaks(entry, options: dict = None) -> dict:
     """
     Finds the peaks in the intensity vs 2θ plot.
 
     Args:
-        archive (EntryArchive): A NOMAD entry archive.
+        entry (EntryData): A NOMAD entry data.
         options (dict): Options for the peak finding algorithm
             `scipy.signal.find_peaks`.
 
@@ -165,8 +165,8 @@ def xrd_find_peaks(archive, options: dict = None) -> dict:
     """
     from scipy.signal import find_peaks
 
-    intensity = archive.results[0].intensity.magnitude
-    two_theta = archive.results[0].two_theta.magnitude
+    intensity = entry.results[0].intensity.magnitude
+    two_theta = entry.results[0].two_theta.magnitude
 
     if options:
         peak_indices, _ = find_peaks(intensity, **options)
@@ -205,7 +205,7 @@ def xrd_save_analysis_results(
 
 @category('XRD')
 def xrd_conduct_analysis(
-    archive,
+    entry,
     options: dict = None,
     plot: bool = True,
 ) -> None:
@@ -214,7 +214,7 @@ def xrd_conduct_analysis(
     a json file which can be used to fill `analysis_results` section.
 
     Args:
-        archive (EntryArchive): A NOMAD entry archive.
+        entry (EntryData): A NOMAD entry data.
         plot (bool): If True, plots the intensity vs 2θ plot.
     """
     if options is None:
@@ -223,10 +223,10 @@ def xrd_conduct_analysis(
             'threshold': 30,
             'distance': 1,
         }
-    peaks, peak_indices = xrd_find_peaks(archive, options=options)
+    peaks, peak_indices = xrd_find_peaks(entry, options=options)
     if plot:
-        xrd_plot_intensity_two_theta(archive, peak_indices)
-        xrd_plot_logy_intensity_two_theta(archive, peak_indices)
+        xrd_plot_intensity_two_theta(entry, peak_indices)
+        xrd_plot_logy_intensity_two_theta(entry, peak_indices)
 
     results = peaks
 
@@ -375,7 +375,7 @@ def xrd_voila_analysis(input_data) -> None:  # noqa: PLR0915
             'distance': find_peak_parameters[2].value,
         }
         peaks, peak_indices = xrd_find_peaks(
-            archive=input_data_entry,
+            entry=input_data_entry,
             options=options,
         )
         peaks_table = pd.DataFrame(
