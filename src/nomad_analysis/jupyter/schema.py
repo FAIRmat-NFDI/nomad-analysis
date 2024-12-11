@@ -515,7 +515,11 @@ class ELNJupyterAnalysis(JupyterAnalysis, EntryData):
             cells.append(nbf.v4.new_code_cell(source=comment + code))
 
         if self.analysis_type == 'XRD':
-            code = '# Pre-defined block\n' '\n' 'xrd_voila_analysis(input_data)\n'
+            code = (
+                '# Pre-defined block\n'
+                '\n'
+                'xrd_voila_analysis(analysis.data.inputs)\n'
+            )
             cells.append(nbf.v4.new_code_cell(source=code))
 
         return cells
