@@ -152,13 +152,13 @@ def create_entry_with_api(
         params['overwrite_if_exists'] = True
 
     if not isinstance(section, EntryArchive):
-        entry = EntryArchive(data=section)
+        json_dict = {
+            'data': section.m_to_dict(),
+        }
     else:
-        entry = section
+        json_dict = section.m_to_dict()
 
-    response = put_nomad_request(
-        url=endpoint, json_dict=entry.m_to_dict(), params=params
-    )
+    response = put_nomad_request(url=endpoint, json_dict=json_dict, params=params)
 
     reference = get_reference(
         upload_id=response['processing']['entry']['upload_id'],
