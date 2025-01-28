@@ -158,9 +158,7 @@ def create_entry_with_api(
     else:
         json_dict = section.m_to_dict()
 
-    response = put_nomad_request(
-        url=endpoint, json_dict=json_dict, params=params
-    )
+    response = put_nomad_request(url=endpoint, json_dict=json_dict, params=params)
 
     reference = get_reference(
         upload_id=response['processing']['entry']['upload_id'],
