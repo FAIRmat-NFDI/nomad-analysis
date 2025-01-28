@@ -67,8 +67,7 @@ def get_analysis_entry(entry_id: str, url: str = None):
 
     if not entry_list:
         print(
-            f'Analysis entry with id "{entry_id}" not '
-            f'found at the given URL "{url}".'
+            f'Analysis entry with id "{entry_id}" not found at the given URL "{url}".'
         )
         return None
     if len(entry_list) > 1:
@@ -303,8 +302,7 @@ def xrd_voila_analysis(input_data) -> None:  # noqa: PLR0915
     )
 
     no_input_alert = widgets.HTML(
-        '<p style="color:red;">No input entry of class'
-        '`ELNXRayDiffraction` found.</p>'
+        '<p style="color:red;">No input entry of class`ELNXRayDiffraction` found.</p>'
     )
     no_input_alert.layout.visibility = 'hidden'
     no_peak_alert = widgets.HTML(
