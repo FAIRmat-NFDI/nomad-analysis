@@ -52,7 +52,6 @@ from nomad.datamodel.metainfo.annotations import (
 )
 from nomad.datamodel.metainfo.basesections import (
     Analysis,
-    AnalysisResult,
     SectionReference,
 )
 from nomad.metainfo import (
@@ -60,7 +59,6 @@ from nomad.metainfo import (
     Quantity,
     SchemaPackage,
     Section,
-    SubSection,
 )
 
 from nomad_analysis.utils import (
@@ -114,62 +112,7 @@ class JupyterAnalysisCategory(EntryDataCategory):
     )
 
 
-class JupyterAnalysisResult(AnalysisResult):
-    """
-    Section for collecting Jupyter notebook analysis results.
-    It is a non-editable section that is populated once the processing is.
-
-    TODO: One can also create a custom schema for results and
-    define it as a sub-section here.
-    """
-
-    m_def = Section(
-        label='Jupyter Notebook Analysis Results',
-    )
-    connection_status = Quantity(
-        type=str,
-        default='Not connected',
-        description='Status of connection with Jupyter notebook',
-    )
-
-    def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger'):
-        """
-        The normalize function for `JupyterAnalysisResult` section.
-
-        Args:
-            archive (EntryArchive): The archive containing the section.
-            logger (BoundLogger): A structlog logger.
-        """
-        super().normalize(archive, logger)
-
-
-class JupyterAnalysis(Analysis):
-    """
-    Generic class for Jupyter notebook analysis.
-    """
-
-    m_def = Section()
-    inputs = SubSection(
-        section_def=SectionReference,
-        description='The input sections for the analysis',
-    )
-    outputs = SubSection(
-        section_def=SectionReference,
-        description='The result section for the analysis',
-    )
-
-    def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger'):
-        """
-        The normalize function for `JupyterAnalysis` section.
-
-        Args:
-            archive (EntryArchive): The archive containing the section.
-            logger (BoundLogger): A structlog logger.
-        """
-        super().normalize(archive, logger)
-
-
-class ELNJupyterAnalysis(JupyterAnalysis, EntryData):
+class ELNJupyterAnalysis(Analysis, EntryData):
     """
     Base section for ELN Jupyter notebook analysis.
     """
