@@ -402,13 +402,5 @@ class AutoXRDAnalysis(Schema):
         repeats=True,
     )
 
-    def normalize(self, archive, logger):
-        super().normalize(archive, logger)
-        # use the normalization function defined above
-        print('Normalizing AutoXRDAnalysis')
-        if self.auto_xrd_model_entry is not None:
-            if self.analysis_settings is not None:
-                analyze_pattern(self, archive, logger)
-
 
 m_package.__init_metainfo__()
