@@ -175,11 +175,11 @@ def analyze_pattern(self, archive: 'EntryArchive', logger: 'BoundLogger') -> Non
 
         # Show backup predictions
         if show_indiv:
-            print(f"XRD predicted phases: {results['XRD']['phases'][idx]}")
-            print(f"XRD confidence: {results['XRD']['confs'][idx]}")
+            print(f'XRD predicted phases: {results["XRD"]["phases"][idx]}')
+            print(f'XRD confidence: {results["XRD"]["confs"][idx]}')
             if inc_pdf:
-                print(f"PDF predicted phases: {results['PDF']['phases'][idx]}")
-                print(f"PDF confidence: {results['PDF']['confs'][idx]}")
+                print(f'PDF predicted phases: {results["PDF"]["phases"][idx]}')
+                print(f'PDF confidence: {results["PDF"]["confs"][idx]}')
 
         # Plot the results
         phasenames = [f'{phase}.cif' for phase in phase_set]
