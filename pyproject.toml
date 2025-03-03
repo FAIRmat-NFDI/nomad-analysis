@@ -20,7 +20,7 @@ name = "nomad-analysis"
 dynamic = ["version"]
 description = "A NOMAD plugin for analysis of FAIR data."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [
     { name = "Sarthak Kapoor", email = "sarthak.kapoor@physik.hu-berlin.de" },
     { name = "Jose M. Pizarro", email = "jose.pizarro@physik.hu-berlin.de" },
