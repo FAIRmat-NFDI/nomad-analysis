@@ -10,6 +10,7 @@ classifiers = [
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
+    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -19,7 +20,7 @@ name = "nomad-analysis"
 dynamic = ["version"]
 description = "A NOMAD plugin for analysis of FAIR data."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 authors = [
     { name = "Sarthak Kapoor", email = "sarthak.kapoor@physik.hu-berlin.de" },
     { name = "Jose M. Pizarro", email = "jose.pizarro@physik.hu-berlin.de" },
