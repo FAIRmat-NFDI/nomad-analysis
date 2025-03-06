@@ -13,15 +13,12 @@ if TYPE_CHECKING:
 import numpy as np
 from ase.io import read
 from matid import SymmetryAnalyzer  # pylint: disable=import-error
-from nomad.config import config
 from nomad.datamodel.data import Schema
 from nomad.datamodel.metainfo.annotations import ELNAnnotation, ELNComponentEnum
 from nomad.datamodel.results import Material, SymmetryNew, System
 from nomad.metainfo import Quantity, SchemaPackage
 from nomad.normalizing.common import nomad_atoms_from_ase_atoms
 from nomad.normalizing.topology import add_system, add_system_info
-
-configuration = config.get_plugin_entry_point('nomad_analysis.auto_xrd:auto_xrd')
 
 m_package = SchemaPackage()
 
