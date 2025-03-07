@@ -20,12 +20,15 @@ import os.path
 
 import pytest
 from nomad.client import normalize_all, parse
+from nomad.datamodel import all_metainfo_packages
 
 test_archives_dir = os.path.join(os.path.dirname(__file__), 'data')
 test_archives_path = []
 for path in os.listdir(test_archives_dir):
     if path.endswith('.archive.yaml'):
         test_archives_path.append(os.path.join(os.path.dirname(__file__), 'data', path))
+
+all_metainfo_packages()
 
 
 @pytest.mark.parametrize('test_file', test_archives_path)

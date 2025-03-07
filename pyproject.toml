@@ -42,6 +42,7 @@ Documentation = "https://fairmat-nfdi.github.io/nomad-analysis/"
 
 [project.optional-dependencies]
 dev = [
+    "nomad-lab[infrastructure]>=1.3.0",
     "ruff",
     "pytest>=5.0",
     "structlog",
@@ -115,5 +116,7 @@ skip = [".github/*"]
 [project.entry-points.'nomad.plugin']
 general_analysis_schema = "nomad_analysis.general:schema"
 jupyter_analysis_schema = "nomad_analysis.jupyter:schema"
+auto_xrd_analysis_schema = "nomad_analysis.auto_xrd:auto_xrd_analysis"
+auto_xrd_schema = "nomad_analysis.auto_xrd:auto_xrd"
 
 [tool.setuptools_scm]
