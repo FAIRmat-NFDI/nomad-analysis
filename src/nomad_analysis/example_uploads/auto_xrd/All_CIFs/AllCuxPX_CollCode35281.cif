@@ -1,0 +1,93 @@
+
+#(C) 2024 by FIZ Karlsruhe - Leibniz Institute for Information Infrastructure.  All rights reserved.
+data_35281-ICSD
+_database_code_ICSD 35281
+_audit_creation_date 1982-12-31
+_chemical_name_common 'Copper(I) phosphide (2/7)'
+_chemical_formula_structural 'Cu2 P7'
+_chemical_formula_sum 'Cu2 P7'
+_exptl_crystal_density_diffrn 3.56
+_citation_title
+
+;
+Darstellung,Eigenschaften und Kristallstruktur von Cu2 P7 und
+Strukturverfeinerungen von Cu P2 und Ag P2
+;
+loop_
+_citation_id
+_citation_journal_full
+_citation_year
+_citation_journal_volume
+_citation_page_first
+_citation_page_last
+_citation_journal_id_ASTM
+primary 'Zeitschrift fuer Anorganische und Allgemeine Chemie (1950) (DE)' 1982
+491 225 236 ZAACAB
+loop_
+_citation_author_citation_id
+_citation_author_name
+primary 'Moeller, M.H.'
+primary 'Jeitschko, W.'
+_cell_length_a 12.658(2)
+_cell_length_b 7.256(1)
+_cell_length_c 14.630(2)
+_cell_angle_alpha 90.
+_cell_angle_beta 107.46(1)
+_cell_angle_gamma 90.
+_cell_volume 1281.8
+_cell_formula_units_Z 8
+_space_group_name_H-M_alt 'C 1 2/m 1'
+_space_group_IT_number 12
+loop_
+_space_group_symop_id
+_space_group_symop_operation_xyz
+1 '-x, y, -z'
+2 '-x, -y, -z'
+3 'x, -y, z'
+4 'x, y, z'
+5 '-x+1/2, y+1/2, -z'
+6 '-x+1/2, -y+1/2, -z'
+7 'x+1/2, -y+1/2, z'
+8 'x+1/2, y+1/2, z'
+loop_
+_atom_type_symbol
+_atom_type_oxidation_number
+Cu1+ 1
+P0+ -0.286
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_symmetry_multiplicity
+_atom_site_Wyckoff_symbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_B_iso_or_equiv
+_atom_site_occupancy
+Cu1 Cu1+ 4 i 0.0346(1) 0 0.3528(1) . 1.
+Cu2 Cu1+ 4 i 0.1570(1) 0 0.9683(1) . 1.
+Cu3 Cu1+ 4 i 0.3836(1) 0 0.2056(1) . 1.
+Cu4 Cu1+ 4 i 0.2805(1) 0 0.5717(1) . 1.
+P1 P0+ 4 i 0.2249(2) 0 0.4050(2) 0.47 1.
+P2 P0+ 4 i 0.1060(2) 0 0.7970(2) 0.51 1.
+P3 P0+ 4 i 0.3480(2) 0 0.0426(2) 0.46 1.
+P4 P0+ 4 i 0.4714(2) 0 0.6442(2) 0.46 1.
+P5 P0+ 8 j 0.0916(1) 0.2666(2) 0.0198(1) 0.43 1.
+P6 P0+ 8 j 0.4817(1) 0.2447(2) 0.4221(1) 0.37 1.
+P7 P0+ 8 j 0.1174(1) 0.3430(2) 0.1712(1) 0.51 1.
+P8 P0+ 8 j 0.2936(1) 0.2665(2) 0.2236(1) 0.47 1.
+P9 P0+ 8 j 0.2997(1) 0.2570(2) 0.3771(1) 0.39 1.
+loop_
+_atom_site_aniso_label
+_atom_site_aniso_type_symbol
+_atom_site_aniso_U_11
+_atom_site_aniso_U_22
+_atom_site_aniso_U_33
+_atom_site_aniso_U_12
+_atom_site_aniso_U_13
+_atom_site_aniso_U_23
+Cu1 Cu1+ 0.0065(4) 0.0074(4) 0.0132(5) 0 0.0030(4) 0
+Cu2 Cu1+ 0.0072(4) 0.0065(4) 0.0094(4) 0 0.0022(3) 0
+Cu3 Cu1+ 0.0131(5) 0.0067(4) 0.0083(4) 0 0.0028(4) 0
+Cu4 Cu1+ 0.0071(4) 0.0065(4) 0.0091(4) 0 0.0042(3) 0
+#End of TTdata_35281-ICSD

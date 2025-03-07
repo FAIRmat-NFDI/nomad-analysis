@@ -1,0 +1,120 @@
+
+#(C) 2024 by FIZ Karlsruhe - Leibniz Institute for Information Infrastructure.  All rights reserved.
+data_235198-ICSD
+_database_code_ICSD 235198
+_audit_creation_date 2020-02-01
+_chemical_name_common 'Copper phosphide (2.848/1)'
+_chemical_formula_structural 'Cu2.848 P1'
+_chemical_formula_sum 'Cu2.848 P1'
+_exptl_crystal_density_diffrn 7.18
+_diffrn_ambient_temperature 80.
+_citation_title
+
+;
+Low-temperature tailoring of copper-deficient Cu3-xP. Electric properties,
+phase transitions, and performance in lithium-ion batteries
+;
+loop_
+_citation_id
+_citation_journal_full
+_citation_year
+_citation_journal_volume
+_citation_page_first
+_citation_page_last
+_citation_journal_id_ASTM
+primary 'Chemistry of Materials' 2018 30 7111 7123 CMATEX
+loop_
+_citation_author_citation_id
+_citation_author_name
+primary 'Wolff, Alexander'
+primary 'Doert, Thomas'
+primary 'Hunger, Jens'
+primary 'Kaiser, Martin'
+primary 'Pallmann, Julia'
+primary 'Reinhold, Romy'
+primary 'Yogendra, Sivatmeehan'
+primary 'Giebeler, Lars'
+primary 'Sichelschmidt, Joerg'
+primary 'Schnelle, Walter'
+primary 'Whiteside, Rachel'
+primary 'Gunaratne, H.Q. Nimal'
+primary 'Nockemann, Peter'
+primary 'Weigand, Jan J.'
+primary 'Brunner, Eike'
+primary 'Ruck, Michael'
+_cell_length_a 13.8000(10)
+_cell_length_b 13.8000(10)
+_cell_length_c 7.1320(10)
+_cell_angle_alpha 90.
+_cell_angle_beta 90.
+_cell_angle_gamma 120.
+_cell_volume 1176.25
+_cell_formula_units_Z 24
+_space_group_name_H-M_alt 'P 63 c m'
+_space_group_IT_number 185
+loop_
+_space_group_symop_id
+_space_group_symop_operation_xyz
+1 'x, x-y, z+1/2'
+2 '-x+y, y, z+1/2'
+3 '-y, -x, z+1/2'
+4 'x-y, x, z+1/2'
+5 'y, -x+y, z+1/2'
+6 '-x, -y, z+1/2'
+7 '-x, -x+y, z'
+8 'x-y, -y, z'
+9 'y, x, z'
+10 '-x+y, -x, z'
+11 '-y, x-y, z'
+12 'x, y, z'
+loop_
+_atom_type_symbol
+_atom_type_oxidation_number
+Cu1+ 1
+P3- -2.848
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_symmetry_multiplicity
+_atom_site_Wyckoff_symbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_U_iso_or_equiv
+_atom_site_occupancy
+Cu1 Cu1+ 2 a 0 0 -0.001593 0.0036(3) 1
+Cu2 Cu1+ 6 c 0.50197(8) 0 0.0060(2) 0.0083(2) 1
+Cu3 Cu1+ 4 b 0.666667 0.333333 0.0707(4) 0.0239(6) 1
+Cu4 Cu1+ 12 d 0.16582(6) 0.33163(4) 0.1329(2) 0.0082(2) 1
+Cu5 Cu1+ 6 c 0.3673(5) 0 0.7496(10) 0.004 0.391(2)
+Cu6 Cu1+ 6 c 0.85993(6) 0 0.7466(2) 0.0067(2) 1
+Cu7 Cu1+ 12 d 0.35914(6) 0.50906(5) 0.7454(2) 0.0119(2) 1
+Cu8 Cu1+ 6 c 0.31650(7) 0 0.4032(3) 0.0110(2) 1
+Cu9 Cu1+ 6 c 0.80519(7) 0 0.3941(3) 0.0129(3) 1
+Cu10 Cu1+ 12 d 0.30842(6) 0.48229(7) 0.3953(3) 0.0186(3) 1
+P1 P3- 6 c 0.33662(15) 0 0.0720(4) 0.0049(4) 1
+P2 P3- 6 c 0.83305(15) 0 0.0708(4) 0.0031(4) 1
+P3 P3- 12 d 0.33132(12) 0.49752(12) 0.0697(4) 0.0039(4) 1
+loop_
+_atom_site_aniso_label
+_atom_site_aniso_type_symbol
+_atom_site_aniso_U_11
+_atom_site_aniso_U_22
+_atom_site_aniso_U_33
+_atom_site_aniso_U_12
+_atom_site_aniso_U_13
+_atom_site_aniso_U_23
+Cu1 Cu1+ 0.0043(6) 0.004231 0.0024(5) 0.002115 0 0
+Cu2 Cu1+ 0.0050(3) 0.0045(3) 0.0154(5) 0.00236 0.0021(3) 0
+Cu3 Cu1+ 0.0056(5) 0.005551 0.0606(16) 0.002776 0 0
+Cu4 Cu1+ 0.0039(3) 0.0039(2) 0.0166(4) 0.0018(2) -0.0006(2) -0.0006(3)
+Cu5 Cu1+ 0.005013 0.003959 0.001385 0.001025 0.000114 0
+Cu6 Cu1+ 0.0071(3) 0.0061(3) 0.0065(4) 0.002981 0.0019(3) 0
+Cu7 Cu1+ 0.0100(3) 0.0142(3) 0.0056(3) 0.0016(2) 0.0017(3) 0.0037(3)
+Cu8 Cu1+ 0.0096(3) 0.0161(3) 0.0095(5) 0.008008 0.0022(4) 0
+Cu9 Cu1+ 0.0154(3) 0.0182(4) 0.0060(4) 0.009039 -0.0007(4) 0
+Cu10 Cu1+ 0.0090(3) 0.0404(5) 0.0057(3) 0.0117(3) -0.0016(3) -0.0066(5)
+P1 P3- 0.0045(6) 0.0042(6) 0.0058(7) 0.002087 0.0003(5) 0
+P2 P3- 0.0033(6) 0.0042(6) 0.0021(6) 0.002088 0.0000(4) 0
+P3 P3- 0.0058(5) 0.0051(5) 0.0016(4) 0.0032(4) -0.0018(4) -0.0014(4)
+#End of TTdata_235198-ICSD
