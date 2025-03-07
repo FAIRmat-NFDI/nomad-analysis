@@ -13,9 +13,9 @@ from nomad.metainfo import (
     Section,
     SubSection,
 )
-from nomad_auto_xrd.schema_packages.model import AutoXRDModel
 from nomad_measurements.xrd.schema import ELNXRayDiffraction
 
+from nomad_analysis.auto_xrd.auto_xrd import AutoXRDModel
 from nomad_analysis.general.schema import AnalysisResult
 from nomad_analysis.jupyter.schema import ELNJupyterAnalysis
 
@@ -142,7 +142,7 @@ class AutoXRDAnalysis(ELNJupyterAnalysis):
         notebook_path = os.path.join(
             package_path, 'jupyter_notebooks', 'auto-xrd-analysis.ipynb'
         )
-        with open(notebook_path, 'r') as f:
+        with open(notebook_path) as f:
             nb = nbformat.read(f, as_version=4)
         for cell in nb.cells:
             if cell.cell_type == 'code':
