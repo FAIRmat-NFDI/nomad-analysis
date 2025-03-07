@@ -2,6 +2,7 @@ from nomad.datamodel import ArchiveSection
 from nomad.datamodel.metainfo.annotations import ELNAnnotation
 from nomad.datamodel.metainfo.basesections import ElementalComposition, SectionReference
 from nomad.metainfo import Quantity, SchemaPackage, SubSection
+
 from nomad_analysis.jupyter.schema import ELNJupyterAnalysis
 
 m_package = SchemaPackage()
