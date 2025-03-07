@@ -118,5 +118,7 @@ general_analysis_schema = "nomad_analysis.general:schema"
 jupyter_analysis_schema = "nomad_analysis.jupyter:schema"
 auto_xrd_analysis_schema = "nomad_analysis.auto_xrd:auto_xrd_analysis"
 auto_xrd_schema = "nomad_analysis.auto_xrd:auto_xrd"
+auto_xrd_app = "nomad_analysis.apps:auto_xrd_models_app"
+auto_xrd_example_upload = "nomad_analysis.example_uploads:auto_xrd_example_upload"
 
 [tool.setuptools_scm]
