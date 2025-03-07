@@ -1,6 +1,6 @@
 import yaml
 
-auto_xrd_models_app = yaml.safe_load(
+models_app = yaml.safe_load(
     """
 label: Auto XRD Models
 path: auto-xrd-models

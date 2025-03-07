@@ -1,9 +1,9 @@
 from nomad.config.models.plugins import AppEntryPoint
 
-from nomad_analysis.apps.auto_xrd_models_app import auto_xrd_models_app
+from nomad_analysis.apps.auto_xrd import models_app
 
-app_entry_point = AppEntryPoint(
+auto_xrd_models_app = AppEntryPoint(
     name='Auto XRD Models',
     description='Search auto XRD models',
-    app=auto_xrd_models_app,
+    app=models_app,
 )
