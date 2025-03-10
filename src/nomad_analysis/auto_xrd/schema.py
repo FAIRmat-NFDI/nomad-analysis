@@ -175,42 +175,26 @@ class AutoXRDModel(Schema):
     [XRD-AutoAnalyzer](https://github.com/njszym/XRD-AutoAnalyzer) model.
     """
 
-    xrd_model_file = Quantity(  # is this the path to the trained model?
+    models = Quantity(
         type=str,
-        description='Path to the HDF5 file containing the XRD data.',
+        shape=['*'],
+        description='Path to the trained model file.',
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.FileEditQuantity,
         ),
     )
-
-    wandb_run_url_xrd = Quantity(
+    wandb_run_urls = Quantity(
         type=str,
-        description='URL to the W&B run containing the XRD model.',
-        a_eln=ELNAnnotation(
-            component=ELNComponentEnum.URLEditQuantity,
-        ),
-    )
-
-    pdf_model_file = Quantity(
-        type=str,
-        description='Path to the HDF5 file containing the XRD data.',
-        a_eln=ELNAnnotation(
-            component=ELNComponentEnum.FileEditQuantity,
-        ),
-    )
-
-    wandb_run_url_pdf = Quantity(
-        type=str,
+        shape=['*'],
         description='URL to the W&B run containing the PDF model.',
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.URLEditQuantity,
         ),
     )
-
-    cif_files = Quantity(
+    structure_files = Quantity(
         type=str,
         shape=['*'],
-        description='List of paths to CIF files containing crystal structures.',
+        description='Path to structure file (CIF) containing crystal structure.',
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.FileEditQuantity,
         ),
@@ -233,15 +217,21 @@ class AutoXRDModel(Schema):
 
     def normalize(self, archive: 'ArchiveSection', logger: 'BoundLogger'):
         super().normalize(archive, logger)
-        if self.cif_files is not None:
+        if self.structure_files is not None:
             # Read the CIF files and convert them into ase atoms
             ase_atoms_list = []
-            for cif_file in self.cif_files:
+            for cif_file in self.structure_files:
+                if not cif_file.endswith('.cif'):
+                    logger.warn(
+                        f'Cannot parse structure file: {cif_file}. '
+                        'Should be a "*.cif" file.'
+                    )
+                    continue
                 with archive.m_context.raw_file(cif_file) as file:
                     try:
                         ase_atoms_list.append(read(file.name))
                     except RuntimeError:
-                        logger.warn(f'Cannot parse cif file: {cif_file}')
+                        logger.warn(f'Cannot parse cif file: {cif_file}.')
 
             # Let's save the composition and structure into archive.results.material
             if not archive.results.material:
@@ -253,8 +243,9 @@ class AutoXRDModel(Schema):
                 elements.update(ase_atoms.get_chemical_symbols())
             archive.results.material.elements = list(elements)
 
-            # Create a System: this is a NOMAD specific data structure for storing structural  # noqa: E501
-            # and chemical information that is suitable for both experiments and simulations.  # noqa: E501
+            # Create a System: this is a NOMAD specific data structure for
+            # storing structural and chemical information that is suitable for both
+            # experiments and simulations.
             topology = {}
             for ase_atoms in ase_atoms_list:
                 symmetry = SymmetryNew()
