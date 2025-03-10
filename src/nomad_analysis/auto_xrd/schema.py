@@ -85,57 +85,10 @@ class CompositionSpace(ArchiveSection):
             self.name = '-'.join(elements)
 
 
-class AutoXRDModel(Schema):
+class SimulationSettings(ArchiveSection):
     """
-    A schema for hosting data from an
-    [XRD-AutoAnalyzer](https://github.com/njszym/XRD-AutoAnalyzer) model.
+    A schema for the settings for simulating XRD patterns.
     """
-
-    composition_space = SubSection(
-        section_def=CompositionSpace,
-        description='The composition space for which the model is trained.',
-    )
-
-    xrd_model_file = Quantity(  # is this the path to the trained model?
-        type=str,
-        description='Path to the HDF5 file containing the XRD data.',
-        a_eln=ELNAnnotation(
-            component=ELNComponentEnum.FileEditQuantity,
-        ),
-    )
-
-    wandb_run_url_xrd = Quantity(
-        type=str,
-        description='URL to the W&B run containing the XRD model.',
-        a_eln=ELNAnnotation(
-            component=ELNComponentEnum.URLEditQuantity,
-        ),
-    )
-
-    pdf_model_file = Quantity(
-        type=str,
-        description='Path to the HDF5 file containing the XRD data.',
-        a_eln=ELNAnnotation(
-            component=ELNComponentEnum.FileEditQuantity,
-        ),
-    )
-
-    wandb_run_url_pdf = Quantity(
-        type=str,
-        description='URL to the W&B run containing the PDF model.',
-        a_eln=ELNAnnotation(
-            component=ELNComponentEnum.URLEditQuantity,
-        ),
-    )
-
-    cif_files = Quantity(
-        type=str,
-        shape=['*'],
-        description='List of paths to CIF files containing crystal structures.',
-        a_eln=ELNAnnotation(
-            component=ELNComponentEnum.FileEditQuantity,
-        ),
-    )
 
     max_texture = Quantity(
         type=np.float64,
@@ -226,13 +179,9 @@ class AutoXRDModel(Schema):
             component=ELNComponentEnum.BoolEditQuantity,
         ),
     )
-    inc_pdf = Quantity(
-        type=bool,
-        description='Include PDF flag.',
-        a_eln=ELNAnnotation(
-            component=ELNComponentEnum.BoolEditQuantity,
-        ),
-    )
+
+
+class TrainingSettings(ArchiveSection):
     num_epochs = Quantity(
         type=int,
         description='Number of training epochs.',
@@ -246,6 +195,74 @@ class AutoXRDModel(Schema):
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.NumberEditQuantity,
         ),
+    )
+
+
+class AutoXRDModel(Schema):
+    """
+    A schema for hosting data from an
+    [XRD-AutoAnalyzer](https://github.com/njszym/XRD-AutoAnalyzer) model.
+    """
+
+    xrd_model_file = Quantity(  # is this the path to the trained model?
+        type=str,
+        description='Path to the HDF5 file containing the XRD data.',
+        a_eln=ELNAnnotation(
+            component=ELNComponentEnum.FileEditQuantity,
+        ),
+    )
+
+    wandb_run_url_xrd = Quantity(
+        type=str,
+        description='URL to the W&B run containing the XRD model.',
+        a_eln=ELNAnnotation(
+            component=ELNComponentEnum.URLEditQuantity,
+        ),
+    )
+
+    pdf_model_file = Quantity(
+        type=str,
+        description='Path to the HDF5 file containing the XRD data.',
+        a_eln=ELNAnnotation(
+            component=ELNComponentEnum.FileEditQuantity,
+        ),
+    )
+
+    wandb_run_url_pdf = Quantity(
+        type=str,
+        description='URL to the W&B run containing the PDF model.',
+        a_eln=ELNAnnotation(
+            component=ELNComponentEnum.URLEditQuantity,
+        ),
+    )
+
+    cif_files = Quantity(
+        type=str,
+        shape=['*'],
+        description='List of paths to CIF files containing crystal structures.',
+        a_eln=ELNAnnotation(
+            component=ELNComponentEnum.FileEditQuantity,
+        ),
+    )
+    inc_pdf = Quantity(
+        type=bool,
+        description='Include PDF flag.',
+        a_eln=ELNAnnotation(
+            component=ELNComponentEnum.BoolEditQuantity,
+        ),
+    )
+
+    composition_space = SubSection(
+        section_def=CompositionSpace,
+        description='The composition space for which the model is trained.',
+    )
+    simulation_settings = SubSection(
+        section_def='SimulationSettings',
+        description='Settings for simulating XRD patterns.',
+    )
+    training_settings = SubSection(
+        section_def='TrainingSettings',
+        description='Settings for training the model.',
     )
 
     def normalize(self, archive: 'ArchiveSection', logger: 'BoundLogger'):
