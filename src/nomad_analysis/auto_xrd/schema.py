@@ -28,12 +28,12 @@ from matid import SymmetryAnalyzer
 from nomad.datamodel import ArchiveSection
 from nomad.datamodel.data import Schema
 from nomad.datamodel.metainfo.annotations import (
+    BrowserAnnotation,
     ELNAnnotation,
     ELNComponentEnum,
     Filter,
     SectionProperties,
 )
-from nomad.datamodel.metainfo.basesections import ElementalComposition, SectionReference
 from nomad.datamodel.results import Material, SymmetryNew, System
 from nomad.metainfo import (
     Quantity,
@@ -45,13 +45,12 @@ from nomad.normalizing.common import nomad_atoms_from_ase_atoms
 from nomad.normalizing.topology import add_system, add_system_info
 
 from nomad_analysis.general.schema import AnalysisResult
+from nomad_analysis.jupyter.schema import ELNJupyterAnalysis
 
 if TYPE_CHECKING:
     from structlog.stdlib import (
         BoundLogger,
     )
-
-from nomad_analysis.jupyter.schema import ELNJupyterAnalysis
 
 m_package = SchemaPackage()
 
@@ -182,6 +181,7 @@ class AutoXRDModel(Schema):
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.FileEditQuantity,
         ),
+        a_browser=BrowserAnnotation(adaptor='RawFileAdaptor'),
     )
     wandb_run_urls = Quantity(
         type=str,
@@ -198,6 +198,7 @@ class AutoXRDModel(Schema):
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.FileEditQuantity,
         ),
+        a_browser=BrowserAnnotation(adaptor='RawFileAdaptor'),
     )
     inc_pdf = Quantity(
         type=bool,
