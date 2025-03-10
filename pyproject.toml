@@ -53,6 +53,9 @@ dev = [
     # "fastapi<0.100",
     # "zipstream-new==1.1.5",
 ]
+jupyter = [
+    "nomad-auto-xrd @ git+https://github.com/FAIRmat-NFDI/nomad-auto-xrd.git#main",
+]
 
 [tool.uv]
 index-url = "https://gitlab.mpcdf.mpg.de/api/v4/projects/2187/packages/pypi/simple"
