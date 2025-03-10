@@ -34,6 +34,7 @@ from nomad.datamodel.metainfo.annotations import (
     Filter,
     SectionProperties,
 )
+from nomad.datamodel.metainfo.basesections import SectionReference
 from nomad.datamodel.results import Material, SymmetryNew, System
 from nomad.metainfo import (
     Quantity,
@@ -170,10 +171,16 @@ class TrainingSettings(ArchiveSection):
 
 class AutoXRDModel(Schema):
     """
-    A schema for hosting data from an
-    [XRD-AutoAnalyzer](https://github.com/njszym/XRD-AutoAnalyzer) model.
+    Section for describing an auto XRD model.
     """
 
+    m_def = Section(
+        description="""
+        Based on the structure files (CIF files) added, XRD patterns are simulated
+        for different phase compositions and structures. The simulated XRD patterns are
+        then used to train a machine learning model to predict the phase composition
+        and structure from the XRD data.""",
+    )
     models = Quantity(
         type=str,
         shape=['*'],
@@ -200,9 +207,11 @@ class AutoXRDModel(Schema):
         ),
         a_browser=BrowserAnnotation(adaptor='RawFileAdaptor'),
     )
-    inc_pdf = Quantity(
+    includes_pdf = Quantity(
         type=bool,
-        description='Include PDF flag.',
+        description='Flag to indicate if an additional model was trained using the '
+        'virtual pairwise distribution functions or PDFs computed through a Fourier '
+        'transform of the simulated XRD patterns.',
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.BoolEditQuantity,
         ),
