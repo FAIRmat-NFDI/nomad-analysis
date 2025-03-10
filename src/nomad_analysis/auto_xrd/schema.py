@@ -56,35 +56,6 @@ from nomad_analysis.jupyter.schema import ELNJupyterAnalysis
 m_package = SchemaPackage()
 
 
-class CompositionSpace(ArchiveSection):
-    """
-    Section for describing the composition space for which the model is trained.
-    """
-
-    m_section = Section(
-        description='The composition space for which the model is trained. Includes a '
-        'list of elemental compositions.',
-    )
-    name = Quantity(
-        type=str,
-        description='A descriptor for the composition space.',
-        a_eln=dict(component='StringEditQuantity'),
-    )
-    element_composition = SubSection(
-        section_def=ElementalComposition,
-        description='The elemental composition of the composition space.',
-        repeats=True,
-    )
-
-    def normalize(self, archive, logger):
-        super().normalize(archive, logger)
-        if self.element_composition is not None:
-            # construct a short description of the composition space
-            elements = [c.element for c in self.element_composition]
-            elements = sorted(elements)
-            self.name = '-'.join(elements)
-
-
 class SimulationSettings(ArchiveSection):
     """
     A schema for the settings for simulating XRD patterns.
@@ -250,11 +221,6 @@ class AutoXRDModel(Schema):
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.BoolEditQuantity,
         ),
-    )
-
-    composition_space = SubSection(
-        section_def=CompositionSpace,
-        description='The composition space for which the model is trained.',
     )
     simulation_settings = SubSection(
         section_def='SimulationSettings',
