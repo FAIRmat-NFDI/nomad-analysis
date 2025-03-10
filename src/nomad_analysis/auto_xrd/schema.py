@@ -57,6 +57,14 @@ m_package = SchemaPackage()
 
 
 class CompositionSpace(ArchiveSection):
+    """
+    Section for describing the composition space for which the model is trained.
+    """
+
+    m_section = Section(
+        description='The composition space for which the model is trained. Includes a '
+        'list of elemental compositions.',
+    )
     name = Quantity(
         type=str,
         description='A descriptor for the composition space.',
@@ -82,6 +90,11 @@ class AutoXRDModel(Schema):
     A schema for hosting data from an
     [XRD-AutoAnalyzer](https://github.com/njszym/XRD-AutoAnalyzer) model.
     """
+
+    composition_space = SubSection(
+        section_def=CompositionSpace,
+        description='The composition space for which the model is trained.',
+    )
 
     xrd_model_file = Quantity(  # is this the path to the trained model?
         type=str,
