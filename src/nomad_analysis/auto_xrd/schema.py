@@ -248,6 +248,15 @@ class AutoXRDModel(Schema):
         then used to train a machine learning model to predict the phase composition
         and structure from the XRD data.""",
     )
+    working_directory = Quantity(
+        type=str,
+        description='Path to the directory containing the simulated data and trained '
+        'models.',
+        default='nomad_auto_xrd',
+        a_eln=ELNAnnotation(
+            component=ELNComponentEnum.StringEditQuantity,
+        ),
+    )
     models = Quantity(
         type=str,
         shape=['*'],
