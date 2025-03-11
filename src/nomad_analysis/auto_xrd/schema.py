@@ -61,6 +61,15 @@ class SimulationSettings(ArchiveSection):
     A schema for the settings for simulating XRD patterns.
     """
 
+    structure_files = Quantity(
+        type=str,
+        shape=['*'],
+        description='Path to structure file (CIF) containing crystal structure.',
+        a_eln=ELNAnnotation(
+            component=ELNComponentEnum.FileEditQuantity,
+        ),
+        a_browser=BrowserAnnotation(adaptor='RawFileAdaptor'),
+    )
     max_texture = Quantity(
         type=np.float64,
         description='Maximum texture value for the simualtions.',
@@ -255,15 +264,6 @@ class AutoXRDModel(Schema):
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.URLEditQuantity,
         ),
-    )
-    structure_files = Quantity(
-        type=str,
-        shape=['*'],
-        description='Path to structure file (CIF) containing crystal structure.',
-        a_eln=ELNAnnotation(
-            component=ELNComponentEnum.FileEditQuantity,
-        ),
-        a_browser=BrowserAnnotation(adaptor='RawFileAdaptor'),
     )
     includes_pdf = Quantity(
         type=bool,
