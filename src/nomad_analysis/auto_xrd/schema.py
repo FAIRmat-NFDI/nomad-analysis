@@ -64,6 +64,7 @@ class SimulationSettings(ArchiveSection):
     max_texture = Quantity(
         type=np.float64,
         description='Maximum texture value for the simualtions.',
+        default=0.5,
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.NumberEditQuantity,
         ),
@@ -72,6 +73,7 @@ class SimulationSettings(ArchiveSection):
         type=np.float64,
         description='Minimum domain size.',
         unit='nm',
+        default=5.0,
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.NumberEditQuantity,
         ),
@@ -80,6 +82,7 @@ class SimulationSettings(ArchiveSection):
         type=np.float64,
         description='Maximum domain size.',
         unit='nm',
+        default=30.0,
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.NumberEditQuantity,
         ),
@@ -87,6 +90,7 @@ class SimulationSettings(ArchiveSection):
     max_strain = Quantity(
         type=np.float64,
         description='Maximum strain value.',
+        default=0.03,
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.NumberEditQuantity,
         ),
@@ -94,6 +98,7 @@ class SimulationSettings(ArchiveSection):
     num_patterns = Quantity(
         type=int,
         description='Number of XRD patterns simulated per phase.',
+        default=50,
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.NumberEditQuantity,
         ),
@@ -102,6 +107,7 @@ class SimulationSettings(ArchiveSection):
         type=np.float64,
         description='Minimum angle value.',
         unit='deg',
+        default=20.0,
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.NumberEditQuantity,
         ),
@@ -110,6 +116,7 @@ class SimulationSettings(ArchiveSection):
         type=np.float64,
         description='Maximum angle value.',
         unit='deg',
+        default=80.0,
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.NumberEditQuantity,
         ),
@@ -118,6 +125,7 @@ class SimulationSettings(ArchiveSection):
         type=np.float64,
         description='Maximum shift value.',
         unit='deg',
+        default=0.1,
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.NumberEditQuantity,
         ),
@@ -125,13 +133,15 @@ class SimulationSettings(ArchiveSection):
     separate = Quantity(
         type=bool,
         description='Separate flag.',
+        default=True,
         a_eln=ELNAnnotation(
             component='BoolEditQuantity',
         ),
     )
     impur_amt = Quantity(
-        type=int,
+        type=np.float64,
         description='Impurity amount.',
+        default=0.0,
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.NumberEditQuantity,
         ),
@@ -139,6 +149,7 @@ class SimulationSettings(ArchiveSection):
     skip_filter = Quantity(
         type=bool,
         description='Skip filter flag.',
+        default=False,
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.BoolEditQuantity,
         ),
@@ -146,6 +157,7 @@ class SimulationSettings(ArchiveSection):
     include_elems = Quantity(
         type=bool,
         description='Include elements flag.',
+        default=True,
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.BoolEditQuantity,
         ),
@@ -156,6 +168,29 @@ class TrainingSettings(ArchiveSection):
     num_epochs = Quantity(
         type=int,
         description='Number of training epochs.',
+        default=50,
+        a_eln=ELNAnnotation(
+            component=ELNComponentEnum.NumberEditQuantity,
+        ),
+    )
+    batch_size = Quantity(
+        type=int,
+        description='Batch size for training.',
+        default=32,
+        a_eln=ELNAnnotation(
+            component=ELNComponentEnum.NumberEditQuantity,
+        ),
+    )
+    learning_rate = Quantity(
+        type=np.float64,
+        description='Learning rate for training.',
+        a_eln=ELNAnnotation(
+            component=ELNComponentEnum.NumberEditQuantity,
+        ),
+    )
+    seed = Quantity(
+        type=int,
+        description='Seed for random number generator.',
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.NumberEditQuantity,
         ),
@@ -163,8 +198,31 @@ class TrainingSettings(ArchiveSection):
     test_fraction = Quantity(
         type=np.float64,
         description='Fraction of data used for testing.',
+        default=0.2,
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.NumberEditQuantity,
+        ),
+    )
+    enable_wandb = Quantity(
+        type=bool,
+        description='Flag to enable W&B logging.',
+        default=False,
+        a_eln=ELNAnnotation(
+            component=ELNComponentEnum.BoolEditQuantity,
+        ),
+    )
+    wandb_project = Quantity(
+        type=str,
+        description='W&B project name.',
+        a_eln=ELNAnnotation(
+            component=ELNComponentEnum.StringEditQuantity,
+        ),
+    )
+    wandb_entity = Quantity(
+        type=str,
+        description='W&B entity name.',
+        a_eln=ELNAnnotation(
+            component=ELNComponentEnum.StringEditQuantity,
         ),
     )
 
