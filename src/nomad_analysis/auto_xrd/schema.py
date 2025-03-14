@@ -174,6 +174,10 @@ class SimulationSettings(ArchiveSection):
 
 
 class TrainingSettings(ArchiveSection):
+    """
+    A schema for the settings for training the model.
+    """
+
     num_epochs = Quantity(
         type=int,
         description='Number of training epochs.',
@@ -214,7 +218,7 @@ class TrainingSettings(ArchiveSection):
     )
     enable_wandb = Quantity(
         type=bool,
-        description='Flag to enable W&B logging.',
+        description='Flag to enable "Weights and Biases" logging.',
         default=False,
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.BoolEditQuantity,
@@ -222,14 +226,14 @@ class TrainingSettings(ArchiveSection):
     )
     wandb_project = Quantity(
         type=str,
-        description='W&B project name.',
+        description='"Weights and Biases" project name.',
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.StringEditQuantity,
         ),
     )
     wandb_entity = Quantity(
         type=str,
-        description='W&B entity name.',
+        description='"Weights and Biases" entity name.',
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.StringEditQuantity,
         ),
@@ -279,7 +283,7 @@ class AutoXRDModel(Schema):
     wandb_run_urls = Quantity(
         type=str,
         shape=['*'],
-        description='URL to the W&B run containing the PDF model.',
+        description='URL to the "Weights and Biases" run containing the trained model.',
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.URLEditQuantity,
         ),
@@ -360,8 +364,12 @@ class AutoXRDModel(Schema):
 
 
 class AutoXRDModelReference(SectionReference):
+    """
+    A reference to an `AutoXRDModel` entry.
+    """
+
     reference = Quantity(
-        type=SectionReference,
+        type=AutoXRDModel,
         description='A reference to an `AutoXRDModel` entry.',
         a_eln=ELNAnnotation(
             component='ReferenceEditQuantity',
