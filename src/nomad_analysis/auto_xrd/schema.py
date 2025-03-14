@@ -362,13 +362,7 @@ class AutoXRDModel(Schema):
             archive.results.material.topology = list(topology.values())
 
 
-class AutoXRDAnalysisInput(SectionReference):
-    """
-    A base class for the input sections for the auto XRD analysis.
-    """
-
-
-class AutoXRDModelReference(AutoXRDAnalysisInput):
+class AutoXRDModelReference(SectionReference):
     """
     A reference to an `AutoXRDModel` entry.
     """
@@ -382,7 +376,7 @@ class AutoXRDModelReference(AutoXRDAnalysisInput):
     )
 
 
-class AutoXRDMeasurementReference(AutoXRDAnalysisInput):
+class AutoXRDMeasurementReference(SectionReference):
     """
     A reference to an `Measurement` entry.
     """
@@ -465,11 +459,6 @@ class AutoXRDAnalysis(ELNJupyterAnalysis):
     analysis_type = Quantity(
         type=str,
         default='Auto XRD Analysis',
-    )
-    inputs = SubSection(
-        section_ref=AutoXRDAnalysisInput,
-        repeats=True,
-        description='The inputs for the auto XRD analysis.',
     )
     identified_phases = SubSection(
         section_def='IdentifiedPhase',
