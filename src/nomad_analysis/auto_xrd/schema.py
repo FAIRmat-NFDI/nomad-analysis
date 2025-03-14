@@ -257,6 +257,16 @@ class AutoXRDModel(Schema):
             component=ELNComponentEnum.StringEditQuantity,
         ),
     )
+    reference_files = Quantity(
+        type=str,
+        shape=['*'],
+        description='Path to the filtered reference structure files (.cif) used to '
+        'train the model.',
+        a_eln=ELNAnnotation(
+            component=ELNComponentEnum.FileEditQuantity,
+        ),
+        a_browser=BrowserAnnotation(adaptor='RawFileAdaptor'),
+    )
     models = Quantity(
         type=str,
         shape=['*'],
@@ -294,10 +304,10 @@ class AutoXRDModel(Schema):
 
     def normalize(self, archive: 'ArchiveSection', logger: 'BoundLogger'):
         super().normalize(archive, logger)
-        if self.structure_files is not None:
-            # Read the CIF files and convert them into ase atoms
+        if self.reference_files is not None:
+            # Read the reference CIF files and convert them into ase atoms
             ase_atoms_list = []
-            for cif_file in self.structure_files:
+            for cif_file in self.reference_files:
                 if not cif_file.endswith('.cif'):
                     logger.warn(
                         f'Cannot parse structure file: {cif_file}. '
