@@ -297,11 +297,11 @@ class AutoXRDModel(Schema):
         ),
     )
     simulation_settings = SubSection(
-        section_def='SimulationSettings',
+        section_def=SimulationSettings,
         description='Settings for simulating XRD patterns.',
     )
     training_settings = SubSection(
-        section_def='TrainingSettings',
+        section_def=TrainingSettings,
         description='Settings for training the model.',
     )
 
