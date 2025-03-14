@@ -34,7 +34,7 @@ from nomad.datamodel.metainfo.annotations import (
     Filter,
     SectionProperties,
 )
-from nomad.datamodel.metainfo.basesections import SectionReference
+from nomad.datamodel.metainfo.basesections import Measurement, SectionReference
 from nomad.datamodel.results import Material, SymmetryNew, System
 from nomad.metainfo import (
     Quantity,
@@ -45,7 +45,6 @@ from nomad.metainfo import (
 from nomad.normalizing.common import nomad_atoms_from_ase_atoms
 from nomad.normalizing.topology import add_system, add_system_info
 
-from nomad_analysis.general.schema import AnalysisResult
 from nomad_analysis.jupyter.schema import ELNJupyterAnalysis
 
 if TYPE_CHECKING:
@@ -363,7 +362,13 @@ class AutoXRDModel(Schema):
             archive.results.material.topology = list(topology.values())
 
 
-class AutoXRDModelReference(SectionReference):
+class AutoXRDAnalysisInput(SectionReference):
+    """
+    A base class for the input sections for the auto XRD analysis.
+    """
+
+
+class AutoXRDModelReference(AutoXRDAnalysisInput):
     """
     A reference to an `AutoXRDModel` entry.
     """
@@ -377,7 +382,21 @@ class AutoXRDModelReference(SectionReference):
     )
 
 
-class IdentifiedPhase(AnalysisResult):
+class AutoXRDMeasurementReference(AutoXRDAnalysisInput):
+    """
+    A reference to an `Measurement` entry.
+    """
+
+    reference = Quantity(
+        type=Measurement,
+        description='A reference to an `Measurement` entry.',
+        a_eln=ELNAnnotation(
+            component='ReferenceEditQuantity',
+        ),
+    )
+
+
+class IdentifiedPhase(ArchiveSection):
     """
     Section for the identified phase.
     """
@@ -386,11 +405,12 @@ class IdentifiedPhase(AnalysisResult):
         type=str,
         description='The identified phase in the XRD data.',
     )
-    reference_cif = Quantity(
-        type=str,
-        description='The reference CIF file.',
+    reference_structure = Quantity(
+        type=System,
+        description='The reference structure of the identified phase in the training '
+        'data.',
         a_eln=ELNAnnotation(
-            component='FileEditQuantity',
+            component='ReferenceEditQuantity',
         ),
     )
     probability = Quantity(
@@ -406,12 +426,6 @@ class AutoXRDTraining(ELNJupyterAnalysis):
             if isinstance(output, AutoXRDModelReference):
                 # trigger a reprocessing of the AutoXRDModel
                 output.reference.normalize(archive, logger)
-
-
-class AutoXRDAnalysisInput(SectionReference):
-    """
-    Base class for all `AutoXRDAnalysis` inputs.
-    """
 
 
 class AutoXRDAnalysis(ELNJupyterAnalysis):
@@ -434,6 +448,8 @@ class AutoXRDAnalysis(ELNJupyterAnalysis):
                     'reset_notebook',
                     'description',
                     'analysis_type',
+                    'inputs',
+                    'identified_phases',
                 ],
             ),
         ),
@@ -448,30 +464,17 @@ class AutoXRDAnalysis(ELNJupyterAnalysis):
     )
     analysis_type = Quantity(
         type=str,
-        default='Auto XRD',
-        description=(
-            'Based on the analysis type, code cells will be added to the Jupyter '
-            'notebook. Code cells from **Generic** are always included.'
-            """
-            | Analysis Type       | Description                                     |
-            |---------------------|-------------------------------------------------|
-            | **Generic**         | Basic setup including connection \
-                                    with entry data.                                |
-            | **XRD**             | Adds XRD related analysis functions.            |
-            | **Auto XRD**        | (Default) Analysis XRD patterns using machine \
-                                    learning.                                       |
-            """
-        ),
+        default='Auto XRD Analysis',
     )
     inputs = SubSection(
-        section_def=SectionReference,
-        description='The input section for the auto XRD analysis.',
+        section_ref=AutoXRDAnalysisInput,
         repeats=True,
+        description='The inputs for the auto XRD analysis.',
     )
-    outputs = SubSection(
-        section_def=IdentifiedPhase,
-        description='The phases identified by the auto XRD analysis.',
+    identified_phases = SubSection(
+        section_def='IdentifiedPhase',
         repeats=True,
+        description='The identified phases in the XRD data.',
     )
 
     def write_jupyter_notebook(self, archive, logger):
@@ -519,12 +522,14 @@ class AutoXRDAnalysis(ELNJupyterAnalysis):
             1. In the <strong><em>inputs</em></strong> sub-section, use the
             <strong><em>AutoXRDModelReference</em></strong> section to reference an
             <strong><em>AutoXRDModel</em></strong> entry containing the pre-trained
-            model.</p> <p>
+            model. Select a model trained on a composition space that includes the
+            composition of the given sample.
+            </p> <p>
 
             2. In the <strong><em>inputs</em></strong> sub-section, use the
-            <strong><em>XRDMeasurement</em></strong> section to reference an
-            <strong><em>ELNXRayDiffraction</em></strong> containing the XRD data
-            you want to analyse.</p> <p>
+            <strong><em>AutoXRDMeasurementReference</em></strong> section to reference
+            an <strong><em>ELNXRayDiffraction</em></strong> entry containing the XRD
+            data for which phases are to be identified.</p> <p>
 
             3. From the <strong><em>notebook</em></strong> quantity, open the the
             Jupyter notebook and follow the steps mentioned in there to perform the
