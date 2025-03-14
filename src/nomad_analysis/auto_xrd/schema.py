@@ -414,12 +414,68 @@ class IdentifiedPhase(ArchiveSection):
 
 
 class AutoXRDTraining(ELNJupyterAnalysis):
+    """
+    Schema for training an auto XRD model.
+    """
+
+    m_def = Section(
+        a_eln=ELNAnnotation(
+            properties=SectionProperties(
+                visible=Filter(
+                    exclude=['input_entry_class'],
+                ),
+                order=[
+                    'name',
+                    'datetime',
+                    'lab_id',
+                    'location',
+                    'notebook',
+                    'reset_notebook',
+                    'description',
+                    'analysis_type',
+                ],
+            ),
+        ),
+    )
+    description = Quantity(
+        type=str,
+        description='A description of the auto XRD model training.',
+        a_eln=ELNAnnotation(
+            component='RichTextEditQuantity',
+            props=dict(height=500),
+        ),
+    )
+    analysis_type = Quantity(
+        type=str,
+        default='Auto XRD Model Training',
+    )
+    outputs = SubSection(
+        section_def=AutoXRDModelReference,
+        repeats=True,
+        description='An `AutoXRDModel` trained to predict phases in a given composition'
+        'space.',
+    )
+
     def normalize(self, archive, logger):
+        """
+        Normalizes the `AutoXRDAnalysis` entry.
+
+        Args:
+            archive (Archive): A NOMAD archive.
+            logger (Logger): A structured logger.
+        """
         super().normalize(archive, logger)
-        for output in self.outputs:
-            if isinstance(output, AutoXRDModelReference):
-                # trigger a reprocessing of the AutoXRDModel
-                output.reference.normalize(archive, logger)
+        if self.description is None or self.description == '':
+            self.description = """
+            <p>
+            This ELN comes with a Jupyter notebook that can be used to train an ML model
+            for automatic phase identification from XRD data. The trained model can be
+            indexed with `AutoXRDModel` entry which saves related metadata. </p> <p>
+
+            From the <strong><em>notebook</em></strong> quantity, open the the
+            Jupyter notebook and follow the steps mentioned in there to perform the
+            training.</p>
+            """
 
 
 class AutoXRDAnalysis(ELNJupyterAnalysis):
