@@ -412,13 +412,6 @@ class ELNJupyterAnalysis(Analysis, EntryData):
             archive (EntryArchive): The archive containing the section.
             logger (BoundLogger): A structlog logger.
         """
-        entry_ids = []
-        if self.inputs is not None:
-            for entry in self.inputs:
-                entry_ids.append(entry.reference.m_parent.entry_id)
-        if len(entry_ids) == 0:
-            logger.warning('No EntryArchive linked.')
-
         cells = []
 
         code = (
