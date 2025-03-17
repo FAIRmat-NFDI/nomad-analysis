@@ -163,9 +163,10 @@ class ELNJupyterAnalysis(Analysis, EntryData):
             ', it will be generated.\n'
             'Resetting or generating a notebook will be based on the analysis type.'
         ),
-        default=True,
+        default=False,
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.BoolEditQuantity,
+            default=False,
         ),
     )
     notebook = Quantity(
@@ -467,72 +468,44 @@ class ELNJupyterAnalysis(Analysis, EntryData):
         self, archive: 'EntryArchive', logger: 'BoundLogger'
     ) -> None:
         """
-        Generates the notebook `ELNJupyterAnalysis.ipynb` and saves it in `raw` folder.
+        Generates the notebook and saves it in `raw` folder. If the notebook already
+        exists and `reset_notebook` is set to False, function returns without
+        modifying the notebook. If `reset_notebook` is set to True, the notebook is
+        overwritten with pre-defined cells while preserving the already existing
+        user-defined cells.
 
         Args:
             archive (EntryArchive): The archive containing the section.
             logger (BoundLogger): A structlog logger.
         """
-        nb = nbf.v4.new_notebook()
 
-        cells = self.write_predefined_cells(archive, logger)
+        if archive.m_context.raw_path_exists(self.notebook) and not self.reset_notebook:
+            return
 
-        cells.append(nbf.v4.new_code_cell())
-        cells.append(nbf.v4.new_code_cell())
-        cells.append(nbf.v4.new_code_cell())
+        new_notebook = nbf.v4.new_notebook()
 
-        for cell in cells:
-            nb.cells.append(cell)
+        # add the pre-defined cells
+        new_notebook.cells.extend(self.write_predefined_cells(archive, logger))
 
-        nb['metadata']['trusted'] = True
-
-        with archive.m_context.raw_file(self.notebook, 'w') as nb_file:
-            nbf.write(nb, nb_file)
-        archive.m_context.process_updated_raw_file(self.notebook, allow_modify=True)
-
-    def overwrite_jupyter_notebook(
-        self, archive: 'EntryArchive', logger: 'BoundLogger'
-    ) -> None:
-        """
-        Overwrites the Jupyter notebook to reset predefined cells while preserving the
-        other user-defined cells.
-
-        Args:
-            archive (EntryArchive): The archive containing the section.
-            logger (BoundLogger): A structlog logger.
-        """
-        cells = self.write_predefined_cells(archive, logger)
-
+        if self.reset_notebook:
+            # add the existing cells
         with archive.m_context.raw_file(self.notebook, 'r') as nb_file:
-            nb = nbf.read(nb_file, as_version=nbf.NO_CONVERT)
+                old_notebook = nbf.read(nb_file, as_version=nbf.NO_CONVERT)
 
-        for cell in nb.cells:
+            for cell in old_notebook.cells:
             if cell.source.startswith('# Pre-defined block'):
                 continue
-            cells.append(cell)
+                new_notebook.cells.append(cell)
+        else:
+            # add some empty cells
+            for _ in range(3):
+                new_notebook.cells.append(nbf.v4.new_code_cell())
 
-        nb.cells = cells
-
-        nb['metadata']['trusted'] = True
+        new_notebook['metadata']['trusted'] = True
 
         with archive.m_context.raw_file(self.notebook, 'w') as nb_file:
-            nbf.write(nb, nb_file)
+            nbf.write(new_notebook, nb_file)
         archive.m_context.process_updated_raw_file(self.notebook, allow_modify=True)
-
-    def write_jupyter_notebook(
-        self, archive: 'EntryArchive', logger: 'BoundLogger'
-    ) -> None:
-        """
-        Writes the Jupyter notebook based on the analysis type.
-
-        Args:
-            archive (EntryArchive): The archive containing the section.
-            logger (BoundLogger): A structlog logger.
-        """
-        if not self.notebook or not archive.m_context.raw_path_exists(self.notebook):
-            self.generate_jupyter_notebook(archive, logger)
-        else:
-            self.overwrite_jupyter_notebook(archive, logger)
 
     def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger'):
         """
@@ -545,9 +518,7 @@ class ELNJupyterAnalysis(Analysis, EntryData):
             self.process_query_for_inputs(archive, logger), logger
         )
 
-        if self.reset_notebook:
-            self.write_jupyter_notebook(archive, logger)
-            self.reset_notebook = False
+        self.generate_jupyter_notebook(archive, logger)
 
         super().normalize(archive, logger)
 
