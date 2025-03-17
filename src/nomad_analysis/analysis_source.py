@@ -37,45 +37,6 @@ Important:
 from nomad_analysis.utils import category
 
 
-@category('Generic')
-def get_analysis_entry(entry_id: str, url: str = None):
-    """
-    Gets the entry archive of the analysis entry.
-
-    Args:
-        entry_id (str): Entry ID of the analysis ELN.
-        url (str): URL of the NOMAD server.
-
-    Returns:
-        EntryArchive: Entry archive of the analysis entry.
-    """
-
-    from nomad.client import ArchiveQuery
-    from nomad.config import config
-
-    if url is None:
-        url = config.client.url
-
-    a_query = ArchiveQuery(
-        query={
-            'entry_id:any': [entry_id],
-        },
-        required='*',
-        url=url,
-    )
-    entry_list = a_query.download()
-
-    if not entry_list:
-        print(
-            f'Analysis entry with id "{entry_id}" not found at the given URL "{url}".'
-        )
-        return None
-    if len(entry_list) > 1:
-        print('Multiple entries found. Picking the first one.')
-
-    return entry_list[0]
-
-
 @category('XRD')
 def xrd_plot_intensity_two_theta(entry, peak_indices=None) -> None:
     """

@@ -27,7 +27,9 @@ import json
 from typing import TYPE_CHECKING, Any
 
 import requests
+from nomad.client import ArchiveQuery
 from nomad.client.api import Auth
+from nomad.config import config
 from nomad.datamodel import EntryArchive
 
 if TYPE_CHECKING:
@@ -103,6 +105,48 @@ def list_to_string(list_instance: list) -> str:
     for item in list_instance:
         string += item + '\n'
     return string
+
+
+def get_analysis_entry(
+    entry_id: str,
+    url: str = config.client.url,
+    username: str = config.client.user,
+    password: str = config.client.password,
+) -> EntryArchive:
+    """
+    Gets the entry archive of the analysis entry from NOMAD API.
+
+    Args:
+        entry_id (str): Entry ID of the analysis ELN.
+        url (str): URL of the NOMAD server.
+
+    Returns:
+        EntryArchive: Entry archive of the analysis entry.
+    """
+
+    entry_list = []
+    try:
+        a_query = ArchiveQuery(
+            query={
+                'entry_id:any': [entry_id],
+            },
+            required='*',
+            url=url,
+            username=username,
+            password=password,
+        )
+        entry_list.extend(a_query.download(1))
+    except Exception as e:
+        print(f'Encountered error: {e}')
+
+    if not entry_list:
+        print(
+            f'Entry not found for entry_id: "{entry_id}", url: "{url}", and user: '
+            f'"{username}".'
+        )
+        return None
+
+    return entry_list[0]
 
 
 def get_reference(upload_id: str, entry_id: str) -> str:
