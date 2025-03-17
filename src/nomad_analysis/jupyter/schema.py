@@ -482,12 +482,12 @@ class ELNJupyterAnalysis(Analysis, EntryData):
 
         if self.reset_notebook:
             # add the existing cells
-        with archive.m_context.raw_file(self.notebook, 'r') as nb_file:
+            with archive.m_context.raw_file(self.notebook, 'r') as nb_file:
                 old_notebook = nbf.read(nb_file, as_version=nbf.NO_CONVERT)
 
             for cell in old_notebook.cells:
-            if cell.source.startswith('# Pre-defined block'):
-                continue
+                if cell.source.startswith('# Pre-defined block'):
+                    continue
                 new_notebook.cells.append(cell)
         else:
             # add some empty cells
