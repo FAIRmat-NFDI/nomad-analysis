@@ -540,6 +540,8 @@ class ELNXRDJupyterAnalysis(ELNJupyterAnalysis, EntryData):
         code = '# Pre-defined block\n\nxrd_voila_analysis(analysis.data.inputs)\n'
         cells.append(nbf.v4.new_code_cell(source=code))
 
+        return cells
+
     def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger'):
         """
         Sets the analysis type to `XRD` and normalizes the entry.
