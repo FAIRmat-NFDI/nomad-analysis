@@ -411,6 +411,9 @@ class ELNJupyterAnalysis(Analysis, EntryData):
         Args:
             archive (EntryArchive): The archive containing the section.
             logger (BoundLogger): A structlog logger.
+
+        Returns:
+            list: The list of pre-defined code cells.
         """
         cells = []
 
@@ -425,9 +428,6 @@ class ELNJupyterAnalysis(Analysis, EntryData):
         )
         cells.append(nbf.v4.new_code_cell(source=code))
 
-        generic_analysis_functions = get_function_source(category_name='Generic')
-        generic_analysis_functions = list_to_string(generic_analysis_functions)
-
         code = (
             '# Pre-defined block\n'
             '\n'
@@ -438,21 +438,6 @@ class ELNJupyterAnalysis(Analysis, EntryData):
             'analysis\n'
         )
         cells.append(nbf.v4.new_code_cell(source=code))
-
-        if self.analysis_type is not None and self.analysis_type != 'Generic':
-            comment = (
-                '# Pre-defined block\n'
-                '\n'
-                f'# Analysis functions specific to "{self.analysis_type}".\n'
-                '\n'
-            )
-            analysis_functions = get_function_source(category_name=self.analysis_type)
-            code = list_to_string(analysis_functions)
-            cells.append(nbf.v4.new_code_cell(source=comment + code))
-
-        if self.analysis_type == 'XRD':
-            code = '# Pre-defined block\n\nxrd_voila_analysis(analysis.data.inputs)\n'
-            cells.append(nbf.v4.new_code_cell(source=code))
 
         return cells
 
@@ -540,7 +525,25 @@ class ELNXRDJupyterAnalysis(ELNJupyterAnalysis, EntryData):
         ),
     )
 
+    def write_predefined_cells(self, archive, logger):
+        """
+        Extends the pre-defined cells with XRD specific analysis functions.
+        """
+
+        cells = super().write_predefined_cells(archive, logger)
+
+        comment = '# Pre-defined block\n\n# Analysis functions specific to XRD.\n\n'
+        analysis_functions = get_function_source(category_name='XRD')
+        code = list_to_string(analysis_functions)
+        cells.append(nbf.v4.new_code_cell(source=comment + code))
+
+        code = '# Pre-defined block\n\nxrd_voila_analysis(analysis.data.inputs)\n'
+        cells.append(nbf.v4.new_code_cell(source=code))
+
     def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger'):
+        """
+        Sets the analysis type to `XRD` and normalizes the entry.
+        """
         self.analysis_type = 'XRD'
         super().normalize(archive, logger)
 
