@@ -22,19 +22,33 @@ import pytest
 from nomad.client import normalize_all, parse
 from nomad.datamodel import all_metainfo_packages
 
-test_archives_dir = os.path.join(os.path.dirname(__file__), 'data')
-test_archives_path = []
-for path in os.listdir(test_archives_dir):
-    if path.endswith('.archive.yaml'):
-        test_archives_path.append(os.path.join(os.path.dirname(__file__), 'data', path))
+test_data_dir = os.path.join(os.path.dirname(__file__), 'data')
 
 all_metainfo_packages()
 
 
-@pytest.mark.parametrize('test_file', test_archives_path)
-def test_schema(test_file, capture_error_from_logger, clean_up):
+@pytest.mark.parametrize(
+    'test_file',
+    [
+        os.path.join(test_data_dir, 'ELNGenericJupyterAnalysis.archive.yaml'),
+        os.path.join(test_data_dir, 'ELNJupyterAnalysis.archive.yaml'),
+    ],
+)
+def test_jupyter_analysis_generic_schema(
+    test_file, capture_error_from_logger, clean_up
+):
     entry_archive = parse(test_file)[0]
     normalize_all(entry_archive)
 
     assert entry_archive.data.analysis_type == 'Generic'
-    # TODO: Add tests for generated jupyter notebook
+
+
+@pytest.mark.parametrize(
+    'test_file',
+    [os.path.join(test_data_dir, 'ELNXRDJupyterAnalysis.archive.yaml')],
+)
+def test_jupyter_analysis_xrd_schema(test_file, capture_error_from_logger, clean_up):
+    entry_archive = parse(test_file)[0]
+    normalize_all(entry_archive)
+
+    assert entry_archive.data.analysis_type == 'XRD'
