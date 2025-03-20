@@ -123,9 +123,6 @@ class ELNJupyterAnalysis(Analysis, EntryData):
         label='Jupyter Notebook Analysis',
         a_eln=ELNAnnotation(
             properties=SectionProperties(
-                visible=Filter(
-                    exclude=['input_entry_class'],
-                ),
                 order=[
                     'name',
                     'datetime',
@@ -186,18 +183,6 @@ class ELNJupyterAnalysis(Analysis, EntryData):
             props=dict(
                 storeInArchive=True,
             ),
-        ),
-    )
-
-    # deprecated in favor of `query_for_inputs`; non-functional
-    input_entry_class = Quantity(
-        type=str,
-        description="""
-        Reference all the available entries of this EntryClass as inputs.
-        (Deprecated in favor of `query_for_inputs`)
-        """,
-        a_eln=ELNAnnotation(
-            component=ELNComponentEnum.StringEditQuantity,
         ),
     )
 
@@ -565,7 +550,6 @@ class ELNXRDJupyterAnalysis(ELNJupyterAnalysis, EntryData):
                     'notebook',
                     'reset_notebook',
                     'query_for_inputs',
-                    'input_entry_class',
                     'description',
                     'analysis_type',
                 ],
