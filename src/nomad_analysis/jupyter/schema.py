@@ -502,7 +502,11 @@ class ELNJupyterAnalysis(Analysis, EntryData):
                 old_notebook = nbf.read(nb_file, as_version=nbf.NO_CONVERT)
 
             for cell in old_notebook.cells:
-                if cell.source.startswith('# Pre-defined block'):
+                if (
+                    cell.metadata
+                    and cell.metadata.tags
+                    and 'nomad-analysis-predefined' in cell.metadata.tags
+                ):
                     continue
                 new_notebook.cells.append(cell)
         else:
