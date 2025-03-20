@@ -564,13 +564,31 @@ class ELNXRDJupyterAnalysis(ELNJupyterAnalysis, EntryData):
 
         cells = super().write_predefined_cells(archive, logger)
 
-        comment = '# Pre-defined block\n\n# Analysis functions specific to XRD.\n\n'
+        comment = '# Analysis functions specific to XRD.\n\n'
         analysis_functions = get_function_source(category_name='XRD')
-        code = list_to_string(analysis_functions)
-        cells.append(nbf.v4.new_code_cell(source=comment + code))
+        source = comment + list_to_string(analysis_functions)
+        cells.append(
+            nbf.v4.new_code_cell(
+                source=source,
+                metadata={
+                    'tags': [
+                        'nomad-analysis-predefined',
+                    ]
+                },
+            )
+        )
 
-        code = '# Pre-defined block\n\nxrd_voila_analysis(analysis.data.inputs)\n'
-        cells.append(nbf.v4.new_code_cell(source=code))
+        source = 'xrd_voila_analysis(analysis.data.inputs)\n'
+        cells.append(
+            nbf.v4.new_code_cell(
+                source=source,
+                metadata={
+                    'tags': [
+                        'nomad-analysis-predefined',
+                    ]
+                },
+            )
+        )
 
         return cells
 
