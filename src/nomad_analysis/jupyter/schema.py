@@ -62,6 +62,7 @@ from nomad.metainfo import (
 )
 
 from nomad_analysis.utils import (
+    create_entry_with_api,
     create_unique_filename,
     get_function_source,
     list_to_string,
@@ -519,6 +520,17 @@ class ELNJupyterAnalysis(Analysis, EntryData):
         with archive.m_context.raw_file(self.notebook, 'w') as nb_file:
             nbf.write(new_notebook, nb_file)
         archive.m_context.process_updated_raw_file(self.notebook, allow_modify=True)
+
+    def save(self):
+        """
+        Uses the NOMAD API to update the entry with the current state.
+        """
+        create_entry_with_api(
+            section=self,
+            base_url=self.m_parent.m_context.installation_url,
+            upload_id=self.m_parent.metadata.upload_id,
+            file_name=self.m_parent.metadata.entry_name,
+        )
 
     def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger'):
         """
