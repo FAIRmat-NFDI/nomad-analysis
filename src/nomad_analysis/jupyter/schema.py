@@ -113,7 +113,7 @@ class JupyterAnalysisCategory(EntryDataCategory):
     )
 
 
-class ELNJupyterAnalysis(Analysis, EntryData):
+class JupyterAnalysis(Analysis, EntryData):
     """
     Base section for ELN Jupyter notebook analysis.
     """
@@ -533,7 +533,7 @@ class ELNJupyterAnalysis(Analysis, EntryData):
         super().normalize(archive, logger)
 
 
-class ELNXRDJupyterAnalysis(ELNJupyterAnalysis, EntryData):
+class XRDJupyterAnalysis(JupyterAnalysis, EntryData):
     """
     Entry section for Jupyter notebook analysis with `XRD` analysis type.
     """
@@ -600,6 +600,8 @@ class ELNXRDJupyterAnalysis(ELNJupyterAnalysis, EntryData):
         super().normalize(archive, logger)
 
 
-ELNGenericJupyterAnalysis = ELNJupyterAnalysis
+# aliases
+ELNGenericJupyterAnalysis = ELNJupyterAnalysis = JupyterAnalysis
+ELNXRDJupyterAnalysis = XRDJupyterAnalysis
 
 m_package.__init_metainfo__()
