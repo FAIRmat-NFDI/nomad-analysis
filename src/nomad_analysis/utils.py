@@ -30,7 +30,7 @@ import requests
 from nomad.client import ArchiveQuery
 from nomad.client.api import Auth
 from nomad.config import config
-from nomad.datamodel import EntryArchive
+from nomad.datamodel import EntryArchive, EntryData
 
 if TYPE_CHECKING:
     from nomad.datamodel.data import MSection
@@ -107,14 +107,14 @@ def list_to_string(list_instance: list) -> str:
     return string
 
 
-def get_analysis_entry(
+def get_entry_data(
     entry_id: str,
     url: str = config.client.url,
     username: str = config.client.user,
     password: str = config.client.password,
-) -> EntryArchive:
+) -> EntryData:
     """
-    Gets the entry archive of the analysis entry from NOMAD API.
+    Gets the data section of an entry archive using the NOMAD API.
 
     Args:
         entry_id (str): Entry ID of the analysis ELN.
@@ -146,7 +146,7 @@ def get_analysis_entry(
         )
         return None
 
-    return entry_list[0]
+    return entry_list[0].data
 
 
 def get_reference(upload_id: str, entry_id: str) -> str:

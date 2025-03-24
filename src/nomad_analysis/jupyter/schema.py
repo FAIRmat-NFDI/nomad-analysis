@@ -438,10 +438,10 @@ class JupyterAnalysis(Analysis, EntryData):
         )
 
         source = [
-            '# Run the cell to get the analysis entry linked with this notebook\n',
-            'from nomad_analysis.utils import get_analysis_entry\n',
+            '# Run the cell to get the analysis entry data linked with this notebook\n',
+            'from nomad_analysis.utils import get_entry_data\n',
             '\n',
-            f'analysis = get_analysis_entry(entry_id="{archive.entry_id}")\n',
+            f'analysis = get_entry_data(entry_id="{archive.entry_id}")\n',
             'analysis\n',
         ]
         cells.append(
