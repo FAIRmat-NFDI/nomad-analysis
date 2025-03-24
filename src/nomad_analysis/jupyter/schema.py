@@ -131,25 +131,14 @@ class JupyterAnalysis(Analysis, EntryData):
                     'reset_notebook',
                     'query_for_inputs',
                     'description',
-                    'analysis_type',
+                    'method',
                 ],
             ),
         ),
     )
-    analysis_type = Quantity(
+    method = Quantity(
         type=str,
         default='Generic',
-        description=(
-            'Based on the analysis type, code cells will be added to the Jupyter '
-            'notebook. Code cells from **Generic** are always included.'
-            """
-            | Analysis Type       | Description                                     |
-            |---------------------|-------------------------------------------------|
-            | **Generic**         | (Default) Basic setup including connection \
-                                    with entry data.                                |
-            | **XRD**             | Adds XRD related analysis functions.            |
-            """
-        ),
     )
     reset_notebook = Quantity(
         type=bool,
@@ -197,10 +186,10 @@ class JupyterAnalysis(Analysis, EntryData):
         """
         if self.name:
             file_name = (
-                self.name.replace(' ', '_')
+                self.name.replace(' ', '_').lower()
                 + '_'
-                + self.analysis_type.lower()
-                + '_notebook.ipynb'
+                + self.method.replace(' ', '_').lower()
+                + '.ipynb'
             )
         else:
             file_name = create_unique_filename(
@@ -550,7 +539,7 @@ class XRDJupyterAnalysis(JupyterAnalysis, EntryData):
                     'reset_notebook',
                     'query_for_inputs',
                     'description',
-                    'analysis_type',
+                    'method',
                 ],
             },
         ),
@@ -595,7 +584,7 @@ class XRDJupyterAnalysis(JupyterAnalysis, EntryData):
         """
         Sets the analysis type to `XRD` and normalizes the entry.
         """
-        self.analysis_type = 'XRD'
+        self.method = 'XRD'
         super().normalize(archive, logger)
 
 
