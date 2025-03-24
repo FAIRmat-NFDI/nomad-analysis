@@ -43,6 +43,7 @@ from nomad.datamodel.data import (
     EntryDataCategory,
     Query,
 )
+from nomad.datamodel.metainfo.action import ActionSection
 from nomad.datamodel.metainfo.annotations import (
     BrowserAnnotation,
     ELNAnnotation,
@@ -112,7 +113,7 @@ class JupyterAnalysisCategory(EntryDataCategory):
     )
 
 
-class JupyterAnalysis(Analysis, EntryData):
+class JupyterAnalysis(Analysis, EntryData, ActionSection):
     """
     Base section for ELN Jupyter notebook analysis.
     """
@@ -127,11 +128,11 @@ class JupyterAnalysis(Analysis, EntryData):
                     'datetime',
                     'lab_id',
                     'location',
-                    'notebook',
-                    'reset_notebook',
-                    'query_for_inputs',
                     'description',
                     'method',
+                    'query_for_inputs',
+                    'notebook',
+                    'action_trigger',
                 ],
             ),
         ),
@@ -140,19 +141,16 @@ class JupyterAnalysis(Analysis, EntryData):
         type=str,
         default='Generic',
     )
-    reset_notebook = Quantity(
+    action_trigger = Quantity(
         type=bool,
-        description=(
-            '**Caution** This will reset the pre-defined cells of the notebook. '
-            'All customization to these cells will be lost.\n'
-            'In case the notebook is not available as a raw file'
-            ', it will be generated.\n'
-            'Resetting or generating a notebook will be based on the analysis type.'
-        ),
-        default=False,
+        description="""
+        Generates a Jupyter notebook `<name>_<method>.ipynb`. If a notebook already
+        exists, the cells containing `nomad-analysis-predefined` tag will be reset.
+        All other cells will be preserved.
+        """,
         a_eln=ELNAnnotation(
-            component=ELNComponentEnum.BoolEditQuantity,
-            default=False,
+            component=ELNComponentEnum.ActionEditQuantity,
+            label='Generate Notebook',
         ),
     )
     notebook = Quantity(
@@ -447,32 +445,36 @@ class JupyterAnalysis(Analysis, EntryData):
 
         return cells
 
-    def generate_jupyter_notebook(
-        self, archive: 'EntryArchive', logger: 'BoundLogger'
-    ) -> None:
+    def perform_action(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:
         """
-        Generates the notebook and saves it in `raw` folder. If the notebook already
-        exists and `reset_notebook` is set to False, function returns without
-        modifying the notebook. If `reset_notebook` is set to True, the notebook is
-        overwritten with pre-defined cells while preserving the already existing
-        user-defined cells.
+        Generates the notebook and saves it in `raw` folder. If a notebook already
+        exists, it will only overwrite the cells containing the tag
+        `nomad-analysis-predefined`. All other cells will be preserved.
 
         Args:
             archive (EntryArchive): The archive containing the section.
             logger (BoundLogger): A structlog logger.
         """
-
-        if archive.m_context.raw_path_exists(self.notebook) and not self.reset_notebook:
-            return
+        if self.name:
+            file_name = (
+                self.name.replace(' ', '_').lower()
+                + '_'
+                + self.method.replace(' ', '_').lower()
+                + '.ipynb'
+            )
+        else:
+            file_name = create_unique_filename(
+                archive=archive, prefix='untitled', suffix='ipynb'
+            )
 
         new_notebook = nbf.v4.new_notebook()
 
         # add the pre-defined cells
         new_notebook.cells.extend(self.write_predefined_cells(archive, logger))
 
-        if self.reset_notebook:
+        if archive.m_context.raw_path_exists(file_name):
             # add the existing cells
-            with archive.m_context.raw_file(self.notebook, 'r') as nb_file:
+            with archive.m_context.raw_file(file_name, 'r') as nb_file:
                 old_notebook = nbf.read(nb_file, as_version=nbf.NO_CONVERT)
 
             for cell in old_notebook.cells:
@@ -490,9 +492,11 @@ class JupyterAnalysis(Analysis, EntryData):
 
         new_notebook['metadata']['trusted'] = True
 
-        with archive.m_context.raw_file(self.notebook, 'w') as nb_file:
+        with archive.m_context.raw_file(file_name, 'w') as nb_file:
             nbf.write(new_notebook, nb_file)
-        archive.m_context.process_updated_raw_file(self.notebook, allow_modify=True)
+        archive.m_context.process_updated_raw_file(file_name, allow_modify=True)
+
+        self.notebook = file_name
 
     def save(self):
         """
@@ -509,15 +513,9 @@ class JupyterAnalysis(Analysis, EntryData):
         """
         Normalizes the ELN entry to generate a Jupyter notebook.
         """
-        super().normalize(archive, logger)
-
-        self.set_jupyter_notebook_name(archive, logger)
         self.normalize_input_references(
             self.process_query_for_inputs(archive, logger), logger
         )
-
-        self.generate_jupyter_notebook(archive, logger)
-
         super().normalize(archive, logger)
 
 
@@ -529,19 +527,19 @@ class XRDJupyterAnalysis(JupyterAnalysis, EntryData):
     m_def = Section(
         label='XRD Jupyter Notebook Analysis',
         a_eln=ELNAnnotation(
-            properties={
-                'order': [
+            properties=SectionProperties(
+                order=[
                     'name',
                     'datetime',
                     'lab_id',
                     'location',
-                    'notebook',
-                    'reset_notebook',
-                    'query_for_inputs',
                     'description',
                     'method',
+                    'query_for_inputs',
+                    'notebook',
+                    'generate_notebook',
                 ],
-            },
+            ),
         ),
     )
 
