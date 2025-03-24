@@ -33,7 +33,6 @@ Upcoming features:
 - Write the analysis results back to the output section.
 """
 
-import os
 from typing import TYPE_CHECKING, Union
 
 import nbformat as nbf
@@ -469,8 +468,8 @@ class JupyterAnalysis(Analysis, EntryData, ActionSection):
         """
         create_entry_with_api(
             section=self,
-            base_url=self.m_parent.m_context.installation_url,
-            upload_id=self.m_parent.metadata.upload_id,
+            base_url=self.m_context.installation_url,
+            upload_id=self.m_context.upload_id,
             file_name=self.m_parent.metadata.entry_name,
         )
 
