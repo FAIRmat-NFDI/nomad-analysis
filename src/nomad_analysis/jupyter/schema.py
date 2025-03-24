@@ -172,41 +172,6 @@ class JupyterAnalysis(Analysis, EntryData, ActionSection):
         ),
     )
 
-    def set_jupyter_notebook_name(
-        self, archive: 'EntryArchive', logger: 'BoundLogger'
-    ) -> None:
-        """
-        Sets the name of notebook in accordance to self.name.
-
-        Args:
-            archive (EntryArchive): The archive containing the section.
-            logger (BoundLogger): A structlog logger.
-        """
-        if self.name:
-            file_name = (
-                self.name.replace(' ', '_').lower()
-                + '_'
-                + self.method.replace(' ', '_').lower()
-                + '.ipynb'
-            )
-        else:
-            file_name = create_unique_filename(
-                archive=archive, prefix='untitled', suffix='ipynb'
-            )
-
-        if self.notebook is None:
-            self.notebook = file_name
-            return
-
-        if self.notebook != file_name:
-            raw_path = archive.m_context.raw_path()
-            os.rename(
-                os.path.join(raw_path, self.notebook),
-                os.path.join(raw_path, file_name),
-            )
-            archive.m_context.process_updated_raw_file(file_name, allow_modify=True)
-            self.notebook = file_name
-
     def get_resolved_section(
         self,
         m_proxy_value: str,
