@@ -40,7 +40,7 @@ def test_jupyter_analysis_generic_schema(
     entry_archive = parse(test_file)[0]
     normalize_all(entry_archive)
 
-    assert entry_archive.data.analysis_type == 'Generic'
+    assert entry_archive.data.method == 'Generic'
 
 
 @pytest.mark.parametrize(
@@ -51,4 +51,4 @@ def test_jupyter_analysis_xrd_schema(test_file, capture_error_from_logger, clean
     entry_archive = parse(test_file)[0]
     normalize_all(entry_archive)
 
-    assert entry_archive.data.analysis_type == 'XRD'
+    assert entry_archive.data.method == 'XRD'

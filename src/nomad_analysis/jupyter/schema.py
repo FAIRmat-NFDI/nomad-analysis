@@ -544,7 +544,7 @@ class XRDJupyterAnalysis(JupyterAnalysis, EntryData):
 
     def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger'):
         """
-        Sets the analysis type to `XRD` and normalizes the entry.
+        Sets the method to `XRD` and normalizes the entry.
         """
         self.method = 'XRD'
         super().normalize(archive, logger)

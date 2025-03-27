@@ -60,8 +60,8 @@ def get_function_source(
     It looks up for the function in the specified module.
 
     Args:
-        category (str): Category of the functions.
         func (callable): Singular function whose source code is to be returned.
+        category (str): Category of the functions.
         module (str): Module which will be searched.
             Default is `nomad_analysis.analysis_source`.
 
