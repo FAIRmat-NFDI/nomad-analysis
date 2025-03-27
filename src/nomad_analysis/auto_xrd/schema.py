@@ -45,7 +45,7 @@ from nomad.metainfo import (
 from nomad.normalizing.common import nomad_atoms_from_ase_atoms
 from nomad.normalizing.topology import add_system, add_system_info
 
-from nomad_analysis.jupyter.schema import ELNJupyterAnalysis
+from nomad_analysis.jupyter.schema import JupyterAnalysis
 
 if TYPE_CHECKING:
     from structlog.stdlib import (
@@ -413,7 +413,7 @@ class IdentifiedPhase(ArchiveSection):
     )
 
 
-class AutoXRDTraining(ELNJupyterAnalysis):
+class AutoXRDTraining(JupyterAnalysis):
     """
     Schema for training an auto XRD model.
     """
@@ -421,33 +421,26 @@ class AutoXRDTraining(ELNJupyterAnalysis):
     m_def = Section(
         a_eln=ELNAnnotation(
             properties=SectionProperties(
-                visible=Filter(
-                    exclude=['input_entry_class'],
-                ),
                 order=[
                     'name',
                     'datetime',
                     'lab_id',
                     'location',
-                    'notebook',
-                    'reset_notebook',
                     'description',
-                    'analysis_type',
+                    'method',
+                    'query_for_inputs',
+                    'notebook',
+                    'action_trigger',
                 ],
             ),
         ),
     )
     description = Quantity(
-        type=str,
         description='A description of the auto XRD model training.',
         a_eln=ELNAnnotation(
             component='RichTextEditQuantity',
             props=dict(height=500),
         ),
-    )
-    analysis_type = Quantity(
-        type=str,
-        default='Auto XRD Model Training',
     )
     outputs = SubSection(
         section_def=AutoXRDModelReference,
@@ -464,7 +457,7 @@ class AutoXRDTraining(ELNJupyterAnalysis):
             archive (Archive): A NOMAD archive.
             logger (Logger): A structured logger.
         """
-        super().normalize(archive, logger)
+        self.method = 'Auto XRD Model Training'
         if self.description is None or self.description == '':
             self.description = """
             <p>
@@ -476,9 +469,10 @@ class AutoXRDTraining(ELNJupyterAnalysis):
             Jupyter notebook and follow the steps mentioned in there to perform the
             training.</p>
             """
+        super().normalize(archive, logger)
 
 
-class AutoXRDAnalysis(ELNJupyterAnalysis):
+class AutoXRDAnalysis(JupyterAnalysis):
     """
     Schema for running an auto XRD analysis using an pre-trained ML model.
     """
@@ -486,18 +480,16 @@ class AutoXRDAnalysis(ELNJupyterAnalysis):
     m_def = Section(
         a_eln=ELNAnnotation(
             properties=SectionProperties(
-                visible=Filter(
-                    exclude=['input_entry_class', 'query_for_inputs'],
-                ),
                 order=[
                     'name',
                     'datetime',
                     'lab_id',
                     'location',
-                    'notebook',
-                    'reset_notebook',
                     'description',
-                    'analysis_type',
+                    'method',
+                    'query_for_inputs',
+                    'notebook',
+                    'action_trigger',
                     'inputs',
                     'identified_phases',
                 ],
@@ -511,10 +503,6 @@ class AutoXRDAnalysis(ELNJupyterAnalysis):
             component='RichTextEditQuantity',
             props=dict(height=500),
         ),
-    )
-    analysis_type = Quantity(
-        type=str,
-        default='Auto XRD Analysis',
     )
     identified_phases = SubSection(
         section_def='IdentifiedPhase',
@@ -556,7 +544,7 @@ class AutoXRDAnalysis(ELNJupyterAnalysis):
             archive (Archive): A NOMAD archive.
             logger (Logger): A structured logger.
         """
-        super().normalize(archive, logger)
+        self.method = 'Auto XRD Analysis'
         if self.description is None or self.description == '':
             self.description = """
             <p>
@@ -580,6 +568,7 @@ class AutoXRDAnalysis(ELNJupyterAnalysis):
             Jupyter notebook and follow the steps mentioned in there to perform the
             analysis.</p>
             """
+        super().normalize(archive, logger)
 
 
 m_package.__init_metainfo__()
