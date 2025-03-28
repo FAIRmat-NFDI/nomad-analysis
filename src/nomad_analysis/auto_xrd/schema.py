@@ -16,7 +16,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import os
 from typing import (
     TYPE_CHECKING,
 )
@@ -31,7 +30,6 @@ from nomad.datamodel.metainfo.annotations import (
     BrowserAnnotation,
     ELNAnnotation,
     ELNComponentEnum,
-    Filter,
     SectionProperties,
 )
 from nomad.datamodel.metainfo.basesections import Measurement, SectionReference

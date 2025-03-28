@@ -155,5 +155,5 @@ dashboard:
         lg: {minH: 3, minW: 3, h: 9, w: 6, y: 0, x: 15}
         md: {minH: 3, minW: 3, h: 8, w: 3, y: 0, x: 15}
         sm: {minH: 3, minW: 3, h: 4, w: 4, y: 14, x: 0}
-"""
+"""  # noqa: E501
 )
