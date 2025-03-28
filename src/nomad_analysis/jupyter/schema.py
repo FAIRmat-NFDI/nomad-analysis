@@ -15,24 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-"""
-Schema for analysis using Jupyter notebooks.
-Allows the user to connect input sections through references. The entry archives from
-the input sections are linked and imported into the generated Jupyter notebook.
-The notebook can be used to interactively analyse the data from these entry archives.
-
-Schema also allows the user to define the analysis type. Based on the analysis type,
-pre-defined code cells are added to the notebook. For example, if the analysis type is
-XRD, then the notebook will have pre-defined code cells for XRD analysis. By default,
-the analysis type is set to Generic, which includes functions and statements to connect
-with the entry archives.
-
-Upcoming features:
-- Link the output section of the analysis schema to a sub-section of the input.
-- Write the analysis results back to the output section.
-"""
-
 from typing import TYPE_CHECKING, Union
 
 import nbformat as nbf
@@ -103,23 +85,29 @@ class ReferencedEntry(ArchiveSection):
 
 class JupyterAnalysisCategory(EntryDataCategory):
     """
-    Category for Jupyter notebook analysis.
+    Category for analysis schemas using Jupyter notebooks.
     """
 
     m_def = Category(
-        label='Jupyter Notebook Analysis',
+        label='Analysis using Jupyter notebooks',
         categories=[EntryDataCategory],
     )
 
 
 class JupyterAnalysis(Analysis, EntryData, ActionSection):
     """
-    Base section for ELN Jupyter notebook analysis.
+    Base section for analysis using Jupyter notebooks. It's features include:
+    - Build queries to get the multiple input entries for the analysis at once.
+    - Generate a Jupyter notebook with pre-defined code cells based.
+    - Optionally, attach your own Jupyter notebook to the section.
     """
 
     m_def = Section(
         categories=[JupyterAnalysisCategory],
-        label='Jupyter Notebook Analysis',
+        description="""
+        Section for analysis using Jupyter notebooks.
+        """,
+        label='Jupyter Analysis',
         a_eln=ELNAnnotation(
             properties=SectionProperties(
                 order=[
@@ -411,9 +399,10 @@ class JupyterAnalysis(Analysis, EntryData, ActionSection):
 
     def perform_action(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:
         """
-        Generates the notebook and saves it in `raw` folder. If a notebook already
-        exists, it will only overwrite the cells containing the tag
-        `nomad-analysis-predefined`. All other cells will be preserved.
+        Generates the notebook and saves it in `raw` folder when button associated with
+        `action_trigger` is clicked. If a notebook already exists, it will only
+        overwrite the cells containing the tag `nomad-analysis-predefined`. All other
+        cells will be preserved.
 
         Args:
             archive (EntryArchive): The archive containing the section.
@@ -464,7 +453,8 @@ class JupyterAnalysis(Analysis, EntryData, ActionSection):
 
     def save(self):
         """
-        Uses the NOMAD API to update the entry with the current state.
+        Uses the NOMAD API to update the entry with the current state. This method
+        can be used to update the entry on the server from the client side.
         """
         create_entry_with_api(
             section=self,
@@ -475,7 +465,7 @@ class JupyterAnalysis(Analysis, EntryData, ActionSection):
 
     def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger'):
         """
-        Normalizes the ELN entry to generate a Jupyter notebook.
+        Normalizes the input references.
         """
         self.normalize_input_references(
             self.process_query_for_inputs(archive, logger), logger
@@ -485,11 +475,14 @@ class JupyterAnalysis(Analysis, EntryData, ActionSection):
 
 class XRDJupyterAnalysis(JupyterAnalysis, EntryData):
     """
-    Entry section for Jupyter notebook analysis with `XRD` analysis type.
+    Extends `JupyterAnalysis` section to generate XRD specific Jupyter notebooks.
     """
 
     m_def = Section(
-        label='XRD Jupyter Notebook Analysis',
+        label='XRD Jupyter Analysis',
+        description="""
+        Section for XRD analysis using Jupyter notebooks.
+        """,
         a_eln=ELNAnnotation(
             properties=SectionProperties(
                 order=[
