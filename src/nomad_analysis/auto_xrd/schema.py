@@ -415,7 +415,8 @@ class IdentifiedPhase(ArchiveSection):
 
 class AutoXRDTraining(JupyterAnalysis):
     """
-    Schema for training an auto XRD model.
+    Schema for training an auto XRD model. Generates a Jupyter notebook containing
+    helper code to train and index the model NOMAD.
     """
 
     m_def = Section(
@@ -448,6 +449,133 @@ class AutoXRDTraining(JupyterAnalysis):
         description='An `AutoXRDModel` trained to predict phases in a given composition'
         'space.',
     )
+
+    def write_predefined_cells(self, archive, logger):
+        """
+        Extends the `write_predefined_cells` method to add additional cells specific to
+        the Auto XRD Training.
+        """
+        cells = super().write_predefined_cells(archive, logger)
+
+        source = [
+            '## Training Auto XRD Model\n',
+            '\n',
+            'For training the Auto XRD model, we need to simulate XRD patterns for\n',
+            'different composition and phases covering an expected composition\n',
+            'space. Once the training data is setup, we train a CNN model capable of\n',
+            'phase identification from real XRD patterns.\n',
+            '\n',
+            'The workflow is managed by `nomad_auto_xrd.training` module which uses\n',
+            'the [XRD-AutoAnalyzer](https://github.com/njszym/XRD-AutoAnalyzer)\n',
+            'package under the hood. `nomad_auto_xrd.training.train` takes\n',
+            '`AutoXRDModel` NOMAD section as input. The section can be used to\n',
+            'specify the settings for simulating XRD patterns and training the\n',
+            'model.\n',
+        ]
+        cells.append(
+            nbformat.v4.new_markdown_cell(
+                source=source,
+                metadata={'tags': ['nomad-analysis-predefined']},
+            )
+        )
+
+        source = [
+            'from nomad_analysis.auto_xrd.schema import (\n',
+            '    SimulationSettings,\n',
+            '    TrainingSettings,\n',
+            '    AutoXRDModel,\n',
+            ')\n',
+            '\n',
+            '# either specify or use the default settings\n',
+            'training_settings = TrainingSettings(\n',
+            '    num_epochs=2,\n',
+            '    batch_size=32,\n',
+            '    learning_rate=0.001,\n',
+            '    seed=43,\n',
+            ')\n',
+            'simulation_settings = SimulationSettings()\n',
+            'model = AutoXRDModel(\n',
+            "    working_directory='.',\n",
+            '    training_settings=training_settings,\n',
+            '    simulation_settings=simulation_settings,\n',
+            '    includes_pdf=True,\n',
+            ')\n',
+        ]
+        cells.append(
+            nbformat.v4.new_code_cell(
+                source=source,
+                metadata={'tags': ['nomad-analysis-predefined']},
+            ),
+        )
+
+        source = [
+            '## Training the Model\n',
+            '\n',
+            'Next, we add the path to the structure files (CIF files) containing\n',
+            'the crystal structures to be used for setting up training data.\n',
+            'Then, we train the model using the `train` function.\n',
+        ]
+        cells.append(
+            nbformat.v4.new_markdown_cell(
+                source=source,
+                metadata={'tags': ['nomad-analysis-predefined']},
+            ),
+        )
+
+        source = [
+            'from nomad_auto_xrd.training import train\n',
+            '\n',
+            'structure_files =\n',
+            'model.simulation_settings.structure_files = structure_files\n',
+            '\n',
+            'train(model)',
+        ]
+        cells.append(
+            nbformat.v4.new_code_cell(
+                source=source,
+                metadata={'tags': ['nomad-analysis-predefined']},
+            ),
+        )
+
+        source = [
+            '## Saving the Model\n',
+            '\n',
+            'After training successfully, we can find that `model.models` is\n',
+            'populated with the path to the trained model file. Additionally, \n',
+            '`model.reference_structures` holds a list of section references to \n',
+            'possible structures that can be predicted by the model. \n',
+            '\n',
+            'Let us now make an entry for this model in NOMAD, after which you can\n',
+            'use the model entry to run Auto XRD analysis.\n',
+            'We will also save a reference to model entry from the analysis entry.\n',
+        ]
+        cells.append(
+            nbformat.v4.new_markdown_cell(
+                source=source,
+                metadata={'tags': ['nomad-analysis-predefined']},
+            ),
+        )
+
+        source = [
+            'from nomad_analysis.utils import create_entry_with_api\n',
+            '\n',
+            "analysis.m_setdefault('outputs/0')\n",
+            '\n',
+            'analysis.outputs[0].reference = create_entry_with_api(\n',
+            '    model,\n',
+            '    base_url=analysis.m_context.installation_url,\n',
+            '    upload_id=analysis.m_context.upload_id,\n',
+            "    file_name=f'{analysis.name}_auto_xrd_model.archive.json',\n",
+            ')\n',
+        ]
+        cells.append(
+            nbformat.v4.new_code_cell(
+                source=source,
+                metadata={'tags': ['nomad-analysis-predefined']},
+            ),
+        )
+
+        return cells
 
     def normalize(self, archive, logger):
         """
@@ -510,31 +638,12 @@ class AutoXRDAnalysis(JupyterAnalysis):
         description='The identified phases in the XRD data.',
     )
 
-    def write_jupyter_notebook(self, archive, logger):
-        """
-        Writes the Jupyter notebook for the `AutoXRDAnalysis` entry.
-        Uses the notebook template from the `nomad_auto_xrd/jupyter_notebooks`.
-        Overwrites the `analysis_entry_id` in the notebook with the current entry id.
-        """
+    def write_predefined_cells(self, archive, logger):
+        cells = super().write_predefined_cells(archive, logger)
 
-        module_path = os.path.abspath(__file__)
-        package_path = os.path.dirname(os.path.dirname(module_path))
-        notebook_path = os.path.join(
-            package_path, 'jupyter_notebooks', 'auto-xrd-analysis.ipynb'
-        )
-        with open(notebook_path, encoding='utf-8') as f:
-            nb = nbformat.read(f, as_version=4)
-        for cell in nb.cells:
-            if cell.cell_type == 'code':
-                if 'analysis_entry_id' in cell.metadata.get('tags', []):
-                    cell.source = f'analysis_entry_id = "{archive.entry_id}"'
-                    break
+        # TODO add the code to run the analysis in notebook
 
-        nb['metadata']['trusted'] = True
-
-        with archive.m_context.raw_file(self.notebook, 'w') as nb_file:
-            nbformat.write(nb, nb_file)
-        archive.m_context.process_updated_raw_file(self.notebook, allow_modify=True)
+        return cells
 
     def normalize(self, archive, logger):
         """
