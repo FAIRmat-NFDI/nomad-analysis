@@ -150,6 +150,7 @@ class JupyterAnalysis(Analysis, EntryData, ActionSection):
     )
     query_for_inputs = Quantity(
         type=Query,
+        shape=['*'],
         description='Query to get the input entries for the analysis.',
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.QueryEditQuantity,
@@ -218,8 +219,10 @@ class JupyterAnalysis(Analysis, EntryData, ActionSection):
         entries = []
 
         # extend the entries with the data from query_for_inputs
-        if self.query_for_inputs is not None:
-            entries.extend(self.query_for_inputs['data'])
+        if self.query_for_inputs:
+            for query in self.query_for_inputs:
+                if query.get('data') is not None:
+                    entries.extend(query['data'])
 
         for entry in entries:
             entry_id = entry['entry_id']
