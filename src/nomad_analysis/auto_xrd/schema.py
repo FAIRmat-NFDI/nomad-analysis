@@ -374,20 +374,6 @@ class AutoXRDModelReference(SectionReference):
     )
 
 
-class AutoXRDMeasurementReference(SectionReference):
-    """
-    A reference to an `Measurement` entry.
-    """
-
-    reference = Quantity(
-        type=Measurement,
-        description='A reference to an `Measurement` entry.',
-        a_eln=ELNAnnotation(
-            component='ReferenceEditQuantity',
-        ),
-    )
-
-
 class IdentifiedPhase(ArchiveSection):
     """
     Section for the identified phase.
@@ -409,6 +395,38 @@ class IdentifiedPhase(ArchiveSection):
         type=float,
         description='The probability that the phase is present.',
     )
+
+
+class AnalysisSettings(ArchiveSection):
+    max_phases: int = 5
+    max_phases = Quantity(
+        type=int,
+        description='Maximum number of phases to be identified.',
+        default=5,
+        a_eln=ELNAnnotation(
+            component=ELNComponentEnum.NumberEditQuantity,
+        ),
+    )
+    cutoff_intensity = Quantity(
+        type=float,
+        description='Cutoff intensity for the XRD patterns.',
+        default=0.05,
+        a_eln=ELNAnnotation(
+            component=ELNComponentEnum.NumberEditQuantity,
+        ),
+    )
+    cutoff_intensity: float = 0.05
+    min_confidence: float = 10.0
+    unknown_threshold: float = 0.2
+    show_reduced: bool = False
+    include_pdf: bool = False
+    parallel: bool = False
+    raw: bool = False
+    show_individual: bool = False
+
+    # min_angle: Optional[float] = None
+    # max_angle: Optional[float] = None
+    # wavelength: str = 'CuKa'
 
 
 class AutoXRDTraining(JupyterAnalysis):
@@ -639,6 +657,19 @@ class AutoXRDAnalysis(JupyterAnalysis):
     def write_predefined_cells(self, archive, logger):
         cells = super().write_predefined_cells(archive, logger)
 
+        source = [
+            '## Auto XRD Analysis\n',
+            '\n',
+            'This notebook allows to run automatic XRD analysis using a pre-trained\n',
+            'Auto XRD model. The input required for the analysis including the model and the XRD\n',
+            'entry) should be specified in the `AutoXRDAnalysis` ELN.\n',
+            '\n',
+            'The first step is loading the ELN entry in the notebook. The ML model specified\n',
+            'in the entry is loaded and the XRD data is passed through it to generate a\n',
+            'prediction. It includes a list of most probable phases that might be present in\n',
+            'the XRD data. To run this inference, we import some functions from\n',
+            '`nomad_auto_xrd.inference` module.',
+        ]
         # TODO add the code to run the analysis in notebook
 
         return cells
@@ -659,17 +690,14 @@ class AutoXRDAnalysis(JupyterAnalysis):
             XRD analysis using a pre-trained ML model. To get started, do the
             following:</p> <p>
 
-            1. In the <strong><em>inputs</em></strong> sub-section, use the
-            <strong><em>AutoXRDModelReference</em></strong> section to reference an
-            <strong><em>AutoXRDModel</em></strong> entry containing the pre-trained
-            model. Select a model trained on a composition space that includes the
-            composition of the given sample.
+            1. In the <strong><em>inputs</em></strong> sub-section, make a reference
+            to an <strong><em>AutoXRDModel</em></strong> entry. Select a model trained
+            on a composition space that matches the sample.
             </p> <p>
 
-            2. In the <strong><em>inputs</em></strong> sub-section, use the
-            <strong><em>AutoXRDMeasurementReference</em></strong> section to reference
-            an <strong><em>ELNXRayDiffraction</em></strong> entry containing the XRD
-            data for which phases are to be identified.</p> <p>
+            2. In the <strong><em>inputs</em></strong> sub-section, make a references to
+            <strong><em>ELNXRayDiffraction</em></strong> entries containing the XRD
+            data that are to be analysed.</p> <p>
 
             3. From the <strong><em>notebook</em></strong> quantity, open the the
             Jupyter notebook and follow the steps mentioned in there to perform the
