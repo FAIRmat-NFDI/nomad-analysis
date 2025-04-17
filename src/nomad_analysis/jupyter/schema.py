@@ -20,12 +20,10 @@ from typing import TYPE_CHECKING, Union
 
 import nbformat as nbf
 from nomad.datamodel.data import (
-    ArchiveSection,
     EntryData,
     EntryDataCategory,
     Query,
 )
-from nomad.datamodel.metainfo.action import ActionSection
 from nomad.datamodel.metainfo.annotations import (
     BrowserAnnotation,
     ELNAnnotation,
@@ -90,12 +88,45 @@ class JupyterAnalysisCategory(EntryDataCategory):
     )
 
 
-class JupyterAnalysis(Analysis, EntryData, ActionSection):
+class JupyterAnalysis(Analysis, EntryData):
     """
-    Base section for analysis using Jupyter notebooks. It's features include:
-    - Build queries to get the multiple input entries for the analysis at once.
-    - Generate a Jupyter notebook with pre-defined code cells based.
-    - Optionally, attach your own Jupyter notebook to the section.
+    Base section for analysis that connects a Jupyter notebook to the entry. The
+    notebook allows the user to run custom code for analysis.
+
+    The section allows the user to:
+    - Build queries to search and connect the input entries for the analysis.
+    - Generate and connect a Jupyter notebook with pre-defined cell blocks.
+    - Optionally, upload a Jupyter notebook from your local system and connect
+      to the entry.
+
+    The pre-defined cells act as a starting point and can be used to supply template
+    code for the analysis. In order to extend the pre-defined cells in the notebook,
+    extend this class and simply override the `write_predefined_cells` method to add
+    your own pre-defined code cells. Make sure to add the `nomad-analysis-predefined`
+    tag to the metadata of the code cells. This ensures cells are recognized as pre-
+    defined cells by other methods. For example:
+
+    ```
+    class MyJupyterAnalysis(JupyterAnalysis):
+        def write_predefined_cells(self, archive, logger):
+            cells = super().write_predefined_cells(archive, logger)
+
+            # add your own pre-defined cells
+            source = [
+                'import pprint\n',
+                'pprint("Hello World!")\n',
+            ]
+            cells.append(
+                nbf.v4.new_code_cell(
+                    source=source, metadata={'tags': ['nomad-analysis-predefined']}
+                )
+            )
+            # add more cells as needed
+            # ...
+
+
+            return cells
+    ```
     """
 
     m_def = Section(
@@ -115,7 +146,8 @@ class JupyterAnalysis(Analysis, EntryData, ActionSection):
                     'method',
                     'query_for_inputs',
                     'notebook',
-                    'action_trigger',
+                    'trigger_generate_notebook',
+                    'trigger_reset_inputs',
                 ],
             ),
         ),
@@ -124,7 +156,7 @@ class JupyterAnalysis(Analysis, EntryData, ActionSection):
         type=str,
         default='Generic',
     )
-    action_trigger = Quantity(
+    trigger_generate_notebook = Quantity(
         type=bool,
         description="""
         Generates a Jupyter notebook and connects it with `notebook` quantity. If the
@@ -134,6 +166,17 @@ class JupyterAnalysis(Analysis, EntryData, ActionSection):
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.ActionEditQuantity,
             label='Generate Notebook',
+        ),
+    )
+    trigger_reset_inputs = Quantity(
+        type=bool,
+        description="""
+        Removes the existing references in `inputs` sub-section and creates new
+        references based on the `query_for_inputs` quantity.
+        """,
+        a_eln=ELNAnnotation(
+            component=ELNComponentEnum.ActionEditQuantity,
+            label='Reset Inputs',
         ),
     )
     notebook = Quantity(
@@ -147,7 +190,10 @@ class JupyterAnalysis(Analysis, EntryData, ActionSection):
     query_for_inputs = Quantity(
         type=Query,
         shape=['*'],
-        description='Query to get the input entries for the analysis.',
+        description="""
+        Search queries for connecting input entries to be used in the analysis.
+        These queries are used to populates the `inputs` sub-section.
+        """,
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.QueryEditQuantity,
             props=dict(
@@ -198,7 +244,7 @@ class JupyterAnalysis(Analysis, EntryData, ActionSection):
         except Exception as e:
             logger.warning(
                 f'Could not resolve the entry with upload_id "{upload_id}" and '
-                f'entry_id "{entry_id}".\n Encountered {e}'
+                f'entry_id "{entry_id}".\n Encountered {e}.'
             )
 
         return None
@@ -385,7 +431,7 @@ class JupyterAnalysis(Analysis, EntryData, ActionSection):
 
         return cells
 
-    def perform_action(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:
+    def generate_notebook(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:
         """
         Generates the notebook and saves it in the upload folder. If a notebook already
         exists, the cells containing `nomad-analysis-predefined` tag will be reset. All
@@ -446,6 +492,12 @@ class JupyterAnalysis(Analysis, EntryData, ActionSection):
         """
         Normalizes the input references.
         """
+        if self.trigger_generate_notebook:
+            self.generate_notebook(archive, logger)
+            self.trigger_generate_notebook = False
+        if self.trigger_reset_inputs:
+            self.inputs = []
+            self.trigger_reset_inputs = False
         self.normalize_input_references(archive, logger)
         super().normalize(archive, logger)
 
@@ -471,7 +523,8 @@ class XRDJupyterAnalysis(JupyterAnalysis, EntryData):
                     'method',
                     'query_for_inputs',
                     'notebook',
-                    'generate_notebook',
+                    'trigger_generate_notebook',
+                    'trigger_reset_inputs',
                 ],
             ),
         ),
