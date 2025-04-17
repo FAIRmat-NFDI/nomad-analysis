@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import os
 from typing import TYPE_CHECKING, Union
 
 import nbformat as nbf
@@ -41,10 +42,10 @@ from nomad.metainfo import (
     SchemaPackage,
     Section,
 )
+from pydantic import BaseModel, Field
 
 from nomad_analysis.utils import (
     create_entry_with_api,
-    create_unique_filename,
     get_function_source,
     list_to_string,
 )
@@ -64,22 +65,17 @@ m_package = SchemaPackage(
 )
 
 
-class ReferencedEntry(ArchiveSection):
+class ReferencedEntry(BaseModel):
     """
-    Section for referenced entry.
+    A data model for referenced entry.
     """
 
-    m_proxy_value = Quantity(
-        type=str,
-        description='The m_proxy_value of the referenced entry.',
+    m_proxy_value: str = Field(description='The proxy value of the referenced entry.')
+    name: str | None = Field(
+        default=None, description='The name of the referenced entry.'
     )
-    name = Quantity(
-        type=str,
-        description='The name of the referenced entry.',
-    )
-    lab_id = Quantity(
-        type=str,
-        description='The lab_id of the referenced entry.',
+    lab_id: str | None = Field(
+        default=None, description='The lab_id of the referenced entry.'
     )
 
 
@@ -131,9 +127,9 @@ class JupyterAnalysis(Analysis, EntryData, ActionSection):
     action_trigger = Quantity(
         type=bool,
         description="""
-        Generates a Jupyter notebook `<name>_<method>.ipynb`. If a notebook already
-        exists, the cells containing `nomad-analysis-predefined` tag will be reset.
-        All other cells will be preserved.
+        Generates a Jupyter notebook and connects it with `notebook` quantity. If the
+        notebook already exists, the cells containing `nomad-analysis-predefined` tag
+        will be reset. All other cells will be preserved.
         """,
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.ActionEditQuantity,
@@ -160,31 +156,33 @@ class JupyterAnalysis(Analysis, EntryData, ActionSection):
         ),
     )
 
-    def get_resolved_section(
+    def resolve_entry_data(
         self,
-        m_proxy_value: str,
+        entry_id: str,
         upload_id: str,
         archive: 'EntryArchive',
         logger: 'BoundLogger',
-    ) -> Union['ArchiveSection', None]:
+    ) -> Union['EntryData', None]:
         """
-        Get the resolved reference of the input entry class.
+        Tries to resolves the entry data for the given `entry_id` and `upload_id`.
 
         Args:
-            m_proxy_value (str): The m_proxy_value of the reference.
-            upload_id (str): The upload_id of the reference.
+            entry_id (str): The entry_id of .
+            upload_id (str): The upload_id of the referenced section.
             archive (EntryArchive): The archive containing the section.
             logger (BoundLogger): A structlog logger.
 
         Returns:
-            Union[ArchiveSection, None]: The resolved archive or None.
+            Union[EntryData, None]: The resolved entry data or None.
         """
         from nomad.app.v1.models.models import User
         from nomad.app.v1.routers.uploads import get_upload_with_read_access
         from nomad.datamodel.context import ServerContext
 
         try:
-            reference = SectionReference(reference=m_proxy_value)
+            reference = SectionReference(
+                reference=f'../uploads/{upload_id}/archive/{entry_id}#/data'
+            )
             context = ServerContext(
                 get_upload_with_read_access(
                     upload_id,
@@ -198,7 +196,10 @@ class JupyterAnalysis(Analysis, EntryData, ActionSection):
             return reference.reference
 
         except Exception as e:
-            logger.warning(f'Could not resolve the reference {m_proxy_value}.\n{e}')
+            logger.warning(
+                f'Could not resolve the entry with upload_id "{upload_id}" and '
+                f'entry_id "{entry_id}".\n Encountered {e}'
+            )
 
         return None
 
@@ -213,7 +214,8 @@ class JupyterAnalysis(Analysis, EntryData, ActionSection):
             logger (BoundLogger): A structlog logger.
 
         Returns:
-            list[ReferencedEntry]: The list of input entries.
+            list[ReferencedEntry]: The list of `ReferencedEntry` containing metadata of
+                the queried entries.
         """
         ref_list = []
         entries = []
@@ -225,36 +227,32 @@ class JupyterAnalysis(Analysis, EntryData, ActionSection):
                     entries.extend(query['data'])
 
         for entry in entries:
-            entry_id = entry['entry_id']
-            upload_id = entry['upload_id']
-            resolved_section = self.get_resolved_section(
-                f'../uploads/{upload_id}/archive/{entry_id}#/data',
+            resolved_entry = self.resolve_entry_data(
+                entry['entry_id'],
                 entry['upload_id'],
                 archive,
                 logger,
             )
-            if resolved_section is None:
+            if resolved_entry is None:
                 continue
             ref = ReferencedEntry(
-                m_proxy_value=f'../uploads/{upload_id}/archive/{entry_id}#/data',
-                name=resolved_section.get('name'),
-                lab_id=resolved_section.get('lab_id'),
+                m_proxy_value=resolved_entry.m_proxy_value,
+                name=resolved_entry.name,
+                lab_id=resolved_entry.lab_id,
             )
-            if resolved_section.get('lab_id') is not None:
-                ref.name = resolved_section.get('lab_id')
             ref_list.append(ref)
 
         return ref_list
 
     def normalize_input_references(
         self,
-        ref_list: list[ReferencedEntry] = None,
-        logger: 'BoundLogger' = None,
+        archive: 'EntryArchive',
+        logger: 'BoundLogger',
     ):
         """
-        Combines the existing input references with provided list of references.
-        Filters out duplicates based on m_proxy_value and lab_id.
-        Sets the name of the input references.
+        Combines the existing input references with references based on the
+        `query_for_inputs` quantity. Filters out duplicates based on m_proxy_value and
+        lab_id. Sets the name of the input references.
         """
 
         def normalize_m_proxy_value(m_proxy_value):
@@ -276,24 +274,8 @@ class JupyterAnalysis(Analysis, EntryData, ActionSection):
                 )
             return m_proxy_value
 
-        def set_name_for_inputs():
-            """
-            Set the name of the input references based on the lab_id or name of the
-            referenced section. If lab_id, it is preferred over the name. If both are
-            not available, the reference name remains the default: None.
-            """
-            for input_ref in self.inputs:
-                if input_ref.name is not None:
-                    continue
-                if input_ref.reference.name is None:
-                    continue
-                if input_ref.reference.get('lab_id') is not None:
-                    input_ref.name = input_ref.reference.lab_id
-                elif input_ref.reference.get('name') is not None:
-                    input_ref.name = input_ref.reference.name
-
-        if ref_list is None:
-            ref_list = []
+        ref_list = []
+        ref_list.extend(self.process_query_for_inputs(archive, logger))
 
         # add the existing input references
         for input_ref in self.inputs:
@@ -301,8 +283,8 @@ class JupyterAnalysis(Analysis, EntryData, ActionSection):
                 continue
             ref = ReferencedEntry(
                 m_proxy_value=input_ref.reference.m_proxy_value,
-                name=input_ref.name,
-                lab_id=input_ref.reference.get('lab_id'),
+                name=input_ref.reference.name,
+                lab_id=input_ref.reference.lab_id,
             )
             ref_list.append(ref)
 
@@ -316,18 +298,19 @@ class JupyterAnalysis(Analysis, EntryData, ActionSection):
         for ref in ref_list:
             if ref.m_proxy_value in ref_hash_map:
                 continue
-            if ref.lab_id is not None and ref.lab_id in ref_hash_map.values():
+            if ref.lab_id and ref.lab_id in ref_hash_map.values():
                 continue
             ref_hash_map[ref.m_proxy_value] = ref.lab_id
             filtered_ref_list.append(ref)
 
+        # reset the inputs references
         self.inputs = []
         for ref in filtered_ref_list:
-            self.inputs.append(
-                SectionReference(reference=ref.m_proxy_value, name=ref.name)
-            )
-
-        set_name_for_inputs()
+            self.inputs.append(SectionReference(reference=ref.m_proxy_value))
+            if ref.name:
+                self.inputs[-1].name = ref.name
+            elif ref.lab_id:
+                self.inputs[-1].lab_id = ref.lab_id
 
     def write_predefined_cells(
         self, archive: 'EntryArchive', logger: 'BoundLogger'
@@ -370,8 +353,12 @@ class JupyterAnalysis(Analysis, EntryData, ActionSection):
             '</div>\n',
             '\n',
             'This notebook has been generated by a NOMAD Analysis entry with the\n',
-            'following definition path:\n',
-            f'`{self.m_def.qualified_name()}`',
+            f'definition path: `{self.m_def.qualified_name()}`.\n',
+            '\n',
+            'Running the following code cell loads the entry in the local Jupyter\n',
+            'environment allowing you to update it based on your analysis. Once the\n',
+            'entry has been modified, use `analysis.save()` method to pass on the\n',
+            'changes back into NOMAD.\n',
         ]
         cells.append(
             nbf.v4.new_markdown_cell(
@@ -380,11 +367,9 @@ class JupyterAnalysis(Analysis, EntryData, ActionSection):
         )
 
         source = [
-            '# Run the cell to get the analysis entry data linked with this notebook\n',
             'from nomad_analysis.utils import get_entry_data\n',
             '\n',
             f'analysis = get_entry_data(entry_id="{archive.entry_id}")\n',
-            'analysis\n',
         ]
         cells.append(
             nbf.v4.new_code_cell(
@@ -402,26 +387,18 @@ class JupyterAnalysis(Analysis, EntryData, ActionSection):
 
     def perform_action(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:
         """
-        Generates the notebook and saves it in `raw` folder when button associated with
-        `action_trigger` is clicked. If a notebook already exists, it will only
-        overwrite the cells containing the tag `nomad-analysis-predefined`. All other
-        cells will be preserved.
+        Generates the notebook and saves it in the upload folder. If a notebook already
+        exists, the cells containing `nomad-analysis-predefined` tag will be reset. All
+        other cells and their outputs will be preserved.
 
         Args:
             archive (EntryArchive): The archive containing the section.
             logger (BoundLogger): A structlog logger.
         """
-        if self.name:
-            file_name = (
-                self.name.replace(' ', '_').lower()
-                + '_'
-                + self.method.replace(' ', '_').lower()
-                + '.ipynb'
-            )
-        else:
-            file_name = create_unique_filename(
-                archive=archive, prefix='untitled', suffix='ipynb'
-            )
+        file_name = (
+            os.path.basename(archive.metadata.mainfile).rsplit('.archive.', 1)[0]
+            + '.ipynb'
+        )
 
         new_notebook = nbf.v4.new_notebook()
 
@@ -442,9 +419,8 @@ class JupyterAnalysis(Analysis, EntryData, ActionSection):
                     continue
                 new_notebook.cells.append(cell)
         else:
-            # add some empty cells
-            for _ in range(3):
-                new_notebook.cells.append(nbf.v4.new_code_cell())
+            # add an empty cell
+            new_notebook.cells.append(nbf.v4.new_code_cell())
 
         new_notebook['metadata']['trusted'] = True
 
@@ -470,9 +446,7 @@ class JupyterAnalysis(Analysis, EntryData, ActionSection):
         """
         Normalizes the input references.
         """
-        self.normalize_input_references(
-            self.process_query_for_inputs(archive, logger), logger
-        )
+        self.normalize_input_references(archive, logger)
         super().normalize(archive, logger)
 
 
