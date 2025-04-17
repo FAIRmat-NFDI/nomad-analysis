@@ -18,62 +18,23 @@
 #
 
 """
-Contains analysis functions which will be included in the Jupyter analysis notebook.
-
-The functions should be added along its category using the `category` decorator. The
-category should be correspond to `analysis_type` in the schema.
-
-At present, the experiment specific categories includes `XRD`.
+Contains analysis functions which can be included in the Jupyter analysis notebook.
+When extending, it is recommended to categorize the functions based on a category name
+which can be specified using the `category` decorator from `nomad_analysis.utils`.
 For e.g., when adding an analysis function for XRD, use `@category('XRD')`
 decorator.
 
-Use `@category('Generic')` for functions which should always be included.
+`nomad_analysis.utils.get_function_source` can be used to get the source code of the
+functions based on the category name or function name. The source code can be converted
+into string and added to the pre-defined Jupyter notebook.
 
 Important:
     Necessary library or module imports should be included inside the function.
-    This will allow the imports to be specified in the generated Jupyter notebook.
+    This will allow the imports to be a part of the source code added to the Jupyter
+    notebooks.
 """
 
 from nomad_analysis.utils import category
-
-
-@category('Generic')
-def get_analysis_entry(entry_id: str, url: str = None):
-    """
-    Gets the entry archive of the analysis entry.
-
-    Args:
-        entry_id (str): Entry ID of the analysis ELN.
-        url (str): URL of the NOMAD server.
-
-    Returns:
-        EntryArchive: Entry archive of the analysis entry.
-    """
-
-    from nomad.client import ArchiveQuery
-    from nomad.config import config
-
-    if url is None:
-        url = config.client.url
-
-    a_query = ArchiveQuery(
-        query={
-            'entry_id:any': [entry_id],
-        },
-        required='*',
-        url=url,
-    )
-    entry_list = a_query.download()
-
-    if not entry_list:
-        print(
-            f'Analysis entry with id "{entry_id}" not found at the given URL "{url}".'
-        )
-        return None
-    if len(entry_list) > 1:
-        print('Multiple entries found. Picking the first one.')
-
-    return entry_list[0]
 
 
 @category('XRD')

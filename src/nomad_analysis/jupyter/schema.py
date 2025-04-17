@@ -15,30 +15,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-"""
-Schema for analysis using Jupyter notebooks.
-Allows the user to connect input sections through references. The entry archives from
-the input sections are linked and imported into the generated Jupyter notebook.
-The notebook can be used to interactively analyse the data from these entry archives.
-
-Schema also allows the user to define the analysis type. Based on the analysis type,
-pre-defined code cells are added to the notebook. For example, if the analysis type is
-XRD, then the notebook will have pre-defined code cells for XRD analysis. By default,
-the analysis type is set to Generic, which includes functions and statements to connect
-with the entry archives.
-
-Upcoming features:
-- Link the output section of the analysis schema to a sub-section of the input.
-- Write the analysis results back to the output section.
-"""
-
 import os
 from typing import TYPE_CHECKING, Union
 
 import nbformat as nbf
 from nomad.datamodel.data import (
-    ArchiveSection,
     EntryData,
     EntryDataCategory,
     Query,
@@ -47,7 +28,6 @@ from nomad.datamodel.metainfo.annotations import (
     BrowserAnnotation,
     ELNAnnotation,
     ELNComponentEnum,
-    Filter,
     SectionProperties,
 )
 from nomad.datamodel.metainfo.basesections import (
@@ -60,9 +40,10 @@ from nomad.metainfo import (
     SchemaPackage,
     Section,
 )
+from pydantic import BaseModel, Field
 
 from nomad_analysis.utils import (
-    create_unique_filename,
+    create_entry_with_api,
     get_function_source,
     list_to_string,
 )
@@ -82,90 +63,120 @@ m_package = SchemaPackage(
 )
 
 
-class ReferencedEntry(ArchiveSection):
+class ReferencedEntry(BaseModel):
     """
-    Section for referenced entry.
+    A data model for referenced entry.
     """
 
-    m_proxy_value = Quantity(
-        type=str,
-        description='The m_proxy_value of the referenced entry.',
+    m_proxy_value: str = Field(description='The proxy value of the referenced entry.')
+    name: str | None = Field(
+        default=None, description='The name of the referenced entry.'
     )
-    name = Quantity(
-        type=str,
-        description='The name of the referenced entry.',
-    )
-    lab_id = Quantity(
-        type=str,
-        description='The lab_id of the referenced entry.',
+    lab_id: str | None = Field(
+        default=None, description='The lab_id of the referenced entry.'
     )
 
 
 class JupyterAnalysisCategory(EntryDataCategory):
     """
-    Category for Jupyter notebook analysis.
+    Category for analysis schemas using Jupyter notebooks.
     """
 
     m_def = Category(
-        label='Jupyter Notebook Analysis',
+        label='Analysis using Jupyter notebooks',
         categories=[EntryDataCategory],
     )
 
 
-class ELNJupyterAnalysis(Analysis, EntryData):
+class JupyterAnalysis(Analysis, EntryData):
     """
-    Base section for ELN Jupyter notebook analysis.
+    Base section for analysis that connects a Jupyter notebook to the entry. The
+    notebook allows the user to run custom code for analysis.
+
+    The section allows the user to:
+    - Build queries to search and connect the input entries for the analysis.
+    - Generate and connect a Jupyter notebook with pre-defined cell blocks.
+    - Optionally, upload a Jupyter notebook from your local system and connect
+      to the entry.
+
+    The pre-defined cells act as a starting point and can be used to supply template
+    code for the analysis. In order to extend the pre-defined cells in the notebook,
+    extend this class and simply override the `write_predefined_cells` method to add
+    your own pre-defined code cells. Make sure to add the `nomad-analysis-predefined`
+    tag to the metadata of the code cells. This ensures cells are recognized as pre-
+    defined cells by other methods. For example:
+
+    ```
+    class MyJupyterAnalysis(JupyterAnalysis):
+        def write_predefined_cells(self, archive, logger):
+            cells = super().write_predefined_cells(archive, logger)
+
+            # add your own pre-defined cells
+            source = [
+                'import pprint\n',
+                'pprint("Hello World!")\n',
+            ]
+            cells.append(
+                nbf.v4.new_code_cell(
+                    source=source, metadata={'tags': ['nomad-analysis-predefined']}
+                )
+            )
+            # add more cells as needed
+            # ...
+
+
+            return cells
+    ```
     """
 
     m_def = Section(
         categories=[JupyterAnalysisCategory],
-        label='Jupyter Notebook Analysis',
+        description="""
+        Section for analysis using Jupyter notebooks.
+        """,
+        label='Jupyter Analysis',
         a_eln=ELNAnnotation(
             properties=SectionProperties(
-                visible=Filter(
-                    exclude=['input_entry_class'],
-                ),
                 order=[
                     'name',
                     'datetime',
                     'lab_id',
                     'location',
-                    'notebook',
-                    'reset_notebook',
-                    'query_for_inputs',
                     'description',
-                    'analysis_type',
+                    'method',
+                    'query_for_inputs',
+                    'notebook',
+                    'trigger_generate_notebook',
+                    'trigger_reset_inputs',
                 ],
             ),
         ),
     )
-    analysis_type = Quantity(
+    method = Quantity(
         type=str,
         default='Generic',
-        description=(
-            'Based on the analysis type, code cells will be added to the Jupyter '
-            'notebook. Code cells from **Generic** are always included.'
-            """
-            | Analysis Type       | Description                                     |
-            |---------------------|-------------------------------------------------|
-            | **Generic**         | (Default) Basic setup including connection \
-                                    with entry data.                                |
-            | **XRD**             | Adds XRD related analysis functions.            |
-            """
+    )
+    trigger_generate_notebook = Quantity(
+        type=bool,
+        description="""
+        Generates a Jupyter notebook and connects it with `notebook` quantity. If the
+        notebook already exists, the cells containing `nomad-analysis-predefined` tag
+        will be reset. All other cells will be preserved.
+        """,
+        a_eln=ELNAnnotation(
+            component=ELNComponentEnum.ActionEditQuantity,
+            label='Generate Notebook',
         ),
     )
-    reset_notebook = Quantity(
+    trigger_reset_inputs = Quantity(
         type=bool,
-        description=(
-            '**Caution** This will reset the pre-defined cells of the notebook. '
-            'All customization to these cells will be lost.\n'
-            'In case the notebook is not available as a raw file'
-            ', it will be generated.\n'
-            'Resetting or generating a notebook will be based on the analysis type.'
-        ),
-        default=True,
+        description="""
+        Removes the existing references in `inputs` sub-section and creates new
+        references based on the `query_for_inputs` quantity.
+        """,
         a_eln=ELNAnnotation(
-            component=ELNComponentEnum.BoolEditQuantity,
+            component=ELNComponentEnum.ActionEditQuantity,
+            label='Reset Inputs',
         ),
     )
     notebook = Quantity(
@@ -178,7 +189,11 @@ class ELNJupyterAnalysis(Analysis, EntryData):
     )
     query_for_inputs = Quantity(
         type=Query,
-        description='Query to get the input entries for the analysis.',
+        shape=['*'],
+        description="""
+        Search queries for connecting input entries to be used in the analysis.
+        These queries are used to populates the `inputs` sub-section.
+        """,
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.QueryEditQuantity,
             props=dict(
@@ -187,78 +202,33 @@ class ELNJupyterAnalysis(Analysis, EntryData):
         ),
     )
 
-    # deprecated in favor of `query_for_inputs`; non-functional
-    input_entry_class = Quantity(
-        type=str,
-        description="""
-        Reference all the available entries of this EntryClass as inputs.
-        (Deprecated in favor of `query_for_inputs`)
-        """,
-        a_eln=ELNAnnotation(
-            component=ELNComponentEnum.StringEditQuantity,
-        ),
-    )
-
-    def set_jupyter_notebook_name(
-        self, archive: 'EntryArchive', logger: 'BoundLogger'
-    ) -> None:
-        """
-        Sets the name of notebook in accordance to self.name.
-
-        Args:
-            archive (EntryArchive): The archive containing the section.
-            logger (BoundLogger): A structlog logger.
-        """
-        if self.name:
-            file_name = (
-                self.name.replace(' ', '_')
-                + '_'
-                + self.analysis_type.lower()
-                + '_notebook.ipynb'
-            )
-        else:
-            file_name = create_unique_filename(
-                archive=archive, prefix='untitled', suffix='ipynb'
-            )
-
-        if self.notebook is None:
-            self.notebook = file_name
-            return
-
-        if self.notebook != file_name:
-            raw_path = archive.m_context.raw_path()
-            os.rename(
-                os.path.join(raw_path, self.notebook),
-                os.path.join(raw_path, file_name),
-            )
-            archive.m_context.process_updated_raw_file(file_name, allow_modify=True)
-            self.notebook = file_name
-
-    def get_resolved_section(
+    def resolve_entry_data(
         self,
-        m_proxy_value: str,
+        entry_id: str,
         upload_id: str,
         archive: 'EntryArchive',
         logger: 'BoundLogger',
-    ) -> Union['ArchiveSection', None]:
+    ) -> Union['EntryData', None]:
         """
-        Get the resolved reference of the input entry class.
+        Tries to resolves the entry data for the given `entry_id` and `upload_id`.
 
         Args:
-            m_proxy_value (str): The m_proxy_value of the reference.
-            upload_id (str): The upload_id of the reference.
+            entry_id (str): The entry_id of .
+            upload_id (str): The upload_id of the referenced section.
             archive (EntryArchive): The archive containing the section.
             logger (BoundLogger): A structlog logger.
 
         Returns:
-            Union[ArchiveSection, None]: The resolved archive or None.
+            Union[EntryData, None]: The resolved entry data or None.
         """
         from nomad.app.v1.models.models import User
         from nomad.app.v1.routers.uploads import get_upload_with_read_access
         from nomad.datamodel.context import ServerContext
 
         try:
-            reference = SectionReference(reference=m_proxy_value)
+            reference = SectionReference(
+                reference=f'../uploads/{upload_id}/archive/{entry_id}#/data'
+            )
             context = ServerContext(
                 get_upload_with_read_access(
                     upload_id,
@@ -272,7 +242,10 @@ class ELNJupyterAnalysis(Analysis, EntryData):
             return reference.reference
 
         except Exception as e:
-            logger.warning(f'Could not resolve the reference {m_proxy_value}.\n{e}')
+            logger.warning(
+                f'Could not resolve the entry with upload_id "{upload_id}" and '
+                f'entry_id "{entry_id}".\n Encountered {e}.'
+            )
 
         return None
 
@@ -287,46 +260,45 @@ class ELNJupyterAnalysis(Analysis, EntryData):
             logger (BoundLogger): A structlog logger.
 
         Returns:
-            list[ReferencedEntry]: The list of input entries.
+            list[ReferencedEntry]: The list of `ReferencedEntry` containing metadata of
+                the queried entries.
         """
         ref_list = []
         entries = []
 
         # extend the entries with the data from query_for_inputs
-        if self.query_for_inputs is not None:
-            entries.extend(self.query_for_inputs['data'])
+        if self.query_for_inputs:
+            for query in self.query_for_inputs:
+                if query.get('data') is not None:
+                    entries.extend(query['data'])
 
         for entry in entries:
-            entry_id = entry['entry_id']
-            upload_id = entry['upload_id']
-            resolved_section = self.get_resolved_section(
-                f'../uploads/{upload_id}/archive/{entry_id}#/data',
+            resolved_entry = self.resolve_entry_data(
+                entry['entry_id'],
                 entry['upload_id'],
                 archive,
                 logger,
             )
-            if resolved_section is None:
+            if resolved_entry is None:
                 continue
             ref = ReferencedEntry(
-                m_proxy_value=f'../uploads/{upload_id}/archive/{entry_id}#/data',
-                name=resolved_section.get('name'),
-                lab_id=resolved_section.get('lab_id'),
+                m_proxy_value=resolved_entry.m_proxy_value,
+                name=resolved_entry.name,
+                lab_id=resolved_entry.lab_id,
             )
-            if resolved_section.get('lab_id') is not None:
-                ref.name = resolved_section.get('lab_id')
             ref_list.append(ref)
 
         return ref_list
 
     def normalize_input_references(
         self,
-        ref_list: list[ReferencedEntry] = None,
-        logger: 'BoundLogger' = None,
+        archive: 'EntryArchive',
+        logger: 'BoundLogger',
     ):
         """
-        Combines the existing input references with provided list of references.
-        Filters out duplicates based on m_proxy_value and lab_id.
-        Sets the name of the input references.
+        Combines the existing input references with references based on the
+        `query_for_inputs` quantity. Filters out duplicates based on m_proxy_value and
+        lab_id. Sets the name of the input references.
         """
 
         def normalize_m_proxy_value(m_proxy_value):
@@ -348,24 +320,8 @@ class ELNJupyterAnalysis(Analysis, EntryData):
                 )
             return m_proxy_value
 
-        def set_name_for_inputs():
-            """
-            Set the name of the input references based on the lab_id or name of the
-            referenced section. If lab_id, it is preferred over the name. If both are
-            not available, the reference name remains the default: None.
-            """
-            for input_ref in self.inputs:
-                if input_ref.name is not None:
-                    continue
-                if input_ref.reference.name is None:
-                    continue
-                if input_ref.reference.get('lab_id') is not None:
-                    input_ref.name = input_ref.reference.lab_id
-                elif input_ref.reference.get('name') is not None:
-                    input_ref.name = input_ref.reference.name
-
-        if ref_list is None:
-            ref_list = []
+        ref_list = []
+        ref_list.extend(self.process_query_for_inputs(archive, logger))
 
         # add the existing input references
         for input_ref in self.inputs:
@@ -373,8 +329,8 @@ class ELNJupyterAnalysis(Analysis, EntryData):
                 continue
             ref = ReferencedEntry(
                 m_proxy_value=input_ref.reference.m_proxy_value,
-                name=input_ref.name,
-                lab_id=input_ref.reference.get('lab_id'),
+                name=input_ref.reference.name,
+                lab_id=input_ref.reference.lab_id,
             )
             ref_list.append(ref)
 
@@ -388,18 +344,19 @@ class ELNJupyterAnalysis(Analysis, EntryData):
         for ref in ref_list:
             if ref.m_proxy_value in ref_hash_map:
                 continue
-            if ref.lab_id is not None and ref.lab_id in ref_hash_map.values():
+            if ref.lab_id and ref.lab_id in ref_hash_map.values():
                 continue
             ref_hash_map[ref.m_proxy_value] = ref.lab_id
             filtered_ref_list.append(ref)
 
+        # reset the inputs references
         self.inputs = []
         for ref in filtered_ref_list:
-            self.inputs.append(
-                SectionReference(reference=ref.m_proxy_value, name=ref.name)
-            )
-
-        set_name_for_inputs()
+            self.inputs.append(SectionReference(reference=ref.m_proxy_value))
+            if ref.name:
+                self.inputs[-1].name = ref.name
+            elif ref.lab_id:
+                self.inputs[-1].lab_id = ref.lab_id
 
     def write_predefined_cells(
         self, archive: 'EntryArchive', logger: 'BoundLogger'
@@ -410,178 +367,214 @@ class ELNJupyterAnalysis(Analysis, EntryData):
         Args:
             archive (EntryArchive): The archive containing the section.
             logger (BoundLogger): A structlog logger.
-        """
-        entry_ids = []
-        if self.inputs is not None:
-            for entry in self.inputs:
-                entry_ids.append(entry.reference.m_parent.entry_id)
-        if len(entry_ids) == 0:
-            logger.warning('No EntryArchive linked.')
 
+        Returns:
+            list: The list of pre-defined code cells.
+        """
+        user = 'Unknown user'
+        if archive.metadata.main_author:
+            user = archive.metadata.main_author.name
         cells = []
 
-        code = (
-            '# Pre-defined block\n'
-            '\n'
-            '# This notebook has been generated by "Jupyter Notebook Analysis" '
-            'schema.\n'
-            '# It gets the data from the entries referenced in the `inputs` '
-            'sub-section.\n'
-            '# It also gets the analysis function based on the analysis type '
-            '(e.g., XRD).'
-        )
-        cells.append(nbf.v4.new_code_cell(source=code))
-
-        generic_analysis_functions = get_function_source(category_name='Generic')
-        generic_analysis_functions = list_to_string(generic_analysis_functions)
-
-        code = (
-            '# Pre-defined block\n'
-            '\n'
-            f'analysis_entry_id = "{archive.entry_id}"\n'
-            '\n'
-            f'{generic_analysis_functions}'
-            'analysis = get_analysis_entry(analysis_entry_id)\n'
-            'analysis\n'
-        )
-        cells.append(nbf.v4.new_code_cell(source=code))
-
-        if self.analysis_type is not None and self.analysis_type != 'Generic':
-            comment = (
-                '# Pre-defined block\n'
-                '\n'
-                f'# Analysis functions specific to "{self.analysis_type}".\n'
-                '\n'
+        source = [
+            '<div style="\n',
+            '    background-color: #f7f7f7;\n',
+            "    background-image: url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcKICAgd2lkdGg9IjcyIgogICBoZWlnaHQ9IjczIgogICB2aWV3Qm94PSIwIDAgNzIgNzMiCiAgIGZpbGw9Im5vbmUiCiAgIHZlcnNpb249IjEuMSIKICAgaWQ9InN2ZzEzMTkiCiAgIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgeG1sbnM6c3ZnPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGRlZnMKICAgICBpZD0iZGVmczEzMjMiIC8+CiAgPHBhdGgKICAgICBkPSJNIC0wLjQ5OTk4NSwxNDUgQyAzOS41MzMsMTQ1IDcyLDExMi41MzIgNzIsNzIuNSA3MiwzMi40Njc4IDM5LjUzMywwIC0wLjQ5OTk4NSwwIC00MC41MzI5LDAgLTczLDMyLjQ2NzggLTczLDcyLjUgYyAwLDQwLjAzMiAzMi40NjcxLDcyLjUgNzIuNTAwMDE1LDcyLjUgeiIKICAgICBmaWxsPSIjMDA4YTY3IgogICAgIGZpbGwtb3BhY2l0eT0iMC4yNSIKICAgICBpZD0icGF0aDEzMTciIC8+Cjwvc3ZnPgo='), url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcKICAgd2lkdGg9IjIxNyIKICAgaGVpZ2h0PSIyMjMiCiAgIHZpZXdCb3g9IjAgMCAyMTcgMjIzIgogICBmaWxsPSJub25lIgogICB2ZXJzaW9uPSIxLjEiCiAgIGlkPSJzdmcxMTA3IgogICB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiAgIHhtbG5zOnN2Zz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxkZWZzCiAgICAgaWQ9ImRlZnMxMTExIiAvPgogIDxwYXRoCiAgICAgZD0ibSAyMi4wNDIsNDUuMDEwOSBjIDIxLjM2MjUsMjEuMjc1NyA1NS45NzYsMjEuMjc1NyA3Ny41MTkyLDAgQyAxMTkuNTU4LDI1LjA4IDE1MS41MDIsMjMuNzM1MiAxNzIuODY0LDQxLjM3OCBjIDEuMzQ1LDEuNTI1NCAyLjY5LDMuMjUxNiA0LjIzNiw0Ljc5NzEgMjEuMzYzLDIxLjI3NTYgMjEuMzYzLDU1Ljc5ODkgMCw3Ny4yNTQ5IC0yMS4zNjIsMjEuMjc2IC0yMS4zNjIsNTUuNzk4IDAsNzcuMjU1IDIxLjM2MywyMS40NTYgNTUuOTc2LDIxLjI3NSA3Ny41MiwwIDIxLjU0MywtMjEuMjc2IDIxLjM2MiwtNTUuNzk5IDAsLTc3LjI1NSAtMjEuMzYzLC0yMS4yNzYgLTIxLjM2MywtNTUuNzk4NiAwLC03Ny4yNTQ5IDEyLjY4OSwtMTIuNjQ1IDE3Ljg4OSwtMzAuMTA3MSAxNS4zOTksLTQ2LjU4NTc2IC0xLjU0NiwtMTEuNTAwOTQgLTYuNzI2LC0yMi44MjExNCAtMTUuNTgsLTMxLjYzMjU0IC0yMS4zNjMsLTIxLjI3NTYgLTU1Ljk3NiwtMjEuMjc1NiAtNzcuNTE5LDAgLTIxLjM2MywyMS4yNzU3IC01NS45NzYsMjEuMjc1NyAtNzcuNTE5NCwwIC0yMS4zNjI1LC0yMS4yNzU2IC01NS45NzYxLC0yMS4yNzU2IC03Ny41MTkyLDAgQyAwLjY3OTU2NSwtMTAuNzg3NiAwLjY3OTU5NiwyMy43MzUyIDIyLjA0Miw0NS4wMTA5IFoiCiAgICAgZmlsbD0iIzJhNGNkZiIKICAgICBzdHJva2U9IiMyYTRjZGYiCiAgICAgc3Ryb2tlLXdpZHRoPSIxMiIKICAgICBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiCiAgICAgaWQ9InBhdGgxMTA1IiAvPgogIDxwYXRoCiAgICAgZD0ibSA1MS45OTUyMTIsMjIyLjczMDEzIGMgMjguMzU5MSwwIDUxLjM1ODM5OCwtMjIuOTk5OSA1MS4zNTgzOTgsLTUxLjM1ODQgMCwtMjguMzU4NiAtMjIuOTk5Mjk4LC01MS4zNTg1OSAtNTEuMzU4Mzk4LC01MS4zNTg1OSAtMjguMzU5MSwwIC01MS4zNTg2MDIsMjIuOTk5OTkgLTUxLjM1ODYwMiw1MS4zNTg1OSAwLDI4LjM1ODUgMjIuOTk5NTAyLDUxLjM1ODQgNTEuMzU4NjAyLDUxLjM1ODQgeiIKICAgICBmaWxsPSIjMTkyZTg2IgogICAgIGZpbGwtb3BhY2l0eT0iMC4zNSIKICAgICBpZD0icGF0aDE5MzciIC8+Cjwvc3ZnPgo=') ;\n",  # noqa: E501
+            '    background-position: left bottom, right top;\n',
+            '    background-repeat: no-repeat,  no-repeat;\n',
+            '    background-size: auto 60px, auto 160px;\n',
+            '    border-radius: 5px;\n',
+            '    box-shadow: 0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0,0,0,.12);">\n',  # noqa: E501
+            '\n',
+            '<h1 style="\n',
+            '    color: #2a4cdf;\n',
+            '    font-style: normal;\n',
+            '    font-size: 2.25rem;\n',
+            '    line-height: 1.4em;\n',
+            '    font-weight: 600;\n',
+            '    padding: 30px 200px 0px 30px;"\n',
+            f'>{self.name}</h1>\n',
+            '<p style="font-size: 1.25em; font-style: italic; padding: 5px 200px 30px 30px;"\n',  # noqa: E501
+            f'>{user}</p>\n',
+            '</div>\n',
+            '\n',
+            'This notebook has been generated by a NOMAD Analysis entry with the\n',
+            f'definition path: `{self.m_def.qualified_name()}`.\n',
+            '\n',
+            'Running the following code cell loads the entry in the local Jupyter\n',
+            'environment allowing you to update it based on your analysis. Once the\n',
+            'entry has been modified, use `analysis.save()` method to pass on the\n',
+            'changes back into NOMAD.\n',
+        ]
+        cells.append(
+            nbf.v4.new_markdown_cell(
+                source=source, metadata={'tags': ['nomad-analysis-predefined']}
             )
-            analysis_functions = get_function_source(category_name=self.analysis_type)
-            code = list_to_string(analysis_functions)
-            cells.append(nbf.v4.new_code_cell(source=comment + code))
+        )
 
-        if self.analysis_type == 'XRD':
-            code = '# Pre-defined block\n\nxrd_voila_analysis(analysis.data.inputs)\n'
-            cells.append(nbf.v4.new_code_cell(source=code))
+        source = [
+            'from nomad_analysis.utils import get_entry_data\n',
+            '\n',
+            f'analysis = get_entry_data(entry_id="{archive.entry_id}")\n',
+        ]
+        cells.append(
+            nbf.v4.new_code_cell(
+                source=source,
+                metadata={
+                    'tags': [
+                        'nomad-analysis-predefined',
+                        'nomad-analysis-get-analysis-entry',
+                    ]
+                },
+            )
+        )
 
         return cells
 
-    def generate_jupyter_notebook(
-        self, archive: 'EntryArchive', logger: 'BoundLogger'
-    ) -> None:
+    def generate_notebook(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:
         """
-        Generates the notebook `ELNJupyterAnalysis.ipynb` and saves it in `raw` folder.
+        Generates the notebook and saves it in the upload folder. If a notebook already
+        exists, the cells containing `nomad-analysis-predefined` tag will be reset. All
+        other cells and their outputs will be preserved.
 
         Args:
             archive (EntryArchive): The archive containing the section.
             logger (BoundLogger): A structlog logger.
         """
-        nb = nbf.v4.new_notebook()
+        file_name = (
+            os.path.basename(archive.metadata.mainfile).rsplit('.archive.', 1)[0]
+            + '.ipynb'
+        )
 
-        cells = self.write_predefined_cells(archive, logger)
+        new_notebook = nbf.v4.new_notebook()
 
-        cells.append(nbf.v4.new_code_cell())
-        cells.append(nbf.v4.new_code_cell())
-        cells.append(nbf.v4.new_code_cell())
+        # add the pre-defined cells
+        new_notebook.cells.extend(self.write_predefined_cells(archive, logger))
 
-        for cell in cells:
-            nb.cells.append(cell)
+        if archive.m_context.raw_path_exists(file_name):
+            # add the existing cells
+            with archive.m_context.raw_file(file_name, 'r') as nb_file:
+                old_notebook = nbf.read(nb_file, as_version=nbf.NO_CONVERT)
 
-        nb['metadata']['trusted'] = True
-
-        with archive.m_context.raw_file(self.notebook, 'w') as nb_file:
-            nbf.write(nb, nb_file)
-        archive.m_context.process_updated_raw_file(self.notebook, allow_modify=True)
-
-    def overwrite_jupyter_notebook(
-        self, archive: 'EntryArchive', logger: 'BoundLogger'
-    ) -> None:
-        """
-        Overwrites the Jupyter notebook to reset predefined cells while preserving the
-        other user-defined cells.
-
-        Args:
-            archive (EntryArchive): The archive containing the section.
-            logger (BoundLogger): A structlog logger.
-        """
-        cells = self.write_predefined_cells(archive, logger)
-
-        with archive.m_context.raw_file(self.notebook, 'r') as nb_file:
-            nb = nbf.read(nb_file, as_version=nbf.NO_CONVERT)
-
-        for cell in nb.cells:
-            if cell.source.startswith('# Pre-defined block'):
-                continue
-            cells.append(cell)
-
-        nb.cells = cells
-
-        nb['metadata']['trusted'] = True
-
-        with archive.m_context.raw_file(self.notebook, 'w') as nb_file:
-            nbf.write(nb, nb_file)
-        archive.m_context.process_updated_raw_file(self.notebook, allow_modify=True)
-
-    def write_jupyter_notebook(
-        self, archive: 'EntryArchive', logger: 'BoundLogger'
-    ) -> None:
-        """
-        Writes the Jupyter notebook based on the analysis type.
-
-        Args:
-            archive (EntryArchive): The archive containing the section.
-            logger (BoundLogger): A structlog logger.
-        """
-        if not self.notebook or not archive.m_context.raw_path_exists(self.notebook):
-            self.generate_jupyter_notebook(archive, logger)
+            for cell in old_notebook.cells:
+                if (
+                    cell.metadata
+                    and cell.metadata.tags
+                    and 'nomad-analysis-predefined' in cell.metadata.tags
+                ):
+                    continue
+                new_notebook.cells.append(cell)
         else:
-            self.overwrite_jupyter_notebook(archive, logger)
+            # add an empty cell
+            new_notebook.cells.append(nbf.v4.new_code_cell())
+
+        new_notebook['metadata']['trusted'] = True
+
+        with archive.m_context.raw_file(file_name, 'w') as nb_file:
+            nbf.write(new_notebook, nb_file)
+        archive.m_context.process_updated_raw_file(file_name, allow_modify=True)
+
+        self.notebook = file_name
+
+    def save(self):
+        """
+        Uses the NOMAD API to update the entry with the current state. This method
+        can be used to update the entry on the server from the client side.
+        """
+        create_entry_with_api(
+            section=self,
+            base_url=self.m_context.installation_url,
+            upload_id=self.m_context.upload_id,
+            file_name=self.m_parent.metadata.entry_name,
+        )
 
     def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger'):
         """
-        Normalizes the ELN entry to generate a Jupyter notebook.
+        Normalizes the input references.
         """
-        super().normalize(archive, logger)
-
-        self.set_jupyter_notebook_name(archive, logger)
-        self.normalize_input_references(
-            self.process_query_for_inputs(archive, logger), logger
-        )
-
-        if self.reset_notebook:
-            self.write_jupyter_notebook(archive, logger)
-            self.reset_notebook = False
-
+        if self.trigger_generate_notebook:
+            self.generate_notebook(archive, logger)
+            self.trigger_generate_notebook = False
+        if self.trigger_reset_inputs:
+            self.inputs = []
+            self.trigger_reset_inputs = False
+        self.normalize_input_references(archive, logger)
         super().normalize(archive, logger)
 
 
-class ELNXRDJupyterAnalysis(ELNJupyterAnalysis, EntryData):
+class XRDJupyterAnalysis(JupyterAnalysis, EntryData):
     """
-    Entry section for Jupyter notebook analysis with `XRD` analysis type.
+    Extends `JupyterAnalysis` section to generate XRD specific Jupyter notebooks.
     """
 
     m_def = Section(
-        label='XRD Jupyter Notebook Analysis',
+        label='XRD Jupyter Analysis',
+        description="""
+        Section for XRD analysis using Jupyter notebooks.
+        """,
         a_eln=ELNAnnotation(
-            properties={
-                'order': [
+            properties=SectionProperties(
+                order=[
                     'name',
                     'datetime',
                     'lab_id',
                     'location',
-                    'notebook',
-                    'reset_notebook',
-                    'query_for_inputs',
-                    'input_entry_class',
                     'description',
-                    'analysis_type',
+                    'method',
+                    'query_for_inputs',
+                    'notebook',
+                    'trigger_generate_notebook',
+                    'trigger_reset_inputs',
                 ],
-            },
+            ),
         ),
     )
 
+    def write_predefined_cells(self, archive, logger):
+        """
+        Extends the pre-defined cells with XRD specific analysis functions.
+        """
+
+        cells = super().write_predefined_cells(archive, logger)
+
+        comment = '# Analysis functions specific to XRD.\n\n'
+        analysis_functions = get_function_source(category_name='XRD')
+        source = comment + list_to_string(analysis_functions)
+        cells.append(
+            nbf.v4.new_code_cell(
+                source=source,
+                metadata={
+                    'tags': [
+                        'nomad-analysis-predefined',
+                    ]
+                },
+            )
+        )
+
+        source = 'xrd_voila_analysis(analysis.data.inputs)\n'
+        cells.append(
+            nbf.v4.new_code_cell(
+                source=source,
+                metadata={
+                    'tags': [
+                        'nomad-analysis-predefined',
+                    ]
+                },
+            )
+        )
+
+        return cells
+
     def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger'):
-        self.analysis_type = 'XRD'
+        """
+        Sets the method to `XRD` and normalizes the entry.
+        """
+        self.method = 'XRD'
         super().normalize(archive, logger)
 
 
-ELNGenericJupyterAnalysis = ELNJupyterAnalysis
+# aliases
+ELNGenericJupyterAnalysis = ELNJupyterAnalysis = JupyterAnalysis
+ELNXRDJupyterAnalysis = XRDJupyterAnalysis
 
 m_package.__init_metainfo__()

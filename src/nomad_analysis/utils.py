@@ -27,8 +27,10 @@ import json
 from typing import TYPE_CHECKING, Any
 
 import requests
+from nomad.client import ArchiveQuery
 from nomad.client.api import Auth
-from nomad.datamodel import EntryArchive
+from nomad.config import config
+from nomad.datamodel import EntryArchive, EntryData
 
 if TYPE_CHECKING:
     from nomad.datamodel.data import MSection
@@ -58,8 +60,8 @@ def get_function_source(
     It looks up for the function in the specified module.
 
     Args:
-        category (str): Category of the functions.
         func (callable): Singular function whose source code is to be returned.
+        category (str): Category of the functions.
         module (str): Module which will be searched.
             Default is `nomad_analysis.analysis_source`.
 
@@ -103,6 +105,48 @@ def list_to_string(list_instance: list) -> str:
     for item in list_instance:
         string += item + '\n'
     return string
+
+
+def get_entry_data(
+    entry_id: str,
+    url: str = config.client.url,
+    username: str = config.client.user,
+    password: str = config.client.password,
+) -> EntryData:
+    """
+    Gets the data section of an entry archive using the NOMAD API.
+
+    Args:
+        entry_id (str): Entry ID of the analysis ELN.
+        url (str): URL of the NOMAD server.
+
+    Returns:
+        EntryArchive: Entry archive of the analysis entry.
+    """
+
+    entry_list = []
+    try:
+        a_query = ArchiveQuery(
+            query={
+                'entry_id:any': [entry_id],
+            },
+            required='*',
+            url=url,
+            username=username,
+            password=password,
+        )
+        entry_list.extend(a_query.download(1))
+    except Exception as e:
+        print(f'Encountered error: {e}')
+
+    if not entry_list:
+        print(
+            f'Entry not found for entry_id: "{entry_id}", url: "{url}", and user: '
+            f'"{username}".'
+        )
+        return None
+
+    return entry_list[0].data
 
 
 def get_reference(upload_id: str, entry_id: str) -> str:
@@ -208,30 +252,3 @@ def put_nomad_request(
         raise ValueError(f'Unexpected response {response.json()}')
 
     return response.json()
-
-
-def create_unique_filename(
-    archive: 'EntryArchive',
-    prefix: str = 'unnamed',
-    suffix: str = 'archive.json',
-):
-    """
-    Create a unique filename of the form '{prefix}_{iterator}.{suffix}'. If the filename
-    already exists, the iterator is incremented until a unique filename is found.
-
-    Args:
-        archive: The archive object.
-        prefix: Part of the filename before the iterator. Default is 'Unnamed'.
-        suffix: Usually the file extension. Default is 'archive.json'.
-    """
-    i = 0
-
-    def template(i):
-        return f'{prefix}_{i}.{suffix}'
-
-    if not archive.m_context.raw_path_exists(template(i)):
-        return template(i)
-    while True:
-        i += 1
-        if not archive.m_context.raw_path_exists(template(i)):
-            return template(i)
