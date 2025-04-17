@@ -1,0 +1,3 @@
+data:
+  m_def: nomad_analysis.jupyter.schema.XRDJupyterAnalysis
+  trigger_generate_notebook: true
