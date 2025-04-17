@@ -34,6 +34,9 @@ all_metainfo_packages()
     [(os.path.join(test_data_dir, 'test_jupyter_analysis.archive.yaml'), log_levels)],
 )
 def test_jupyter_analysis_schema(test_file, caplog, clean_up):
+    """
+    Test the Jupyter analysis schema.
+    """
     entry_archive = parse(test_file)[0]
     normalize_all(entry_archive)
 
@@ -62,6 +65,9 @@ def test_jupyter_analysis_schema(test_file, caplog, clean_up):
     ],
 )
 def test_jupyter_analysis_xrd_schema(test_file, caplog, clean_up):
+    """
+    Test the Jupyter analysis schema for XRD.
+    """
     entry_archive = parse(test_file)[0]
     normalize_all(entry_archive)
 
@@ -85,6 +91,9 @@ def test_jupyter_analysis_xrd_schema(test_file, caplog, clean_up):
     ],
 )
 def test_aliasing(test_file, caplog):
+    """
+    Test the Jupyter analysis schema for aliasing.
+    """
     entry_archive = parse(test_file)[0]
     normalize_all(entry_archive)
     assert entry_archive.data.method == 'Generic'
