@@ -24,17 +24,16 @@ from nomad.client import normalize_all, parse
 from nomad.datamodel import all_metainfo_packages
 
 test_data_dir = os.path.join(os.path.dirname(__file__), 'data')
+log_levels = ['error', 'critical']
 
 all_metainfo_packages()
 
 
 @pytest.mark.parametrize(
-    'test_file',
-    [
-        os.path.join(test_data_dir, 'test_jupyter_analysis.archive.yaml'),
-    ],
+    ('test_file', 'caplog'),
+    [(os.path.join(test_data_dir, 'test_jupyter_analysis.archive.yaml'), log_levels)],
 )
-def test_jupyter_analysis_schema(test_file, capture_error_from_logger, clean_up):
+def test_jupyter_analysis_schema(test_file, caplog, clean_up):
     entry_archive = parse(test_file)[0]
     normalize_all(entry_archive)
 
@@ -52,10 +51,17 @@ def test_jupyter_analysis_schema(test_file, capture_error_from_logger, clean_up)
 
 
 @pytest.mark.parametrize(
-    'test_file',
-    [os.path.join(test_data_dir, 'test_extended_xrd_jupyter_analysis.archive.yaml')],
+    ('test_file', 'caplog'),
+    [
+        (
+            os.path.join(
+                test_data_dir, 'test_extended_xrd_jupyter_analysis.archive.yaml'
+            ),
+            log_levels,
+        )
+    ],
 )
-def test_jupyter_analysis_xrd_schema(test_file, capture_error_from_logger, clean_up):
+def test_jupyter_analysis_xrd_schema(test_file, caplog, clean_up):
     entry_archive = parse(test_file)[0]
     normalize_all(entry_archive)
 
@@ -70,12 +76,15 @@ def test_jupyter_analysis_xrd_schema(test_file, capture_error_from_logger, clean
 
 
 @pytest.mark.parametrize(
-    'test_file',
+    ('test_file', 'caplog'),
     [
-        os.path.join(test_data_dir, 'test_aliased_jupyter_analysis.archive.yaml'),
+        (
+            os.path.join(test_data_dir, 'test_aliased_jupyter_analysis.archive.yaml'),
+            log_levels,
+        )
     ],
 )
-def test_aliasing(test_file, capture_error_from_logger):
+def test_aliasing(test_file, caplog):
     entry_archive = parse(test_file)[0]
     normalize_all(entry_archive)
     assert entry_archive.data.method == 'Generic'
