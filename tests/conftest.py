@@ -1,26 +1,60 @@
+#
+# Copyright The NOMAD Authors.
+#
+# This file is part of NOMAD. See https://nomad-lab.eu for further info.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 import glob
-import json
+import logging
 import os
 
 import pytest
+import structlog
 from nomad.utils import structlogging
+from structlog.testing import LogCapture
+
+structlogging.ConsoleFormatter.short_format = True
+setattr(logging, 'Formatter', structlogging.ConsoleFormatter)
 
 
-@pytest.fixture(scope='function')
-def capture_error_from_logger(caplog):
+@pytest.fixture(
+    name='caplog',
+    scope='function',
+)
+def fixture_caplog(request):
     """
-    Extracts log messages from the logger and raises an assertion error if any
-    ERROR messages are found.
+    Extracts log messages from the logger and raises an assertion error if the specified
+    log levels in the `request.param` are found.
     """
-    caplog.handler.formatter = structlogging.ConsoleFormatter()
-    yield caplog
-    for record in caplog.get_records(when='call'):
-        if record.levelname in ['ERROR']:
-            try:
-                msg = structlogging.ConsoleFormatter.serialize(json.loads(record.msg))
-            except Exception:
-                msg = record.msg
-            assert False, msg
+    caplog = LogCapture()
+    processors = structlog.get_config()['processors']
+    old_processors = processors.copy()
+
+    try:
+        processors.clear()
+        processors.append(caplog)
+        structlog.configure(processors=processors)
+        yield caplog
+        for record in caplog.entries:
+            if record['log_level'] in request.param:
+                raise AssertionError(
+                    f"Log level '{record['log_level']}' found: {record}"
+                )
+    finally:
+        processors.clear()
+        processors.extend(old_processors)
+        structlog.configure(processors=processors)
 
 
 @pytest.fixture(scope='function')
