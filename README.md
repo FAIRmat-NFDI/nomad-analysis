@@ -4,8 +4,10 @@
 
 # NOMAD's Analysis plugin
 This is a plugin for [NOMAD](https://nomad-lab.eu) to facilitate analysis of processed
-entry archives using classes and functions. The plugin also supports ELN schemas which
-allow the use of these functions in Jupyter notebooks and persist the analysis workflow.
+entry archives. The plugin provides schemas to create entries for analysis that can 
+interact with other entries, using them as analysis inputs. Jupyter Analysis schemas
+generate analysis entries that are connected with an external programming interface,
+JupyterHub, which allows users to run custom code on the connected input entries.
 
 To install the package as a dependency for your NOMAD Oasis, add it to your
 `pyproject.toml` as under `project.dependencies` table:
