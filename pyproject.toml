@@ -41,10 +41,10 @@ Documentation = "https://fairmat-nfdi.github.io/nomad-analysis/"
 
 [project.optional-dependencies]
 dev = [
+    "nomad-lab[infrastructure]>=1.3.14",
     "ruff",
     "pytest",
     "structlog",
-    "python-logstash>=0.4.6",
 ]
 
 [tool.uv]
