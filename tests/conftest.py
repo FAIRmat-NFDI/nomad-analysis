@@ -48,7 +48,9 @@ def fixture_caplog(request):
         yield caplog
         for record in caplog.entries:
             if record['log_level'] in request.param:
-                assert False, record
+                raise AssertionError(
+                    f"Log level '{record['log_level']}' found: {record}"
+                )
     finally:
         processors.clear()
         processors.extend(old_processors)
