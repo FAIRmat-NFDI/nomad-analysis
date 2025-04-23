@@ -19,6 +19,7 @@ import os
 from typing import TYPE_CHECKING, Union
 
 import nbformat as nbf
+from nomad.datamodel.context import ServerContext
 from nomad.datamodel.data import (
     EntryData,
     EntryDataCategory,
@@ -283,8 +284,8 @@ class JupyterAnalysis(Analysis, EntryData):
                 continue
             ref = ReferencedEntry(
                 m_proxy_value=resolved_entry.m_proxy_value,
-                name=resolved_entry.name,
-                lab_id=resolved_entry.lab_id,
+                name=resolved_entry.get('name'),
+                lab_id=resolved_entry.get('lab_id'),
             )
             ref_list.append(ref)
 
@@ -298,7 +299,8 @@ class JupyterAnalysis(Analysis, EntryData):
         """
         Combines the existing input references with references based on the
         `query_for_inputs` quantity. Filters out duplicates based on m_proxy_value and
-        lab_id. Sets the name of the input references.
+        lab_id. Sets the name of the input references. Returns without normalizing if
+        the context is not a server context.
         """
 
         def normalize_m_proxy_value(m_proxy_value):
@@ -320,6 +322,9 @@ class JupyterAnalysis(Analysis, EntryData):
                 )
             return m_proxy_value
 
+        if not isinstance(archive.m_context, ServerContext):
+            return
+
         ref_list = []
         ref_list.extend(self.process_query_for_inputs(archive, logger))
 
@@ -329,8 +334,8 @@ class JupyterAnalysis(Analysis, EntryData):
                 continue
             ref = ReferencedEntry(
                 m_proxy_value=input_ref.reference.m_proxy_value,
-                name=input_ref.reference.name,
-                lab_id=input_ref.reference.lab_id,
+                name=input_ref.reference.get('name'),
+                lab_id=input_ref.reference.get('lab_id'),
             )
             ref_list.append(ref)
 
