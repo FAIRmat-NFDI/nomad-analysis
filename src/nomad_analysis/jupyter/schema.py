@@ -19,6 +19,7 @@ import os
 from typing import TYPE_CHECKING, Union
 
 import nbformat as nbf
+from nomad.datamodel.context import ServerContext
 from nomad.datamodel.data import (
     EntryData,
     EntryDataCategory,
@@ -298,7 +299,8 @@ class JupyterAnalysis(Analysis, EntryData):
         """
         Combines the existing input references with references based on the
         `query_for_inputs` quantity. Filters out duplicates based on m_proxy_value and
-        lab_id. Sets the name of the input references.
+        lab_id. Sets the name of the input references. Returns without normalizing if
+        the context is not a server context.
         """
 
         def normalize_m_proxy_value(m_proxy_value):
@@ -319,6 +321,9 @@ class JupyterAnalysis(Analysis, EntryData):
                     f'Error in normalizing the m_proxy_value "{m_proxy_value}".\n{e}'
                 )
             return m_proxy_value
+
+        if not isinstance(archive.m_context, ServerContext):
+            return
 
         ref_list = []
         ref_list.extend(self.process_query_for_inputs(archive, logger))
