@@ -490,7 +490,7 @@ class JupyterAnalysis(Analysis, EntryData):
             section=self,
             base_url=self.m_context.installation_url,
             upload_id=self.m_context.upload_id,
-            file_name=self.m_parent.metadata.entry_name,
+            file_name=self.m_parent.metadata.mainfile,
         )
 
     def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger'):

@@ -197,7 +197,7 @@ def create_entry_with_api(
 
     if not isinstance(section, EntryArchive):
         json_dict = {
-            'data': section.m_to_dict(),
+            'data': section.m_to_dict(with_root_def=True),
         }
     else:
         json_dict = section.m_to_dict()
