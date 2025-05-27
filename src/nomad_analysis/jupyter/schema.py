@@ -367,7 +367,7 @@ class JupyterAnalysis(Analysis, EntryData):
         self, archive: 'EntryArchive', logger: 'BoundLogger'
     ) -> list:
         """
-        Writes the pre-defined Jupyter notebook cells based on the analysis type.
+        Writes the pre-defined Jupyter notebook cells.
 
         Args:
             archive (EntryArchive): The archive containing the section.
@@ -495,7 +495,8 @@ class JupyterAnalysis(Analysis, EntryData):
 
     def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger'):
         """
-        Normalizes the input references.
+        Handles the behavior of action triggers and normalizes the input
+        references.
         """
         # self.name should be available before calling self.generate_notebook
         super().normalize(archive, logger)
