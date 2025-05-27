@@ -497,6 +497,9 @@ class JupyterAnalysis(Analysis, EntryData):
         """
         Normalizes the input references.
         """
+        # self.name should be available before calling self.generate_notebook
+        super().normalize(archive, logger)
+
         if self.trigger_generate_notebook:
             self.generate_notebook(archive, logger)
             self.trigger_generate_notebook = False
@@ -504,6 +507,8 @@ class JupyterAnalysis(Analysis, EntryData):
             self.inputs = []
             self.trigger_reset_inputs = False
         self.normalize_input_references(archive, logger)
+
+        # again run super normalization to ensure the workflow has the latest inputs
         super().normalize(archive, logger)
 
 
