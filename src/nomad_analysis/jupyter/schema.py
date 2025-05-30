@@ -379,6 +379,10 @@ class JupyterAnalysis(Analysis, EntryData):
         user = 'Unknown user'
         if archive.metadata.main_author:
             user = archive.metadata.main_author.name
+        notebook_heading = self.name
+        if not notebook_heading:
+            notebook_heading = archive.metadata.mainfile.split('.')[0].replace('_', ' ')
+
         cells = []
 
         source = [
@@ -398,7 +402,7 @@ class JupyterAnalysis(Analysis, EntryData):
             '    line-height: 1.4em;\n',
             '    font-weight: 600;\n',
             '    padding: 30px 200px 0px 30px;"\n',
-            f'>{self.name}</h1>\n',
+            f'>{notebook_heading}</h1>\n',
             '<p style="font-size: 1.25em; font-style: italic; padding: 5px 200px 30px 30px;"\n',  # noqa: E501
             f'>{user}</p>\n',
             '</div>\n',
@@ -498,9 +502,6 @@ class JupyterAnalysis(Analysis, EntryData):
         Handles the behavior of action triggers and normalizes the input
         references.
         """
-        # self.name should be available before calling self.generate_notebook
-        super().normalize(archive, logger)
-
         if self.trigger_generate_notebook:
             self.generate_notebook(archive, logger)
             self.trigger_generate_notebook = False
@@ -509,7 +510,8 @@ class JupyterAnalysis(Analysis, EntryData):
             self.trigger_reset_inputs = False
         self.normalize_input_references(archive, logger)
 
-        # again run super normalization to ensure the workflow has the latest inputs
+        # running super().normalize() at this point ensures the workflow section uses
+        # filtered self.inputs
         super().normalize(archive, logger)
 
 
