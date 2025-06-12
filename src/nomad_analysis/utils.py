@@ -149,18 +149,21 @@ def get_entry_data(
     return entry_list[0].data
 
 
-def get_reference(upload_id: str, entry_id: str) -> str:
+def get_reference(upload_id: str, entry_id: str, archive_path: str = 'data') -> str:
     """
     Returns the proxy value for referencing an entry.
 
     Args:
         upload_id (str): Upload ID of the upload in which the entry resides.
         entry_id (str): Entry ID of the entry.
+        archive_path (str): Path in the NOMAD upload where the entry is located.
+            Defaults to 'data'.
 
     Returns:
-        str: Proxy value of the form '../uploads/{upload_id}/archive/{entry_id}#/data'
+        str: Proxy value of the form
+            '../uploads/{upload_id}/archive/{entry_id}#/{archive_path}'
     """
-    return f'../uploads/{upload_id}/archive/{entry_id}#/data'
+    return f'../uploads/{upload_id}/archive/{entry_id}#/{archive_path}'
 
 
 def create_entry_with_api(
