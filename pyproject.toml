@@ -75,6 +75,7 @@ select = [
 
 ignore = [
     "F403", # 'from module import *' used; unable to detect undefined names
+    "PLC0415", # `import` should be at the top-level of a file
 ]
 
 fixable = ["ALL"]
@@ -107,7 +108,7 @@ where = ["src"]
 skip = [".github/*"]
 
 [project.entry-points.'nomad.plugin']
-general_analysis_schema = "nomad_analysis.general:schema"
-jupyter_analysis_schema = "nomad_analysis.jupyter:schema"
+general_analysis_schema = "nomad_analysis.general:schema_entry_point"
+jupyter_analysis_schema = "nomad_analysis.jupyter:schema_entry_point"
 
 [tool.setuptools_scm]

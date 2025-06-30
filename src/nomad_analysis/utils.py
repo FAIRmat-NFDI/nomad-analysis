@@ -151,12 +151,12 @@ def get_entry_data(
 
 def get_reference(upload_id: str, entry_id: str, archive_path: str = 'data') -> str:
     """
-    Returns the proxy value for referencing an entry.
+    Returns the proxy value for referencing a section of an entry.
 
     Args:
         upload_id (str): Upload ID of the upload in which the entry resides.
         entry_id (str): Entry ID of the entry.
-        archive_path (str): Path in the NOMAD upload where the entry is located.
+        archive_path (str): Path in the entry where the section is located.
             Defaults to 'data'.
 
     Returns:
