@@ -26,7 +26,7 @@ class GeneralSchemaEntryPoint(SchemaPackageEntryPoint):
         return m_package
 
 
-schema = GeneralSchemaEntryPoint(
+schema_entry_point = GeneralSchemaEntryPoint(
     name='NOMADAnalysisGeneral',
     description='A module containing general schemas for analysis of FAIR data.',
 )

@@ -27,7 +27,7 @@ class JupyterSchemaEntryPoint(SchemaPackageEntryPoint):
         return m_package
 
 
-schema = JupyterSchemaEntryPoint(
+schema_entry_point = JupyterSchemaEntryPoint(
     name='NOMADAnalysisJupyter',
     description='A module containing schemas for analysis using Jupyter notebooks.',
 )
