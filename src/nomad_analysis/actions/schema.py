@@ -102,10 +102,10 @@ class Action(ArchiveSection):
         Retrieves the status of the action using the action ID.
         """
         try:
-            if not self.action_id:
+            if not self.action_instance_id:
                 raise ValueError('No action ID found.')
             status = manager.get_action_status(
-                self.action_id, archive.metadata.authors[0].user_id
+                self.action_instance_id, archive.metadata.authors[0].user_id
             )
             self.action_status = status.name
         except Exception:
@@ -119,9 +119,11 @@ class Action(ArchiveSection):
         Stops the action using the action ID.
         """
         try:
-            if not self.action_id:
+            if not self.action_instance_id:
                 raise ValueError('No action ID found.')
-            manager.stop_action(self.action_id, archive.metadata.authors[0].user_id)
+            manager.stop_action(
+                self.action_instance_id, archive.metadata.authors[0].user_id
+            )
         except Exception:
             logger.error('Failed to stop the action.', exc_info=True)
         finally:
@@ -161,7 +163,7 @@ class Action(ArchiveSection):
                     'complete before running the action again.'
                 )
             try:
-                self.action_id = self.start_action(archive, logger)
+                self.action_instance_id = self.start_action(archive, logger)
                 self.trigger_get_action_status = True
             except Exception:
                 logger.error('Failed to start the action.', exc_info=True)
