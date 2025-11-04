@@ -109,7 +109,6 @@ class Action(ArchiveSection):
             )
             self.action_status = status.name
         except Exception:
-            # TODO handle id not available separately.
             logger.error('Failed to get action status.', exc_info=True)
         finally:
             self.trigger_get_action_status = False
@@ -148,27 +147,29 @@ class Action(ArchiveSection):
         if self.trigger_stop_action:
             if self.action_status != 'RUNNING':
                 self.trigger_stop_action = False
-                logger.warning(
+                logger.error(
                     'The action is not running. Cannot stop an action that '
                     'is not running.'
                 )
-            self.stop_action(archive, logger)
-            self.trigger_get_action_status = True
+            else:
+                self.stop_action(archive, logger)
+                self.trigger_get_action_status = True
 
         if self.trigger_start_action:
             if self.action_status == 'RUNNING':
                 self.trigger_start_action = False
-                logger.warning(
+                logger.error(
                     'The action is already running. Please wait for it to '
                     'complete before running the action again.'
                 )
-            try:
-                self.action_instance_id = self.start_action(archive, logger)
-                self.trigger_get_action_status = True
-            except Exception:
-                logger.error('Failed to start the action.', exc_info=True)
-            finally:
-                self.trigger_start_action = False
+            else:
+                try:
+                    self.action_instance_id = self.start_action(archive, logger)
+                    self.trigger_get_action_status = True
+                except Exception:
+                    logger.error('Failed to start the action.', exc_info=True)
+                finally:
+                    self.trigger_start_action = False
 
         if self.trigger_get_action_status:
             self.get_action_status(archive, logger)
