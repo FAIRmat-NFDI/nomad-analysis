@@ -102,6 +102,8 @@ class Action(ArchiveSection):
         Retrieves the status of the action using the action ID.
         """
         try:
+            if self.action_status == 'COMPLETED':
+                return
             if not self.action_instance_id:
                 raise ValueError('No action ID found.')
             status = manager.get_action_status(
