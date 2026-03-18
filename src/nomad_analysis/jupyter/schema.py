@@ -31,7 +31,7 @@ from nomad.datamodel.metainfo.annotations import (
     ELNComponentEnum,
     SectionProperties,
 )
-from nomad.datamodel.metainfo.basesections import (
+from nomad.datamodel.metainfo.basesections.v2 import (
     Analysis,
     SectionReference,
 )
