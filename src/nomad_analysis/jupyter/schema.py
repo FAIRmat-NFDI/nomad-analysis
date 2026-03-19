@@ -16,6 +16,7 @@
 # limitations under the License.
 #
 import os
+import re
 from typing import TYPE_CHECKING, Union
 
 import nbformat as nbf
@@ -26,6 +27,7 @@ from nomad.datamodel.data import (
     Query,
 )
 from nomad.datamodel.metainfo.annotations import (
+    BrowserAdaptors,
     BrowserAnnotation,
     ELNAnnotation,
     ELNComponentEnum,
@@ -41,6 +43,7 @@ from nomad.metainfo import (
     SchemaPackage,
     Section,
 )
+from nomad.metainfo.metainfo import Reference, SectionProxy
 from pydantic import BaseModel, Field
 
 from nomad_analysis.utils import (
@@ -56,6 +59,39 @@ if TYPE_CHECKING:
     from structlog.stdlib import (
         BoundLogger,
     )
+
+
+GET_ANALYSIS_ENTRY_CODE_CELL = """
+from nomad_analysis.utils import get_entry_data
+
+analysis = get_entry_data(entry_id="%s")
+"""
+
+
+def replace_analysis_entry_id(
+    notebook: nbf.notebooknode.NotebookNode,
+    analysis_id: str,
+) -> nbf.notebooknode.NotebookNode | None:
+    """
+    Goes over all the code and matches them with the `GET_ANALYSIS_ENTRY_CODE_CELL`
+    template. If a match is found, replaces the analysis_id in the cell with the
+    provided `analysis_id` and returns the notebook.
+    """
+    first_cell_pattern = re.compile(
+        re.escape(GET_ANALYSIS_ENTRY_CODE_CELL.strip()).replace('%s', '(.*)')
+    )
+    for cell in notebook.cells:
+        if (
+            cell.cell_type == 'code'
+            and cell.metadata
+            and cell.metadata.tags
+            and 'nomad-analysis-predefined' in cell.metadata.tags
+        ):
+            match = first_cell_pattern.match(cell.source)
+            if match:
+                cell.source = GET_ANALYSIS_ENTRY_CODE_CELL % analysis_id
+                return notebook
+
 
 m_package = SchemaPackage(
     aliases=[
@@ -87,6 +123,71 @@ class JupyterAnalysisCategory(EntryDataCategory):
         label='Analysis using Jupyter notebooks',
         categories=[EntryDataCategory],
     )
+
+
+class JupyterAnalysisTemplate(Analysis, EntryData):
+    m_def = Section(
+        categories=[JupyterAnalysisCategory],
+        label='Jupyter Analysis Template',
+    )
+    template_notebook = Quantity(
+        type=str,
+        description='A Jupyter notebook file that serves as a template.',
+        a_eln=ELNAnnotation(
+            component=ELNComponentEnum.FileEditQuantity,
+        ),
+        a_browser=BrowserAnnotation(adaptor=BrowserAdaptors.RawFileAdaptor),
+    )
+    from_analysis = Quantity(
+        type=Reference(SectionProxy('JupyterAnalysis')),
+        a_eln=ELNAnnotation(
+            component=ELNComponentEnum.ReferenceEditQuantity,
+        ),
+    )
+    trigger_generate_template = Quantity(
+        type=bool,
+        description='Generate a template Jupyter notebook',
+        a_eln=ELNAnnotation(
+            component=ELNComponentEnum.ActionEditQuantity,
+            label='Generate Template',
+        ),
+    )
+
+    def copy_from_analysis(self, archive: 'EntryArchive', logger: 'BoundLogger') -> str:
+        """
+        Creates a template notebook by copying the notebook from the referenced
+        analysis in `from_analysis` quantity.
+        """
+        context = self.from_analysis.m_context
+        with context.raw_file(self.from_analysis.notebook, 'r') as src_file:
+            source_notebook = nbf.read(src_file, as_version=4)
+
+        template_notebook = replace_analysis_entry_id(
+            source_notebook, 'THE_ANALYSIS_ID'
+        )
+        if template_notebook is None:
+            logger.warn('Standard Analysis query block is not found in the notebook.')
+            return self.template_notebook
+
+        new_notebook_path = archive.metadata.mainfile.split('.')[0] + '.ipynb'
+        if archive.m_context.raw_path_exists(new_notebook_path):
+            logger.warn(f'Notebook {new_notebook_path} already exists.')
+            return self.template_notebook
+
+        with archive.m_context.raw_file(new_notebook_path, 'w') as dest_file:
+            nbf.write(template_notebook, dest_file)
+
+        return new_notebook_path
+
+    def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:
+        super().normalize(archive, logger)
+        if (
+            self.trigger_generate_template
+            and self.from_analysis
+            and self.from_analysis.notebook
+        ):
+            self.template_notebook = self.copy_from_analysis(archive, logger)
+            self.trigger_generate_template = False
 
 
 class JupyterAnalysis(Analysis, EntryData):
@@ -421,18 +522,12 @@ class JupyterAnalysis(Analysis, EntryData):
             )
         )
 
-        source = [
-            'from nomad_analysis.utils import get_entry_data\n',
-            '\n',
-            f'analysis = get_entry_data(entry_id="{archive.entry_id}")\n',
-        ]
         cells.append(
             nbf.v4.new_code_cell(
-                source=source,
+                source=GET_ANALYSIS_ENTRY_CODE_CELL % archive.metadata.entry_id,
                 metadata={
                     'tags': [
                         'nomad-analysis-predefined',
-                        'nomad-analysis-get-analysis-entry',
                     ]
                 },
             )
