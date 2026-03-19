@@ -538,47 +538,35 @@ class JupyterAnalysis(Analysis, EntryData):
     def generate_notebook(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:
         """
         Generates the notebook and saves it in the upload folder. If a notebook already
-        exists, the cells containing `nomad-analysis-predefined` tag will be reset. All
-        other cells and their outputs will be preserved.
+        exists, the method does nothing.
 
         Args:
             archive (EntryArchive): The archive containing the section.
             logger (BoundLogger): A structlog logger.
         """
-        file_name = (
+        new_notebook_path = (
             os.path.basename(archive.metadata.mainfile).rsplit('.archive.', 1)[0]
             + '.ipynb'
         )
+        if archive.m_context.raw_path_exists(new_notebook_path):
+            logger.warn(f'Notebook {new_notebook_path} already exists.')
+            return
 
         new_notebook = nbf.v4.new_notebook()
 
         # add the pre-defined cells
         new_notebook.cells.extend(self.write_predefined_cells(archive, logger))
 
-        if archive.m_context.raw_path_exists(file_name):
-            # add the existing cells
-            with archive.m_context.raw_file(file_name, 'r') as nb_file:
-                old_notebook = nbf.read(nb_file, as_version=nbf.NO_CONVERT)
-
-            for cell in old_notebook.cells:
-                if (
-                    cell.metadata
-                    and cell.metadata.tags
-                    and 'nomad-analysis-predefined' in cell.metadata.tags
-                ):
-                    continue
-                new_notebook.cells.append(cell)
-        else:
-            # add an empty cell
-            new_notebook.cells.append(nbf.v4.new_code_cell())
+        # add an empty cell
+        new_notebook.cells.append(nbf.v4.new_code_cell())
 
         new_notebook['metadata']['trusted'] = True
 
-        with archive.m_context.raw_file(file_name, 'w') as nb_file:
+        with archive.m_context.raw_file(new_notebook_path, 'w') as nb_file:
             nbf.write(new_notebook, nb_file)
-        archive.m_context.process_updated_raw_file(file_name, allow_modify=True)
+        archive.m_context.process_updated_raw_file(new_notebook_path, allow_modify=True)
 
-        self.notebook = file_name
+        self.notebook = new_notebook_path
 
     def save(self):
         """
