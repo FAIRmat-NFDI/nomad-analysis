@@ -186,8 +186,12 @@ class JupyterAnalysisTemplate(Analysis, EntryData):
             and self.from_analysis
             and self.from_analysis.notebook
         ):
-            self.template_notebook = self.copy_from_analysis(archive, logger)
-            self.trigger_generate_template = False
+            try:
+                self.template_notebook = self.copy_from_analysis(archive, logger)
+            except Exception as e:
+                logger.warning(f'Error in generating template notebook: {e}.')
+            finally:
+                self.trigger_generate_template = False
 
 
 class JupyterAnalysis(Analysis, EntryData):
@@ -598,8 +602,12 @@ class JupyterAnalysis(Analysis, EntryData):
            filters duplicates by `m_proxy_value` and `lab_id`, and updates the `inputs`.
         """
         if self.trigger_generate_notebook:
-            self.generate_notebook(archive, logger)
-            self.trigger_generate_notebook = False
+            try:
+                self.generate_notebook(archive, logger)
+            except Exception as e:
+                logger.warning(f'Error in generating notebook: {e}.')
+            finally:
+                self.trigger_generate_notebook = False
         if self.trigger_reset_inputs:
             self.inputs = []
             self.trigger_reset_inputs = False
