@@ -274,6 +274,8 @@ class JupyterAnalysis(Analysis, EntryData):
     The section allows the user to:
     - Build queries to search and connect the input entries for the analysis.
     - Generate and connect a Jupyter notebook with pre-defined cell blocks.
+    - Optionally, use a JupyterAnalysisTemplate to generate the notebook based on
+        a template notebook.
     - Optionally, upload a Jupyter notebook from your local system and connect
       to the entry.
 
@@ -323,6 +325,7 @@ class JupyterAnalysis(Analysis, EntryData):
                     'description',
                     'method',
                     'query_for_inputs',
+                    'template',
                     'notebook',
                     'trigger_generate_notebook',
                     'trigger_reset_inputs',
@@ -357,13 +360,19 @@ class JupyterAnalysis(Analysis, EntryData):
             label='Reset Inputs',
         ),
     )
+    template = Quantity(
+        type=JupyterAnalysisTemplate,
+        a_eln=ELNAnnotation(
+            component=ELNComponentEnum.ReferenceEditQuantity,
+        ),
+    )
     notebook = Quantity(
         type=str,
         description='Generated Jupyter notebook file.',
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.FileEditQuantity,
         ),
-        a_browser=BrowserAnnotation(adaptor='RawFileAdaptor'),
+        a_browser=BrowserAnnotation(adaptor=BrowserAdaptors.RawFileAdaptor),
     )
     query_for_inputs = Quantity(
         type=Query,
@@ -591,13 +600,20 @@ class JupyterAnalysis(Analysis, EntryData):
             logger.warn(f'Notebook {new_notebook_path} already exists.')
             return
 
-        new_notebook = nbf.v4.new_notebook()
+        header_cells = write_header_cells(
+            notebook_heading=self.name or 'Jupyter Analysis',
+            archive_metadata={},
+        )
 
-        # add the pre-defined cells
-        new_notebook.cells.extend(self.write_predefined_cells(archive, logger))
-
-        # add an empty cell
-        new_notebook.cells.append(nbf.v4.new_code_cell())
+        if self.template and self.template.template_notebook:
+            context = self.template.m_context
+            with context.raw_file(self.template.template_notebook, 'r') as src_file:
+                new_notebook = nbf.read(src_file, as_version=4)
+            replace_header_cells(new_notebook, header_cells)
+        else:
+            new_notebook = nbf.v4.new_notebook()
+            new_notebook.cells.extend(self.write_predefined_cells(archive, logger))
+            new_notebook.cells.append(nbf.v4.new_code_cell())
 
         new_notebook['metadata']['trusted'] = True
 
