@@ -113,7 +113,7 @@ def write_header_cells(
 
     Args:
         notebook_heading (str): The heading to be displayed in the header cell.
-        archive_metadata (dict): The metadata of the linked analysis archive.
+        archive_metadata (ArchiveMetadata): The metadata of the linked analysis archive.
 
     Returns:
         list: The list of header cells to be added in the notebook.
@@ -158,8 +158,8 @@ def write_header_cells(
 
     nomad_metadata_source = ['# NOMAD Analysis Metadata - DO NOT EDIT\n']
 
-    for k, v in archive_metadata.items():
-        nomad_metadata_source.append(f'_NOMAD_ANALYSIS_{k.capitalize()} = {v!r}\n')
+    for k, v in archive_metadata:
+        nomad_metadata_source.append(f'_NOMAD_ANALYSIS_{k.upper()} = {v!r}\n')
 
     cells.append(
         nbf.v4.new_code_cell(
@@ -252,7 +252,7 @@ class JupyterAnalysisTemplate(Analysis, EntryData):
 
         archive_metadata = ArchiveMetadata(
             entry_id=archive.metadata.entry_id,
-            m_def=archive.metadata.m_def,
+            m_def=self.m_def.qualified_name(),
             main_author_name=archive.metadata.main_author.name
             if archive.metadata.main_author
             else None,
@@ -626,7 +626,7 @@ class JupyterAnalysis(Analysis, EntryData):
 
         archive_metadata = ArchiveMetadata(
             entry_id=archive.metadata.entry_id,
-            m_def=archive.metadata.m_def,
+            m_def=self.m_def.qualified_name(),
             main_author_name=archive.metadata.main_author.name
             if archive.metadata.main_author
             else None,
@@ -643,6 +643,7 @@ class JupyterAnalysis(Analysis, EntryData):
             replace_header_cells(new_notebook, header_cells)
         else:
             new_notebook = nbf.v4.new_notebook()
+            new_notebook.cells.extend(header_cells)
             new_notebook.cells.extend(self.write_predefined_cells(archive, logger))
             new_notebook.cells.append(nbf.v4.new_code_cell())
 
