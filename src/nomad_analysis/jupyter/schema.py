@@ -16,7 +16,6 @@
 # limitations under the License.
 #
 import os
-import re
 from typing import TYPE_CHECKING, Union
 
 import nbformat as nbf
@@ -59,38 +58,6 @@ if TYPE_CHECKING:
     from structlog.stdlib import (
         BoundLogger,
     )
-
-
-GET_ANALYSIS_ENTRY_CODE_CELL = """
-from nomad_analysis.utils import get_entry_data
-
-analysis = get_entry_data(entry_id="%s")
-"""
-
-
-def replace_analysis_entry_id(
-    notebook: nbf.notebooknode.NotebookNode,
-    analysis_id: str,
-) -> nbf.notebooknode.NotebookNode | None:
-    """
-    Goes over all the code and matches them with the `GET_ANALYSIS_ENTRY_CODE_CELL`
-    template. If a match is found, replaces the analysis_id in the cell with the
-    provided `analysis_id` and returns the notebook.
-    """
-    first_cell_pattern = re.compile(
-        re.escape(GET_ANALYSIS_ENTRY_CODE_CELL.strip()).replace('%s', '(.*)')
-    )
-    for cell in notebook.cells:
-        if (
-            cell.cell_type == 'code'
-            and cell.metadata
-            and cell.metadata.tags
-            and 'nomad-analysis-predefined' in cell.metadata.tags
-        ):
-            match = first_cell_pattern.match(cell.source)
-            if match:
-                cell.source = GET_ANALYSIS_ENTRY_CODE_CELL % analysis_id
-                return notebook
 
 
 def replace_header_cells(
@@ -260,21 +227,24 @@ class JupyterAnalysisTemplate(Analysis, EntryData):
         Creates a template notebook by copying the notebook from the referenced
         analysis in `from_analysis` quantity.
         """
-        context = self.from_analysis.m_context
-        with context.raw_file(self.from_analysis.notebook, 'r') as src_file:
-            source_notebook = nbf.read(src_file, as_version=4)
-
-        template_notebook = replace_analysis_entry_id(
-            source_notebook, 'THE_ANALYSIS_ID'
-        )
-        if template_notebook is None:
-            logger.warn('Standard Analysis query block is not found in the notebook.')
-            return self.template_notebook
-
         new_notebook_path = archive.metadata.mainfile.split('.')[0] + '.ipynb'
         if archive.m_context.raw_path_exists(new_notebook_path):
             logger.warn(f'Notebook {new_notebook_path} already exists.')
-            return self.template_notebook
+            return
+
+        context = self.from_analysis.m_context
+        with context.raw_file(self.from_analysis.notebook, 'r') as src_file:
+            template_notebook = nbf.read(src_file, as_version=4)
+
+        archive_metadata = {}
+
+        replace_header_cells(
+            template_notebook,
+            write_header_cells(
+                notebook_heading=f'Template for {self.from_analysis.name}',
+                archive_metadata=archive_metadata,
+            ),
+        )
 
         with archive.m_context.raw_file(new_notebook_path, 'w') as dest_file:
             nbf.write(template_notebook, dest_file)
