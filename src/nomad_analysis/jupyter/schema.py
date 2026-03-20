@@ -587,7 +587,10 @@ class JupyterAnalysis(Analysis, EntryData):
         ```
         class MyJupyterAnalysis(JupyterAnalysis):
             def write_predefined_cells(self, archive, logger):
-                cells = []
+                cells = self.write_predefined_cells(archive, logger)
+                # or if you want to start with a fresh set of pre-defined cells,
+                # you can simply do
+                # cells = []
 
                 # add your own pre-defined cells
                 source = '''\nimport pprint\npprint("Hello World!")\n'''
@@ -604,6 +607,18 @@ class JupyterAnalysis(Analysis, EntryData):
         ```
         """
         cells = []
+
+        source = [
+            'from nomad_analysis.utils import get_entry_data\n',
+            '\n',
+            'analysis = get_entry_data(entry_id=_NOMAD_ANALYSIS_ENTRY_ID)\n',
+        ]
+        cells.append(
+            nbf.v4.new_code_cell(
+                source=source,
+                metadata={'tags': ['nomad-analysis-predefined']},
+            )
+        )
 
         return cells
 
