@@ -215,7 +215,7 @@ class JupyterAnalysis(Analysis, EntryData):
     ```
     class MyJupyterAnalysis(JupyterAnalysis):
         def write_predefined_cells(self, archive, logger):
-            cells = super().write_predefined_cells(archive, logger)
+            cells = []
 
             # add your own pre-defined cells
             source = [
@@ -472,70 +472,33 @@ class JupyterAnalysis(Analysis, EntryData):
         self, archive: 'EntryArchive', logger: 'BoundLogger'
     ) -> list:
         """
-        Writes the pre-defined Jupyter notebook cells.
+        A function to be overridden in the subclasses for extending pre-defined cells
+        in the generated Jupyter notebook.
 
-        Args:
-            archive (EntryArchive): The archive containing the section.
-            logger (BoundLogger): A structlog logger.
+        Note: we use `nomad-analysis-predefined` tag in the metadata of the code
+        cells to identify them as pre-defined cells.
 
-        Returns:
-            list: The list of pre-defined code cells.
+        Here's an example:
+        ```
+        class MyJupyterAnalysis(JupyterAnalysis):
+            def write_predefined_cells(self, archive, logger):
+                cells = []
+
+                # add your own pre-defined cells
+                source = '''\nimport pprint\npprint("Hello World!")\n'''
+                cells.append(
+                    nbf.v4.new_code_cell(
+                        source=source, metadata={'tags': ['nomad-analysis-predefined']}
+                    )
+                )
+                # add more cells as needed
+                # ...
+
+
+                return cells
+        ```
         """
-        user = 'Unknown user'
-        if archive.metadata.main_author:
-            user = archive.metadata.main_author.name
-        notebook_heading = self.name
-        if not notebook_heading:
-            notebook_heading = archive.metadata.mainfile.split('.')[0].replace('_', ' ')
-
         cells = []
-
-        source = [
-            '<div style="\n',
-            '    background-color: #f7f7f7;\n',
-            "    background-image: url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcKICAgd2lkdGg9IjcyIgogICBoZWlnaHQ9IjczIgogICB2aWV3Qm94PSIwIDAgNzIgNzMiCiAgIGZpbGw9Im5vbmUiCiAgIHZlcnNpb249IjEuMSIKICAgaWQ9InN2ZzEzMTkiCiAgIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgeG1sbnM6c3ZnPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGRlZnMKICAgICBpZD0iZGVmczEzMjMiIC8+CiAgPHBhdGgKICAgICBkPSJNIC0wLjQ5OTk4NSwxNDUgQyAzOS41MzMsMTQ1IDcyLDExMi41MzIgNzIsNzIuNSA3MiwzMi40Njc4IDM5LjUzMywwIC0wLjQ5OTk4NSwwIC00MC41MzI5LDAgLTczLDMyLjQ2NzggLTczLDcyLjUgYyAwLDQwLjAzMiAzMi40NjcxLDcyLjUgNzIuNTAwMDE1LDcyLjUgeiIKICAgICBmaWxsPSIjMDA4YTY3IgogICAgIGZpbGwtb3BhY2l0eT0iMC4yNSIKICAgICBpZD0icGF0aDEzMTciIC8+Cjwvc3ZnPgo='), url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcKICAgd2lkdGg9IjIxNyIKICAgaGVpZ2h0PSIyMjMiCiAgIHZpZXdCb3g9IjAgMCAyMTcgMjIzIgogICBmaWxsPSJub25lIgogICB2ZXJzaW9uPSIxLjEiCiAgIGlkPSJzdmcxMTA3IgogICB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiAgIHhtbG5zOnN2Zz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxkZWZzCiAgICAgaWQ9ImRlZnMxMTExIiAvPgogIDxwYXRoCiAgICAgZD0ibSAyMi4wNDIsNDUuMDEwOSBjIDIxLjM2MjUsMjEuMjc1NyA1NS45NzYsMjEuMjc1NyA3Ny41MTkyLDAgQyAxMTkuNTU4LDI1LjA4IDE1MS41MDIsMjMuNzM1MiAxNzIuODY0LDQxLjM3OCBjIDEuMzQ1LDEuNTI1NCAyLjY5LDMuMjUxNiA0LjIzNiw0Ljc5NzEgMjEuMzYzLDIxLjI3NTYgMjEuMzYzLDU1Ljc5ODkgMCw3Ny4yNTQ5IC0yMS4zNjIsMjEuMjc2IC0yMS4zNjIsNTUuNzk4IDAsNzcuMjU1IDIxLjM2MywyMS40NTYgNTUuOTc2LDIxLjI3NSA3Ny41MiwwIDIxLjU0MywtMjEuMjc2IDIxLjM2MiwtNTUuNzk5IDAsLTc3LjI1NSAtMjEuMzYzLC0yMS4yNzYgLTIxLjM2MywtNTUuNzk4NiAwLC03Ny4yNTQ5IDEyLjY4OSwtMTIuNjQ1IDE3Ljg4OSwtMzAuMTA3MSAxNS4zOTksLTQ2LjU4NTc2IC0xLjU0NiwtMTEuNTAwOTQgLTYuNzI2LC0yMi44MjExNCAtMTUuNTgsLTMxLjYzMjU0IC0yMS4zNjMsLTIxLjI3NTYgLTU1Ljk3NiwtMjEuMjc1NiAtNzcuNTE5LDAgLTIxLjM2MywyMS4yNzU3IC01NS45NzYsMjEuMjc1NyAtNzcuNTE5NCwwIC0yMS4zNjI1LC0yMS4yNzU2IC01NS45NzYxLC0yMS4yNzU2IC03Ny41MTkyLDAgQyAwLjY3OTU2NSwtMTAuNzg3NiAwLjY3OTU5NiwyMy43MzUyIDIyLjA0Miw0NS4wMTA5IFoiCiAgICAgZmlsbD0iIzJhNGNkZiIKICAgICBzdHJva2U9IiMyYTRjZGYiCiAgICAgc3Ryb2tlLXdpZHRoPSIxMiIKICAgICBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiCiAgICAgaWQ9InBhdGgxMTA1IiAvPgogIDxwYXRoCiAgICAgZD0ibSA1MS45OTUyMTIsMjIyLjczMDEzIGMgMjguMzU5MSwwIDUxLjM1ODM5OCwtMjIuOTk5OSA1MS4zNTgzOTgsLTUxLjM1ODQgMCwtMjguMzU4NiAtMjIuOTk5Mjk4LC01MS4zNTg1OSAtNTEuMzU4Mzk4LC01MS4zNTg1OSAtMjguMzU5MSwwIC01MS4zNTg2MDIsMjIuOTk5OTkgLTUxLjM1ODYwMiw1MS4zNTg1OSAwLDI4LjM1ODUgMjIuOTk5NTAyLDUxLjM1ODQgNTEuMzU4NjAyLDUxLjM1ODQgeiIKICAgICBmaWxsPSIjMTkyZTg2IgogICAgIGZpbGwtb3BhY2l0eT0iMC4zNSIKICAgICBpZD0icGF0aDE5MzciIC8+Cjwvc3ZnPgo=') ;\n",  # noqa: E501
-            '    background-position: left bottom, right top;\n',
-            '    background-repeat: no-repeat,  no-repeat;\n',
-            '    background-size: auto 60px, auto 160px;\n',
-            '    border-radius: 5px;\n',
-            '    box-shadow: 0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0,0,0,.12);">\n',  # noqa: E501
-            '\n',
-            '<h1 style="\n',
-            '    color: #2a4cdf;\n',
-            '    font-style: normal;\n',
-            '    font-size: 2.25rem;\n',
-            '    line-height: 1.4em;\n',
-            '    font-weight: 600;\n',
-            '    padding: 30px 200px 0px 30px;"\n',
-            f'>{notebook_heading}</h1>\n',
-            '<p style="font-size: 1.25em; font-style: italic; padding: 5px 200px 30px 30px;"\n',  # noqa: E501
-            f'>{user}</p>\n',
-            '</div>\n',
-            '\n',
-            'This notebook has been generated by a NOMAD Analysis entry with the\n',
-            f'definition path: `{self.m_def.qualified_name()}`.\n',
-            '\n',
-            'Running the following code cell loads the entry in the local Jupyter\n',
-            'environment allowing you to update it based on your analysis. Once the\n',
-            'entry has been modified, use `analysis.save()` method to pass on the\n',
-            'changes back into NOMAD.\n',
-        ]
-        cells.append(
-            nbf.v4.new_markdown_cell(
-                source=source, metadata={'tags': ['nomad-analysis-predefined']}
-            )
-        )
-
-        cells.append(
-            nbf.v4.new_code_cell(
-                source=GET_ANALYSIS_ENTRY_CODE_CELL % archive.metadata.entry_id,
-                metadata={
-                    'tags': [
-                        'nomad-analysis-predefined',
-                    ]
-                },
-            )
-        )
 
         return cells
 
