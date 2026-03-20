@@ -60,6 +60,20 @@ if TYPE_CHECKING:
     )
 
 
+class ArchiveMetadata(BaseModel):
+    """
+    A data model for storing metadata of a NOMAD entry archive.
+    """
+
+    entry_id: str = Field(description='The unique identifier of the entry.')
+    m_def: str | None = Field(
+        default=None, description='The definition path of the entry schema.'
+    )
+    main_author_name: str | None = Field(
+        default=None, description='The name of the main author.'
+    )
+
+
 def replace_header_cells(
     notebook: nbf.notebooknode.NotebookNode, header_cells: list
 ) -> None:
@@ -91,7 +105,7 @@ def replace_header_cells(
 
 def write_header_cells(
     notebook_heading: str,
-    archive_metadata: dict,
+    archive_metadata: ArchiveMetadata,
 ) -> list:
     """
     Returns the header cells in the notebook based on the given heading and
@@ -236,12 +250,22 @@ class JupyterAnalysisTemplate(Analysis, EntryData):
         with context.raw_file(self.from_analysis.notebook, 'r') as src_file:
             template_notebook = nbf.read(src_file, as_version=4)
 
-        archive_metadata = {}
+        archive_metadata = ArchiveMetadata(
+            entry_id=archive.metadata.entry_id,
+            m_def=archive.metadata.m_def,
+            main_author_name=archive.metadata.main_author.name
+            if archive.metadata.main_author
+            else None,
+        )
 
         replace_header_cells(
             template_notebook,
             write_header_cells(
-                notebook_heading=f'Template for {self.from_analysis.name}',
+                notebook_heading='Template for %s'
+                % (
+                    self.from_analysis.name
+                    or self.from_analysis.m_parent.metadata.mainfile
+                ),
                 archive_metadata=archive_metadata,
             ),
         )
@@ -600,9 +624,16 @@ class JupyterAnalysis(Analysis, EntryData):
             logger.warn(f'Notebook {new_notebook_path} already exists.')
             return
 
+        archive_metadata = ArchiveMetadata(
+            entry_id=archive.metadata.entry_id,
+            m_def=archive.metadata.m_def,
+            main_author_name=archive.metadata.main_author.name
+            if archive.metadata.main_author
+            else None,
+        )
         header_cells = write_header_cells(
             notebook_heading=self.name or 'Jupyter Analysis',
-            archive_metadata={},
+            archive_metadata=archive_metadata,
         )
 
         if self.template and self.template.template_notebook:
