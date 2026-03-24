@@ -27,6 +27,9 @@ TODO
 How-to guides provide step-by-step instructions for a wide range of tasks, with the overarching topics:
 
 - [Install and add to your Oasis](how_to/install_and_add_to_your_oasis.md)
+- [Analysis with Jupyter Notebooks](how_to/analysis_with_jupyter_notebooks.md)
+- [Extend JupyterAnalysis Schema](how_to/extend_jupyter_analysis.md)
+- [Run NOMAD Actions from ELN](how_to/run_nomad_actions_from_eln.md)
 - [Contribute to the Plugin](how_to/contribute_to_the_plugin.md)
 
 </div>
@@ -42,8 +45,13 @@ The explanation [section](explanation/explanation.md) provides background knowle
 
 ### Reference
 
-The reference [section](reference/references.md) includes all CLI commands and arguments, all configuration options,
-the possible schema annotations and their arguments, and a glossary of used terms.
+Technical reference documentation for schemas and their functionalities:
+
+- [Schemas Overview](reference/schemas/overview.md)
+    - [Jupyter Analysis](reference/schemas/jupyter.md)
+    - [Actions](reference/schemas/actions.md)
+    - [General](reference/schemas/general.md)
+- [Glossary](reference/glossary.md)
 
 </div>
 </div>
