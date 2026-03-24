@@ -16,12 +16,13 @@ nav:
       - Contribute to the Plugin: how_to/contribute_to_the_plugin.md
   - Explanation: explanation/explanation.md
   - References:
-      - Overview: reference/references.md
       - Entry Points: reference/entry_points.md
       - Schemas:
+          - Overview: reference/schemas/overview.md
           - General: reference/schemas/general.md
           - Jupyter Analysis: reference/schemas/jupyter.md
           - Actions: reference/schemas/actions.md
+      - Glossary: reference/glossary.md
 plugins:
  - search
  - macros:
