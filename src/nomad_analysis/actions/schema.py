@@ -43,7 +43,7 @@ class Action(ArchiveSection):
     """
     Base class for actions that can be triggered from the ELN interface. Includes two
     action buttons: one for triggering the action and another for retrieving the
-    status of the action using the action ID. Subclasses should implement the
+    status of the action using the action instance ID. Subclasses should implement the
     `start_action` method to define the specific action to be performed.
     """
 
@@ -99,34 +99,52 @@ class Action(ArchiveSection):
 
     def get_action_status(self, archive: 'EntryArchive', logger: 'BoundLogger'):
         """
-        Retrieves the status of the action using the action ID.
+        Retrieves the status of the action using the action instance ID.
+
+        The `action_status` field can have the following values:
+
+            | Status       | Description                              |
+            |--------------|------------------------------------------|
+            | `RUNNING`    | Action is currently executing            |
+            | `COMPLETED`  | Action finished successfully             |
+            | `FAILED`     | Action encountered an error              |
+            | `CANCELLED`  | Action was stopped by user               |
+            | `TERMINATED` | Action was terminated by system or admin |
         """
         try:
             if self.action_status == 'COMPLETED':
                 return
             if not self.action_instance_id:
-                raise ValueError('No action ID found.')
+                raise ValueError('Action instance ID not provided.')
             status = manager.get_action_status(
                 self.action_instance_id, archive.metadata.authors[0].user_id
             )
             self.action_status = status.name
         except Exception:
-            logger.error('Failed to get action status.', exc_info=True)
+            logger.error(
+                'Failed to get status for action instance ID '
+                f'"{self.action_instance_id}".',
+                exc_info=True,
+            )
         finally:
             self.trigger_get_action_status = False
 
     def stop_action(self, archive: 'EntryArchive', logger: 'BoundLogger'):
         """
-        Stops the action using the action ID.
+        Stops the action using the action instance ID.
         """
         try:
             if not self.action_instance_id:
-                raise ValueError('No action ID found.')
+                raise ValueError('Action instance ID not provided.')
             manager.stop_action(
                 self.action_instance_id, archive.metadata.authors[0].user_id
             )
         except Exception:
-            logger.error('Failed to stop the action.', exc_info=True)
+            logger.error(
+                'Failed to stop the action with instance ID '
+                f'"{self.action_instance_id}".',
+                exc_info=True,
+            )
         finally:
             self.trigger_stop_action = False
 

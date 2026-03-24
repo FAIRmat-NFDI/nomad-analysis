@@ -134,4 +134,3 @@ def normalize(self, archive, logger):
 
 - [Analysis with Jupyter Notebooks](./analysis_with_jupyter_notebooks.md#analysis-with-jupyter-notebooks): Learn how to use the generated notebooks for your analysis workflow.
 - [Run NOMAD Actions from ELN](./run_nomad_actions_from_eln.md): Trigger complex analysis workflows directly from your ELN entries using NOMAD Actions.
-- [Define robust analysis pipelines with NOMAD Actions](https://nomad-lab.eu/prod/v1/docs/howto/plugins/types/actions.html): Automate your analysis workflows with NOMAD Actions.

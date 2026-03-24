@@ -127,3 +127,4 @@ the ELN interface (see above).
 - [Extend JupyterAnalysis Schema](extend_jupyter_analysis.md): Learn how to
 extend the `JupyterAnalysis` schema to add more fields, use specialized
 sub-section, and define the content for generated notebooks.
+- [Run NOMAD Actions from ELN](run_nomad_actions_from_eln.md): Trigger complex analysis workflows directly from your ELN entries using NOMAD Actions.
