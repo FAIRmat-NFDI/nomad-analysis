@@ -2,9 +2,25 @@
 
 This guide provides step-by-step instructions for creating and managing Jupyter notebook-based analyses in NOMAD using the `JupyterAnalysis` schema. It covers both the ELN interface and YAML-based approaches.
 
+## Why use Jupyter Analysis?
+
+Jupyter notebooks are a powerful tool for interactive data analysis, combining
+code, visualizations, and documentation in a single document. The
+Jupyter Analysis schema leverages this capability to provide a structured
+framework for performing semi-automated analysis workflows directly connected
+to your research data.
+
+With Jupyter Analysis entries, you can connect entries stored in
+NOMAD as inputs, load them into your notebook environment, and perform custom
+analysis using Python. The results can then be saved back to NOMAD, ensuring
+that your analysis outputs are properly linked to the original data and remain
+part of the reproducible research record. This approach also makes it easy to
+share your complete analysis workflow—including code, data references, and
+results—with collaborators.
+
 ## Method 1: Using the ELN Interface
 
-### Create a New Entry
+### Create a new Jupyter Analysis Entry
 
 - Navigate to your upload in NOMAD
 - Click **Create Entry** and enter the name of your analysis (e.g., "XRD Phase Analysis")
@@ -21,21 +37,21 @@ This guide provides step-by-step instructions for creating and managing Jupyter 
 
 ### Select Input Data
 
-You can search and connect multiple input entries to your analysis. To do this in the ELN:
+Existing NOMAD entries can be added as input to your analysis via referencing.
+To do this, go to the `inputs` field and click on the plus button to add a new
+sub-section. Inside the sub-section, fill in the `reference` quantity with path to the desired entry and save the analysis entry.
 
-- Find the `query_for_inputs` field
+If you want to add several inputs, you can also use a query-powered approach to search and reference multiple entries at once. To do this:
+
+- Go to the `query_for_inputs` field
 - Click the search icon to open the search interface
 - Build a query to find your input data (e.g., filter by upload, entry type, etc.)
 - Click OK to add the searched entries as inputs
 
-The entries will be stored and appear in the `inputs` sub-section.
+Each searched entry will be processed as one input and all of them will be added under the `inputs` field.
 
-A new input can also be added manually by clicking the plus button in the `inputs` sub-section and filling in the reference path to the desired entry.
-
-
-### Resetting Inputs
-
-To clear and repopulate inputs from queries, click the **Reset Inputs** action button. All existing inputs will be removed and repopulated based on the search query in `query_for_inputs`.
+!!! hint
+    If you have mistakenly added a lot of inputs based on a broad query, use the **Reset Inputs** action button to start afresh. Set the more specific query and click the button. All existing inputs will be removed and repopulated based on the new query.
 
 ### Generate the Notebook
 
@@ -47,7 +63,15 @@ You can also generate a notebook automatically by clicking the **Generate Notebo
 - Pre-populate it with header cells and data loading code
 - Link it with the `notebook` quantity
 
-The name of the generated notebook will match your entry name.
+The name of the generated notebook will match your entry name. It contains a header with the analysis name and a pre-defined code cell that loads the analysis entry and its inputs:
+
+```python
+from nomad_analysis.utils import get_entry_data
+
+analysis = get_entry_data(entry_id=<NOMAD_ANALYSIS_ENTRY_ID>)
+```
+
+Inputs can be accessed through the `analysis.inputs` attribute, which contains references to the input entries you defined in the ELN interface.
 
 !!! warning
     Different notebooks cannot share the same name. If you encounter issues trying to generate a new notebook, check for name collisions first. Either modify or delete the existing notebook depending on your needs.
@@ -63,10 +87,18 @@ It will open in NOMAD's integrated JupyterHub (North) in a new tab with your not
 
 Now you can run the cells to load your data and perform your analysis.
 
+During the analysis, you can save the steps and results by writing them into
+the `analysis.steps` and `analysis.outputs` fields respectively. To save the
+entry back to NOMAD, simply call `analysis.save()` at the end of your notebook.
+This will update the entry with your analysis results and ensure that
+everything is properly linked and stored in NOMAD.
+
 
 ## Method 2: Using YAML Files
 
-`JupyterAnalysis` entries can also be created using YAML files. The support comes from NOMAD in general, where you can create entries by uploading YAML files with the appropriate structure.
+Jupyter Analysis entries can also be created using YAML files. The support
+comes from NOMAD in general, where you can create entries by uploading YAML
+files with the appropriate structure.
 
 Create a file named `my_analysis.archive.yaml` and upload it to your NOMAD upload:
 
@@ -92,4 +124,6 @@ the ELN interface (see above).
 
 ## Learn More
 
-- [Extend JupyterAnalysis Schema](extend_jupyter_analysis.md): Learn how to extend the `JupyterAnalysis` schema to add more fields, use specialized sub-section, and define the content for generated notebooks.
+- [Extend JupyterAnalysis Schema](extend_jupyter_analysis.md): Learn how to
+extend the `JupyterAnalysis` schema to add more fields, use specialized
+sub-section, and define the content for generated notebooks.
