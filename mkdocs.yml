@@ -11,6 +11,7 @@ nav:
   - How-to guides:
       - Install and add to your Oasis: how_to/install_and_add_to_your_oasis.md
       - Analysis with Jupyter Notebooks: how_to/analysis_with_jupyter_notebooks.md
+      - Extend JupyterAnalysis Schema: how_to/extend_jupyter_analysis.md
       - Contribute to the Plugin: how_to/contribute_to_the_plugin.md
   - Explanation: explanation/explanation.md
   - Reference:
