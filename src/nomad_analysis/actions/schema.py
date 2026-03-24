@@ -41,13 +41,11 @@ m_package = SchemaPackage()
 
 class Action(ArchiveSection):
     """
-    Base class for actions that can be triggered from the ELN interface. Includes two
-    action buttons: one for triggering the action and another for retrieving the
-    status of the action using the action instance ID. Subclasses should implement the
-    `start_action` method to define the specific action to be performed.
+    Base class for triggering actions from the ELN interface.
+    Subclasses should implement the `start_action` method.
     """
 
-    m_def = Section(description='Section for running NOMAD Actions.')
+    m_def = Section(description='Section for handling NOMAD Actions.')
     action_instance_id = Quantity(
         type=str,
         description='The instance ID of the last triggered action.',
@@ -100,16 +98,6 @@ class Action(ArchiveSection):
     def get_action_status(self, archive: 'EntryArchive', logger: 'BoundLogger'):
         """
         Retrieves the status of the action using the action instance ID.
-
-        The `action_status` field can have the following values:
-
-            | Status       | Description                              |
-            |--------------|------------------------------------------|
-            | `RUNNING`    | Action is currently executing            |
-            | `COMPLETED`  | Action finished successfully             |
-            | `FAILED`     | Action encountered an error              |
-            | `CANCELLED`  | Action was stopped by user               |
-            | `TERMINATED` | Action was terminated by system or admin |
         """
         try:
             if self.action_status == 'COMPLETED':
@@ -150,15 +138,34 @@ class Action(ArchiveSection):
 
     def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger'):
         """
-        Normalizes the action entry. If `trigger_start_action` is set to True, it calls
-        the `start_action` method to execute the action and sets
-        `trigger_get_action_status` to True to retrieve the action status. If
-        `trigger_get_action_status` is set to True, it calls the `_get_action_status`
-        method to update the `action_status`.
+        Handles the behavior of the trigger buttons:
 
-        Args:
-            archive (Archive): A NOMAD archive.
-            logger (Logger): A structured logger.
+        - If `trigger_start_action` is set to True, it calls the `start_action`
+        method to execute the action and sets `trigger_get_action_status` to True to
+        retrieve the action status.
+
+        - If `trigger_stop_action` is set to True, it calls the `stop_action` method
+        to stop the action and sets `trigger_get_action_status` to True to update
+        the action status.
+
+        - If `trigger_get_action_status` is set to True, it calls the
+        `get_action_status` method to update the `action_status`.
+
+        The `action_status` field can have the following values:
+
+        | Status       | Description                              |
+        |--------------|------------------------------------------|
+        | `RUNNING`    | Action is currently executing            |
+        | `COMPLETED`  | Action finished successfully             |
+        | `FAILED`     | Action encountered an error              |
+        | `CANCELLED`  | Action was stopped by user               |
+        | `TERMINATED` | Action was terminated by system or admin |
+
+        The `start_action` method should be implemented by subclasses.
+        It should prepare the input for the specific action and trigger it using the
+        `nomad.actions.manager.start_action` method. The `start_action` method should
+        return the same instance ID of the triggered as returned by the
+        `nomad.actions.manager.start_action` method.
         """
         if self.action_status == 'RUNNING':
             # work with the latest status if last known status is RUNNING

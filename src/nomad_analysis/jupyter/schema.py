@@ -499,8 +499,20 @@ class JupyterAnalysis(Analysis, EntryData):
 
     def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger'):
         """
-        Handles the behavior of action triggers and normalizes the input
-        references.
+        Handles the behavior of trigger buttons (generate notebook, reset inputs)
+        and normalizes the input references.
+
+        The normalize method orchestrates:
+
+        - `generate_notebook`: If triggered, generates a Jupyter notebook file. The
+           `write_predefined_cells` method is used to write the pre-defined cells in
+           the notebook.
+        - `reset_inputs`: If triggered, resets the existing input references and
+           creates new references based on the `query_for_inputs` quantity.
+        - `process_query_for_inputs`: Processes the `query_for_inputs` quantity to get
+           the list of input entries based on the queries.
+        - `normalize_input_references`: Combines existing inputs with query results,
+           filters duplicates by `m_proxy_value` and `lab_id`, and updates the `inputs`.
         """
         if self.trigger_generate_notebook:
             self.generate_notebook(archive, logger)
