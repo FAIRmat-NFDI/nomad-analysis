@@ -49,8 +49,8 @@ You can also generate a notebook automatically by clicking the **Generate Notebo
 
 The name of the generated notebook will match your entry name.
 
-!!! note
-    If a notebook already exists with the same name, the generation will be skipped. Delete the existing notebook first if you want to regenerate it.
+!!! warning
+    Different notebooks cannot share the same name. If you encounter issues trying to generate a new notebook, check for name collisions first. Either modify or delete the existing notebook depending on your needs.
 
 ### Open and Run the Notebook
 
@@ -87,7 +87,7 @@ data:
 ```
 
 After uploading, trigger notebook generation and other functionality through
-the ELN interface.
+the ELN interface (see above).
 
 
 ## Learn More
