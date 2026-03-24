@@ -1,6 +1,6 @@
-site_name: Documentation
+site_name: NOMAD Analysis Plugin Documentation
 site_description: |
-  The documentation for the NOMAD analysis tools
+  Documentation for the NOMAD Analysis plugin - Tools for data analysis within NOMAD
 site_author: The NOMAD Authors
 repo_url: https://github.com/FAIRmat-NFDI/nomad-analysis
 edit_uri: ""
@@ -15,10 +15,17 @@ nav:
       - Run NOMAD Actions from ELN: how_to/run_nomad_actions_from_eln.md
       - Contribute to the Plugin: how_to/contribute_to_the_plugin.md
   - Explanation: explanation/explanation.md
-  - Reference:
+  - References:
+      - Overview: reference/references.md
       - Entry Points: reference/entry_points.md
+      - Schemas:
+          - General: reference/schemas/general.md
+          - Jupyter Analysis: reference/schemas/jupyter.md
+          - Actions: reference/schemas/actions.md
 plugins:
-  - search
+ - search
+ - macros:
+    module_name: docs/main
 theme:
   name: material
   palette:
@@ -57,6 +64,5 @@ use_directory_urls: false
 extra_css:
   - stylesheets/extra.css
 extra_javascript:
-  - javascript.js
   - https://polyfill.io/v3/polyfill.min.js?features=es6
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
