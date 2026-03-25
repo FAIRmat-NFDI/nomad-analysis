@@ -11,7 +11,7 @@ Install the plugin in your local environment directly from PyPI:
 pip install nomad-analysis
 ```
 
-If you are using [uv](https://github.com/astral-sh/uv) (recommended) to manage your Python environments, you can install the plugin with:
+If you are using [uv](https://docs.astral.sh/uv/) (recommended) to manage your Python environments, you can install the plugin with:
 
 ```sh
 uv pip install nomad-analysis
@@ -36,7 +36,7 @@ plugins = [
 ]
 ```
 
-### Configure the plugin (optional)
+### Configure the Plugin (optional)
 
 You can configure the plugin by updating the `nomad.yaml` of your distribution. For example, exclusively include only one entry point from the plugin by:
 
@@ -52,7 +52,7 @@ plugins:
 
 By default, all entry points from the plugin are included, so this step is optional. You can find all available entry points under [Reference > Entry Points](../reference/entry_points.md).
 
-### Rebuild and deploy
+### Rebuild and Deploy
 
 Rebuild your Oasis Docker image and redeploy:
 

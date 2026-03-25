@@ -86,7 +86,7 @@ uv run ruff check . --fix
 ```
 
 Once you've made your changes and ensured that tests pass and code is properly
-formatted, you can [create a Pull Request](#creating-a-pull-request) to submit
+formatted, you can [create a Pull Request](#creating-a-pull-request-pr) to submit
 your contributions.
 
 ## Documentation Contribution
@@ -121,7 +121,7 @@ docs/
 
 ### Documentation PR Previews
 
-Once you've made changes to the documentation locally, you can [create a Pull Request](#creating-a-pull-request) to submit your contributions. For documentation changes, a preview is automatically deployed. Look
+Once you've made changes to the documentation locally, you can [create a Pull Request](#creating-a-pull-request-pr) to submit your contributions. For documentation changes, a preview is automatically deployed. Look
 for a comment by **github-actions** bot on your PR with the preview URL.
 
 
@@ -134,7 +134,7 @@ In your local clone, create a new branch for your feature or fix:
   ```
 
 !!! tip "Forking the repository"
-    If you don't have write access to the main repository, fork it first and clone your fork locally. Then create a branch in your fork. Check out the [GitHub documentation](https://docs.github.com/en/get-started/quickstart/fork-a-repo) for detailed instructions on forking.
+    If you don't have write access to the main repository, fork it first and clone your fork locally. Then create a branch in your fork. Check out the GitHub documentation for detailed instructions on [forking](https://docs.github.com/en/get-started/quickstart/fork-a-repo).
 
 Make your changes and ensure tests pass:
 ```sh

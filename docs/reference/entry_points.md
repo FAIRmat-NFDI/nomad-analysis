@@ -11,6 +11,6 @@ be included in your [Oasis](https://nomad-lab.eu/prod/v1/docs/reference/glossary
 
 
 You can configure which entry points to include in your Oasis deployment by
-updating the `nomad.yaml` of your distribution, as described in the
-[Installation guide](../how_to/install_and_add_to_your_oasis.
-md#configure-the-plugin-optional). By default, all entry points from the plugin are included.
+updating the `nomad.yaml` of your distribution, as described in the [Configure
+the Plugin](../how_to/install_and_add_to_your_oasis.md#configure-the-plugin-optional) section of the installation guide.
+By default, all entry points from the plugin are included.
