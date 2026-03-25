@@ -1,11 +1,14 @@
-# Welcome to the `nomad-analysis` documentation
+# NOMAD Analysis
 
-A NOMAD plugin for analysis.
+A NOMAD plugin developed by the community to support analysis workflows in
+NOMAD.
 
-## Introduction
+This is  collection of resources to help you get started with the plugin,
+understand its features, and contribute to its development.
 
-!!! note "Attention"
-    TODO
+Whether you're a user looking to leverage the plugin for your analysis
+workflows or a developer interested in extending its capabilities, you'll find
+everything you need here.
 
 <div markdown="block" class="home-grid">
 <div markdown="block">
@@ -23,10 +26,8 @@ TODO
 
 How-to guides provide step-by-step instructions for a wide range of tasks, with the overarching topics:
 
-- [Install this plugin](how_to/install_this_plugin.md)
-- [Use this plugin](how_to/use_this_plugin.md)
-- [Contribute to this plugin](how_to/contribute_to_this_plugin.md)
-- [Contribute to the documentation](how_to/contribute_to_the_documentation.md)
+- [Install and add to your Oasis](how_to/install_and_add_to_your_oasis.md)
+- [Contribute](how_to/contribute.md)
 
 </div>
 
