@@ -45,6 +45,7 @@ dev = [
     "ruff",
     "pytest",
     "structlog",
+    "nomad-docs>=0.1.3",
 ]
 
 [tool.uv]
