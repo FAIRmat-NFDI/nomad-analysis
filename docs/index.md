@@ -27,7 +27,7 @@ TODO
 How-to guides provide step-by-step instructions for a wide range of tasks, with the overarching topics:
 
 - [Install and add to your Oasis](how_to/install_and_add_to_your_oasis.md)
-- [Contribute](how_to/contribute.md)
+- [Contribute to the Plugin](how_to/contribute_to_the_plugin.md)
 
 </div>
 

@@ -10,7 +10,7 @@ nav:
   - Tutorial: tutorial/tutorial.md
   - How-to guides:
       - Install and add to your Oasis: how_to/install_and_add_to_your_oasis.md
-      - Contribute: how_to/contribute.md
+      - Contribute to the Plugin: how_to/contribute_to_the_plugin.md
   - Explanation: explanation/explanation.md
   - Reference:
       - Entry Points: reference/entry_points.md
