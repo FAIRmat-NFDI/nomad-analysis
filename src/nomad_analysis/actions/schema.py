@@ -374,6 +374,7 @@ class Action(ActionStatus, StopAction, StartAction):
             else:
                 try:
                     self.action_instance_id = self.start_action(archive, logger)
+                    self.action_status = None
                     self.trigger_get_action_status = True
                 except Exception:
                     logger.warning('Failed to start the action.', exc_info=True)
