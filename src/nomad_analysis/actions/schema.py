@@ -356,7 +356,7 @@ class Action(ActionStatus, StopAction, StartAction):
         if self.trigger_stop_action:
             if self.action_status != 'RUNNING':
                 self.trigger_stop_action = False
-                logger.error(
+                logger.warning(
                     'The action is not running. Cannot stop an action that '
                     'is not running.'
                 )
@@ -367,7 +367,7 @@ class Action(ActionStatus, StopAction, StartAction):
         if self.trigger_start_action:
             if self.action_status == 'RUNNING':
                 self.trigger_start_action = False
-                logger.error(
+                logger.warning(
                     'The action is already running. Please wait for it to '
                     'complete before running the action again.'
                 )
@@ -376,7 +376,7 @@ class Action(ActionStatus, StopAction, StartAction):
                     self.action_instance_id = self.start_action(archive, logger)
                     self.trigger_get_action_status = True
                 except Exception:
-                    logger.error('Failed to start the action.', exc_info=True)
+                    logger.warning('Failed to start the action.', exc_info=True)
                 finally:
                     self.trigger_start_action = False
 
