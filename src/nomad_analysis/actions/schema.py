@@ -21,11 +21,14 @@ from typing import (
 
 from nomad.actions import manager
 from nomad.datamodel import ArchiveSection
+from nomad.datamodel.data import EntryDataCategory
 from nomad.datamodel.metainfo.annotations import (
     ELNAnnotation,
     ELNComponentEnum,
+    QuantityDisplayAnnotation,
 )
 from nomad.metainfo import (
+    Category,
     Quantity,
     SchemaPackage,
     Section,
@@ -37,6 +40,32 @@ if TYPE_CHECKING:
 
 
 m_package = SchemaPackage()
+
+
+class ActionCategory(EntryDataCategory):
+    """
+    A category for schemas that can be used to run NOMAD Actions.
+
+    `EntryData` sections with this category will be put under the same group,
+    **"Run NOMAD Actions from ELN"**,
+    in the Create from Schema > Built-in schema dropdown menu.
+
+    Example usage:
+
+    ```python
+    class MyActionELN(Action, EntryData):
+        m_def = Section(
+            description='Section for running my custom action.',
+            categories=[ActionCategory],
+        )
+        ...
+    ```
+    """
+
+    m_def = Category(
+        label='Run NOMAD Actions from ELN',
+        categories=[EntryDataCategory],
+    )
 
 
 class StartAction(ArchiveSection):
