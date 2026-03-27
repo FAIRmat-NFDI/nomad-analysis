@@ -24,7 +24,7 @@ results—with collaborators.
 
 - Navigate to your upload in NOMAD
 - Click **Create Entry** and enter the name of your analysis (e.g., "XRD Phase Analysis")
-- Select the **Built-in Schemas** option and select **Jupyter Analysis** from the dropdown
+- Select the **Built-in Schemas** option and select **Jupyter Analysis** from the dropdown menu
 - Click **Create** to generate the entry
 
 ### Fill in Basic Information
@@ -37,11 +37,11 @@ results—with collaborators.
 
 ### Select Input Data
 
-Existing NOMAD entries can be added as input to your analysis via referencing.
+Existing NOMAD entries can be added as input to your analysis as `Reference`s.
 To do this, go to the `inputs` field and click on the plus button to add a new
 sub-section. Inside the sub-section, fill in the `reference` quantity with path to the desired entry and save the analysis entry.
 
-If you want to add several inputs, you can also use a query-powered approach to search and reference multiple entries at once. To do this:
+If you want to add several inputs, you can also use a **query-powered approach** to search and reference multiple entries at once. To do this:
 
 - Go to the `query_for_inputs` field
 - Click the search icon to open the search interface
@@ -83,7 +83,7 @@ You can open the notebook in NOMAD's integrated JupyterHub (North).
 - Click on right arrow button next to the `notebook` field
 - From a list of NORTH tools, select the JupterHub by clicking on the "Launch" button under it
 
-It will open in NOMAD's integrated JupyterHub (North) in a new tab with your notebook loaded. The directory structure in the JupyterHub will mirror your NOMAD upload structure, allowing you to easily access your data files and notebooks.
+NOMAD's integrated JupyterHub (North) will automatically open in a new tab with your notebook loaded. The directory structure in the JupyterHub will mirror your NOMAD upload structure, allowing you to easily access your data files and notebooks.
 
 Now you can run the cells to load your data and perform your analysis.
 

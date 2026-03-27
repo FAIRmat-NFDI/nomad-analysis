@@ -105,8 +105,8 @@ class MyAnalysisELN(MyAnalysisAction, EntryData):
 If something isn't working as expected, there's a good chance you will find
 useful information in the entry processing logs. You can access these logs from the ELN interface. Some common issues and tips:
 
-- **Action Won't Start**: Check if an action is already running. Only one action can run at a time per entry. Either stop the running action or wait for it to complete before starting a new one.
-- **Status Not Updating**: The status doesn't auto-refresh. You need to click "Get Action Status" to see the latest status. If it still doesn't update, check the logs for errors.
+- **Action Won't Start**: Check whether an action is already running. Only one action can run at a time per entry. Either stop the running action or wait for it to complete before starting a new one.
+- **Status Not Updating**: The status does not auto-refresh. Try clicking "Get Action Status" to manually retrieve the latest status. If the status does not update, check the logs for errors.
 - **Action Fails Immediately**: Check the logs for error messages. Common issues include incorrect action input preparation or problems with the action worker.
 
 
