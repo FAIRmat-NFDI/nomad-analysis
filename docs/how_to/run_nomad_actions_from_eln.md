@@ -80,7 +80,7 @@ class MyAnalysisAction(Action):
 
 ## Use in an ELN Entry
 
-The custom action section can be added as a sub-section to an ELN schema:
+The custom action section can be composed as a sub-section inside an ELN schema:
 
 ```python
 from nomad.datamodel.data import EntryData
@@ -88,18 +88,24 @@ from nomad.metainfo import SubSection
 
 
 class MyAnalysisELN(EntryData):
-    """ELN entry with action trigger capability."""
+    """
+    ELN entry where the section with action buttons is composed as a
+    sub-section.
+    """
 
     action = SubSection(section_def=MyAnalysisAction)
 ```
 
-Or it can be defined as a standalone ELN entry:
+Or it can be added at the root level of the entry through multiple inheritance:
 
 ```python
 from nomad.datamodel.data import EntryData
 
 class MyAnalysisELN(MyAnalysisAction, EntryData):
-    """ELN entry for my specific analysis workflow."""
+    """
+    ELN entry where the section with action buttons is defined at the root
+    level.
+    """
 ```
 
 ## Troubleshooting
