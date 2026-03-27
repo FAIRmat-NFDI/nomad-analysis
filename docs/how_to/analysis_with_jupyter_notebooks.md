@@ -51,19 +51,21 @@ If you want to add several inputs, you can also use a **query-powered approach**
 Each searched entry will be processed as one input and all of them will be added under the `inputs` field.
 
 !!! hint
-    If you have mistakenly added a lot of inputs based on a broad query, use the **Reset Inputs** action button to start afresh. Set the more specific query and click the button. All existing inputs will be removed and repopulated based on the new query.
+    If you have mistakenly added a lot of inputs based on a broad query, use the **Reset Inputs** button to start afresh. Set the more specific query and click the button. All existing inputs will be removed and repopulated based on the new query.
 
 ### Generate the Notebook
 
 A notebook can be uploaded manually and connected to the entry. For this, simply find the `notebook` quantity and upload a Jupyter notebook file.
 
-You can also generate a notebook automatically by clicking the **Generate Notebook** action button. This will:
+You can also generate a notebook automatically by clicking the **Generate Notebook** button. This will:
 
-- Create a new `.ipynb` file in the same upload
+- Create a Jupyter notebook "`<entry archive name>.ipynb`" in the same upload
 - Pre-populate it with header cells and data loading code
 - Link it with the `notebook` quantity
 
-The name of the generated notebook will match your entry name. It contains a header with the analysis name and a pre-defined code cell that loads the analysis entry and its inputs:
+The name of the generated notebook will match the analysis entry's archive file
+name. It contains a header with the analysis name and a pre-defined code cell
+that loads the analysis entry and its inputs:
 
 ```python
 from nomad_analysis.utils import get_entry_data
@@ -71,10 +73,13 @@ from nomad_analysis.utils import get_entry_data
 analysis = get_entry_data(entry_id=<NOMAD_ANALYSIS_ENTRY_ID>)
 ```
 
-Inputs can be accessed through the `analysis.inputs` attribute, which contains references to the input entries you defined in the ELN interface.
+In the code above, `analysis` is an instance of the `JupyterAnalysis` section
+and contains the data from the analysis entry linked with the notebook.
+You can use it to access the inputs and modify your analysis steps, and save
+results back to the entry.
 
 !!! warning
-    Different notebooks cannot share the same name. If you encounter issues trying to generate a new notebook, check for name collisions first. Either modify or delete the existing notebook depending on your needs.
+    If the `notebook` field is already populated with a notebook that was uploaded before, the **Generate Notebook** button will **not** overwrite it. Clear the `notebook` field and click the button again. Also, the automated generation creates a notebook with the same name as the entry. If you try to generate a notebook multiple times, it will **not** overwrite it. In this case, delete the existing notebook from the upload and click the button again.
 
 ### Open and Run the Notebook
 
@@ -87,11 +92,14 @@ NOMAD's integrated JupyterHub (North) will automatically open in a new tab with 
 
 Now you can run the cells to load your data and perform your analysis.
 
-During the analysis, you can save the steps and results by writing them into
-the `analysis.steps` and `analysis.outputs` fields respectively. To save the
-entry back to NOMAD, simply call `analysis.save()` at the end of your notebook.
-This will update the entry with your analysis results and ensure that
-everything is properly linked and stored in NOMAD.
+If you are working with a generated notebook, you can retrieve the input data
+from the loaded `analysis` object (see the code snippet above). For example,
+`analysis.inputs[0].reference` will give you the first input entry. You can
+save the steps and results by writing them into the `analysis.steps` and
+`analysis.outputs` fields respectively. To save the entry back to NOMAD, simply
+call `analysis.save()` at the end of your notebook. This will update the entry
+with your analysis results and ensure that everything is properly linked and
+stored in NOMAD.
 
 
 ## Method 2: Using YAML Files
@@ -105,21 +113,30 @@ Create a file named `my_analysis.archive.yaml` and upload it to your NOMAD uploa
 ```yaml
 data:
   m_def: nomad_analysis.jupyter.schema.JupyterAnalysis
-  name: XRD Phase Analysis
-  description: |
-    Analysis of XRD patterns to identify crystalline phases
-    in the synthesized samples.
+  name: My Analysis
+  description: A description of my analysis.
 
   # Optional: Pre-define input references
   inputs:
     - reference: '../uploads/UPLOAD_ID/archive/ENTRY_ID_1#/data'
-      name: Sample A - XRD Pattern
+      name: Input A
     - reference: '../uploads/UPLOAD_ID/archive/ENTRY_ID_2#/data'
-      name: Sample B - XRD Pattern
+      name: Input B
 ```
 
-After uploading, trigger notebook generation and other functionality through
-the ELN interface (see above).
+After uploading, trigger the notebook generation and other functionalities
+through the ELN interface (see above).
+
+!!! note "Automated Notebook Generation"
+    When creating a Jupyter Analysis entry by uploading a YAML file, you can set the `trigger_generate_notebook` quantity as `true` to automatically generate a notebook upon entry creation:
+    ```yaml
+    data:
+      m_def: nomad_analysis.jupyter.schema.JupyterAnalysis
+      name: My Analysis
+      description: A description of my analysis.
+      trigger_generate_notebook: true
+    ```
+
 
 
 ## Learn More

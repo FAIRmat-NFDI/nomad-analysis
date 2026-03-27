@@ -5,14 +5,17 @@ specialized workers. This guide explains how to use the `Action` schema from
 `nomad_analysis.actions.schema` to trigger, monitor, and stop NOMAD Actions
 directly from the ELN interface.
 
+NOMAD Actions are independent of Jupyter notebooks and are better suited
+for use cases such as:
+
+- Running standarized analysis workflows that require fixed user input and generates a fixed output, without any custom code
+- Offloading heavy computations to dedicated workers
+- Integrate with external services and APIs as part of your analysis
+
 If you would like to set up customizable analysis workflows that run in Jupyter
 notebooks instead, check out the [Analysis with Jupyter Notebooks][int_href_1]
 guide.
 
-!!! tip "When to use Actions over Jupyter Notebooks?"
-    - Running standarized analysis workflows that require fixed user input and generates a fixed output, without any custom code
-    - Offloading heavy computations to dedicated workers
-    - Integrate with external services and APIs as part of your analysis
 
 ## Overview
 
@@ -24,11 +27,10 @@ It provides a boilerplate NOMAD section equipped with buttons to:
 - **Get Status**: Check the current status of a running action
 - **Stop Action**: Cancel a running action
 
-The schema is designed to be extended for different types of analysis workflows. By implementing the `start_action` method, you can define custom logic to prepare inputs and trigger any registered NOMAD Action.
-
-!!! hint
-    Read more about registration of Actions in the
-    [Action Entry Point][ext_href_2] guide.
+The schema is designed to be extended for different types of analysis
+workflows. By implementing the `start_action` method, you can define custom
+logic to prepare inputs and trigger any registered NOMAD Action. Read more
+about registration of Actions in the [Action Entry Point][ext_href_2] guide.
 
 ## Create a custom Action Schema
 
@@ -102,8 +104,9 @@ class MyAnalysisELN(MyAnalysisAction, EntryData):
 
 ## Troubleshooting
 
-If something isn't working as expected, there's a good chance you will find
-useful information in the entry processing logs. You can access these logs from the ELN interface. Some common issues and tips:
+If something is not working as expected, check the entry processing logs first.
+These logs are accessible from the ELN interface by toggling to the `Logs` tab.
+Some common issues and tips:
 
 - **Action Won't Start**: Check whether an action is already running. Only one action can run at a time per entry. Either stop the running action or wait for it to complete before starting a new one.
 - **Status Not Updating**: The status does not auto-refresh. Try clicking "Get Action Status" to manually retrieve the latest status. If the status does not update, check the logs for errors.

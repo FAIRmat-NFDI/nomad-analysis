@@ -4,10 +4,7 @@ This guide shows how to create custom analysis schemas by extending the base
 `JupyterAnalysis` schema.
 
 !!! note "Prerequisites"
-    It assumes that you already have a NOMAD plugin that
-    adds customizations to your NOMAD installation. More details on creating a
-    plugin can be found in the [Plugin Development](https://nomad-lab.eu/prod/v1/
-    docs/howto/plugins/plugins.html) guide (look at schema packages).
+    It assumes that you already have a NOMAD plugin that adds customizations to your NOMAD installation. More details on creating a plugin can be found in the [Plugin Development](https://nomad-lab.eu/prod/v1/docs/howto/plugins/plugins.html) guide (look at schema packages there).
 
 ## Why Extend JupyterAnalysis?
 
@@ -30,8 +27,11 @@ from nomad_analysis.jupyter.schema import JupyterAnalysis
 
 
 class MyCustomAnalysisStep(AnalysisStep, PlotSection):
-    """Custom analysis step with plotting capabilities."""
-    pass
+    """
+    For illustrative purposes, this section includes a plotting section on top
+    of the base AnalysisStep. In a real-world problem, this would have to be
+    filled further.
+    """
 
 
 class MyCustomAnalysis(JupyterAnalysis, EntryData):
@@ -103,8 +103,11 @@ class MyCustomAnalysis(JupyterAnalysis, EntryData):
         return cells
 ```
 
+!!! tip "Newlines in Code Cells"
+    When defining the source code for pre-defined cells, make sure to include newline characters (`\n`) at the end of each line to ensure proper formatting in the generated notebook.
+
 !!! tip "Cell Metadata Tags"
-    Always include `'nomad-analysis-predefined'` in cell metadata tags. This allows the system to identify and manage these cells.
+    Always include `'nomad-analysis-predefined'` in cell metadata tags. This allows the schema to identify and manage these cells differently.
 
 ### Customize normalization logic
 
@@ -127,8 +130,7 @@ def normalize(self, archive, logger):
 ```
 
 !!! tip "Error Handling"
-    Include try/except blocks and `logger` in your normalize method to handle edge cases gracefully.
-
+    Even though NOMAD processing does not crash on exceptions in `normalize()`, it's good practice to handle potential errors gracefully. Use `try/except` blocks around code that might raise exceptions and utilize the `logger` to log warnings or errors.
 
 ## Learn More
 
