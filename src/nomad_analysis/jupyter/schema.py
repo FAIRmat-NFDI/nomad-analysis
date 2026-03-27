@@ -243,7 +243,10 @@ class JupyterAnalysisTemplate(Analysis, EntryData):
         """
         new_notebook_path = archive.metadata.mainfile.split('.')[0] + '.ipynb'
         if archive.m_context.raw_path_exists(new_notebook_path):
-            logger.warn(f'Notebook {new_notebook_path} already exists.')
+            logger.warn(
+                f'Notebook {new_notebook_path} already exists. Delete it from the '
+                'upload folder to generate a new one.'
+            )
             return
 
         context = self.from_analysis.m_context
@@ -631,12 +634,21 @@ class JupyterAnalysis(Analysis, EntryData):
             archive (EntryArchive): The archive containing the section.
             logger (BoundLogger): A structlog logger.
         """
+        if self.notebook:
+            logger.warning(
+                f'`notebook` field has an existing value: {self.notebook}. Clear it to '
+                'generate a new notebook.'
+            )
+            return
         new_notebook_path = (
             os.path.basename(archive.metadata.mainfile).rsplit('.archive.', 1)[0]
             + '.ipynb'
         )
         if archive.m_context.raw_path_exists(new_notebook_path):
-            logger.warn(f'Notebook {new_notebook_path} already exists.')
+            logger.warn(
+                f'Notebook {new_notebook_path} already exists. Delete it from '
+                'the upload folder to generate a new one.'
+            )
             return
 
         archive_metadata = ArchiveMetadata(
