@@ -257,32 +257,3 @@ def put_nomad_request(
         raise ValueError(f'Unexpected response {response.json()}')
 
     return response.json()
-
-
-def clean_rich_text_to_json(rich_text: str) -> str:
-    """
-    Converts HTML-formatted rich text to a plain string suitable for JSON parsing.
-
-    Handles common HTML elements from RichTextEditQuantity:
-    - Removes HTML tags (<p>, <br />, etc.)
-    - Decodes HTML entities (&nbsp;, &amp;, &quot;, etc.) into unicode characters
-    - Converts non-breaking spaces to regular spaces
-
-    Args:
-        rich_text: HTML-formatted string from RichTextEditQuantity.
-
-    Returns:
-        Plain text string that can be parsed by json.loads().
-    """
-    if not rich_text:
-        return ''
-
-    clean = re.sub(r'<[^>]+>', '', rich_text)
-
-    # Decode HTML entities (&nbsp; -> \xa0, &amp; -> &, etc.)
-    clean = html.unescape(clean)
-
-    # Replace non-breaking spaces (\xa0) with regular spaces
-    clean = clean.replace('\xa0', ' ')
-
-    return clean.strip()

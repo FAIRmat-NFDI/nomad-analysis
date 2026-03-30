@@ -15,14 +15,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import json
 from abc import abstractmethod
 from typing import (
     TYPE_CHECKING,
 )
 
 from nomad.actions import manager
-from nomad.datamodel import ArchiveSection, EntryData
+from nomad.datamodel import ArchiveSection
 from nomad.datamodel.data import EntryDataCategory
 from nomad.datamodel.metainfo.annotations import (
     ELNAnnotation,
@@ -36,8 +35,6 @@ from nomad.metainfo import (
     SchemaPackage,
     Section,
 )
-
-from nomad_analysis.utils import clean_rich_text_to_json
 
 if TYPE_CHECKING:
     from nomad.datamodel import EntryArchive
@@ -414,60 +411,6 @@ class Action(ActionStatus, StopAction, StartAction):
             self.get_action_status(self.action_instance_id, archive, logger)
 
         super().normalize(archive, logger)
-
-
-class ActionELN(Action, EntryData):
-    """
-    A general ELN section for running any NOMAD Action available in the deployment.
-    Built on top of the base `Action` class.
-
-    Users can start and monitor an action by specifying the `action_id` and
-    `action_input`.
-    """
-
-    m_def = Section(
-        description='ELN interface for running a NOMAD Action.',
-        a_display=SectionDisplayAnnotation(
-            order=[
-                'action_id',
-                'action_input',
-                'trigger_start_action',
-                'action_instance_id',
-                'action_status',
-                'trigger_get_action_status',
-                'trigger_stop_action',
-            ]
-        ),
-    )
-
-    action_id = Quantity(
-        type=str,
-        description='The action ID to be triggered. Should be in the format of '
-        '"namespace.package:action_name".',
-        a_eln=ELNAnnotation(component=ELNComponentEnum.StringEditQuantity),
-    )
-
-    action_input = Quantity(
-        type=str,
-        description='The input data for the action. Should be a JSON string that can '
-        'be parsed into the input data model of the given action.',
-        a_eln=ELNAnnotation(component=ELNComponentEnum.RichTextEditQuantity),
-    )
-
-    def start_action(self, archive, logger) -> str:
-        try:
-            clean_input = clean_rich_text_to_json(self.action_input)
-            action_input = json.loads(clean_input)
-            action_input_validated = manager.validate_action_arg(
-                self.action_id, action_input
-            )
-            instance_id = manager.start_action(
-                action_id=self.action_id,
-                data=action_input_validated,
-            )
-            return instance_id
-        except Exception as e:
-            logger.error(f'Failed to start the action: {e}', exc_info=True)
 
 
 m_package.__init_metainfo__()
