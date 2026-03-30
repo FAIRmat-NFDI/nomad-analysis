@@ -57,7 +57,7 @@ class ActionCategory(EntryDataCategory):
     Example usage:
 
     ```python
-    class MyActionELN(Action, EntryData):
+    class MyActionELN(StartAction, EntryData):
         m_def = Section(
             description='Section for running my custom action.',
             categories=[ActionCategory],
@@ -73,7 +73,39 @@ class ActionCategory(EntryDataCategory):
 
 
 class StartAction(ArchiveSection):
-    """Section to trigger an action instance."""
+    """
+    Section to trigger an action instance. Comes with an abstract method `start_action`
+    that should be implemented in the extended classes to provides the logic to trigger
+    an action.
+
+    ### Using `start_action` in normalize methods
+
+    Implementing `start_action` method alone will not trigger the action. How and when
+    it should be triggered needs to be defined in the `normalize` method of the child
+    section.
+
+    Here's an example that uses `trigger_start_action` quantity to trigger the action
+    when the quantity is set to True:
+
+    ```python
+    from nomad_analysis.actions.schema import StartAction
+
+
+    class MyExtendedStartAction(StartAction):
+        def start_action(self, archive, logger) -> str:
+            # Implement the logic to prepare the input for an action and start it.
+
+        def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger'):
+            super().normalize(archive, logger)
+            if self.trigger_start_action:
+                try:
+                    self.action_instance_id = self.start_action(archive, logger)
+                except Exception:
+                    logger.warning('Failed to start the action.', exc_info=True)
+                finally:
+                    self.trigger_start_action = False
+    ```
+    """
 
     action_instance_id = Quantity(
         type=str,
@@ -92,9 +124,11 @@ class StartAction(ArchiveSection):
 
     def start_action(self, archive, logger) -> str:
         """
-        To be implemented by subclasses. Based on the data available in the ELN,
-        use this method to prepare the input for the given action and trigger it using
-        `nomad.actions.manager.start_action`.
+        Provides the logic to trigger an action instance. To be implemented by
+        subclasses.
+
+        Based on the data available in the ELN, use this method to prepare the input
+        for the given action and trigger it using `nomad.actions.manager.start_action`.
 
         The method should return the same instance ID of the triggered action as
         returned by the `nomad.actions.manager.start_action` method.
@@ -103,28 +137,26 @@ class StartAction(ArchiveSection):
 
         ```python
         from nomad.actions import manager
+        from nomad_analysis.actions.schema import StartAction
 
-        def start_action(self, archive, logger) -> str:
-            # Prepare input for the action
-            action_input = MyActionInput(
-                user_id=archive.metadata.authors[0].user_id,
-                upload_id=archive.metadata.upload_id,
-                # other necessary input data for the action
-            )
 
-            # Start the action using the NOMAD action manager
-            instance_id = manager.start_action(
-                action_id='nomad_example.actions.myaction:my_action',
-                data=action_input,
-            )
+        class MyExtendedStartAction(StartAction):
+            def start_action(self, archive, logger) -> str:
+                # Prepare input for the action
+                action_input = MyActionInput(
+                    user_id=archive.metadata.authors[0].user_id,
+                    upload_id=archive.metadata.upload_id,
+                    # other necessary input data for the action
+                )
 
-            return instance_id
+                # Start the action using the NOMAD action manager
+                instance_id = manager.start_action(
+                    action_id='nomad_example.actions.myaction:my_action',
+                    data=action_input,
+                )
+
+                return instance_id
         ```
-
-        When using an implemented `start_action` method, condition it on the
-        `trigger_start_action` quantity to ensure that the action is triggered when the
-        quantity is set to True. And set the trigger quantity to False the method
-        is executed to avoid retriggering the action on the next normalization.
 
         Returns:
             str: The instance ID of the triggered action.
@@ -157,13 +189,20 @@ class StartAction(ArchiveSection):
 class StopAction(ArchiveSection):
     """
     Section to stop a running action instance. Comes with a method `stop_action` that
-    takes in action instance ID and schedules a cancellation of the action. It can used
-    in the `normalize` method of child sections and set to be triggered using the
-    `trigger_stop_action` quantity.
+    takes in action instance ID and schedules a cancellation of the action.
 
-    Example usage:
+    ### Using `stop_action` in normalize methods
+
+    How and when the `stop_action` method is triggered needs to be defined in the
+    `normalize` method of child sections.
+
+    Here's an example that uses `trigger_stop_action` quantity to trigger the action:
+
     ```python
-    class MyActionELN(..., StopAction):
+    from nomad_analysis.actions.schema import StopAction
+
+
+    class MyExtendedStopAction(..., StopAction):
         # Assuming quantity `action_instance_id` is already a property of the section.
         # Can be defined in the section or inherited from the parent section.
 
@@ -210,13 +249,21 @@ class StopAction(ArchiveSection):
 class ActionStatus(ArchiveSection):
     """
     Section to save and fetch the status of an action instance. Comes with a method
-    `get_action_status` that takes in action instance ID and gets the status. It can
-    used in the `normalize` method of child sections and set to be triggered using
-    the `trigger_get_action_status` quantity.
+    `get_action_status` that takes in action instance ID and gets the status.
+
+    ### Using `get_action_status` in normalize methods
+    How and when the `get_action_status` method is triggered needs to be defined in the
+    `normalize` method of child sections.
+
+    Here's an example that uses `trigger_get_action_status` quantity to trigger the
+    action status retrieval:
 
     Example usage:
 
     ```python
+    from nomad_analysis.actions.schema import ActionStatus
+
+
     class MySection(..., ActionStatus):
         # Assuming quantity `action_instance_id` is already a property of the section.
         # Can be defined in the section or inherited from the parent section.
@@ -269,12 +316,13 @@ class ActionStatus(ArchiveSection):
 
 class Action(ActionStatus, StopAction, StartAction):
     """
-    Base class for actions that can be triggered from the ELN interface. Includes three
+    Base class for actions that can be triggered from the ELN interface. Comes with a
+    normalize method that handles the behavior of the trigger buttons for three
     main functionalities: starting an action, stopping a running action, and retrieving
     the status of an action.
 
-    Subclasses should implement the `start_action` method to define the specific action
-    to be performed.
+    Subclasses should implement the `start_action` method to provide the logic to
+    trigger an action instance.
     """
 
     m_def = Section(
@@ -389,8 +437,11 @@ class Action(ActionStatus, StopAction, StartAction):
 
 class ActionELN(Action, EntryData):
     """
-    Standalone ELN section for running any NOMAD Action that is available in the
-    deployment. Users can trigger the action by specifying the action ID and input data.
+    A general ELN section for running any NOMAD Action available in the deployment.
+    Built on top of the base `Action` class.
+
+    Users can start and monitor an action by specifying the `action_id` and
+    `action_input`.
     """
 
     m_def = Section(
