@@ -15,17 +15,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from abc import abstractmethod
 from typing import (
     TYPE_CHECKING,
 )
 
 from nomad.actions import manager
 from nomad.datamodel import ArchiveSection
+from nomad.datamodel.data import EntryDataCategory
 from nomad.datamodel.metainfo.annotations import (
     ELNAnnotation,
     ELNComponentEnum,
+    QuantityDisplayAnnotation,
+    SectionDisplayAnnotation,
 )
 from nomad.metainfo import (
+    Category,
     Quantity,
     SchemaPackage,
     Section,
@@ -39,102 +44,314 @@ if TYPE_CHECKING:
 m_package = SchemaPackage()
 
 
-class Action(ArchiveSection):
+class ActionCategory(EntryDataCategory):
     """
-    Base class for triggering actions from the ELN interface.
-    Subclasses should implement the `start_action` method.
+    A category for schemas that can be used to run NOMAD Actions.
+
+    `EntryData` sections with this category will be put under the same group,
+    **"Run NOMAD Actions from ELN"**,
+    in the Create from Schema > Built-in schema dropdown menu.
+
+    Example usage:
+
+    ```python
+    class MyActionELN(StartAction, EntryData):
+        m_def = Section(
+            description='Section for running my custom action.',
+            categories=[ActionCategory],
+        )
+        ...
+    ```
     """
 
-    m_def = Section(description='Section for handling NOMAD Actions.')
+    m_def = Category(
+        label='Run NOMAD Actions from ELN',
+        categories=[EntryDataCategory],
+    )
+
+
+class StartAction(ArchiveSection):
+    """
+    Section to trigger an action instance. Comes with an abstract method `start_action`
+    that should be implemented in the extended classes to provides the logic to trigger
+    an action.
+
+    ### Using `start_action` in normalize methods
+
+    Implementing `start_action` method alone will not trigger the action. How and when
+    it should be triggered needs to be defined in the `normalize` method of the child
+    section.
+
+    Here's an example that uses `trigger_start_action` quantity to trigger the action
+    when the quantity is set to True:
+
+    ```python
+    from nomad_analysis.actions.schema import StartAction
+
+
+    class MyExtendedStartAction(StartAction):
+        def start_action(self, archive, logger) -> str:
+            # Implement the logic to prepare the input for an action and start it.
+
+        def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger'):
+            super().normalize(archive, logger)
+            if self.trigger_start_action:
+                try:
+                    self.action_instance_id = self.start_action(archive, logger)
+                except Exception:
+                    logger.warning('Failed to start the action.', exc_info=True)
+                finally:
+                    self.trigger_start_action = False
+    ```
+    """
+
     action_instance_id = Quantity(
         type=str,
-        description='The instance ID of the last triggered action.',
-    )
-    action_status = Quantity(
-        type=str,
-        description='The status of the action derived using the action instance ID.',
+        description='Instance ID of the action.',
+        a_eln=ELNAnnotation(component=ELNComponentEnum.StringEditQuantity),
+        a_display=QuantityDisplayAnnotation(editable=False, visible=True),
     )
     trigger_start_action = Quantity(
         type=bool,
+        default=False,
         description='Starts the action defined under `start_action` method.',
-        default=False,
         a_eln=ELNAnnotation(
-            component=ELNComponentEnum.ActionEditQuantity,
-            label='Run Action',
-        ),
-    )
-    trigger_get_action_status = Quantity(
-        type=bool,
-        description='Retrieves the status of the action using the action instance ID.',
-        default=False,
-        a_eln=ELNAnnotation(
-            component=ELNComponentEnum.ActionEditQuantity,
-            label='Get Action Status',
-        ),
-    )
-    trigger_stop_action = Quantity(
-        type=bool,
-        description='Stops the action using the action instance ID.',
-        default=False,
-        a_eln=ELNAnnotation(
-            component=ELNComponentEnum.ActionEditQuantity,
-            label='Stop Action',
+            component=ELNComponentEnum.ActionEditQuantity, label='Start Action'
         ),
     )
 
+    @abstractmethod
     def start_action(self, archive, logger) -> str:
         """
-        To be implemented by subclasses. Based on the data available in the ELN,
-        use this method to prepare the input for the given action and trigger it using
-        `nomad.actions.manager.start_action`. The method should return the same instance
-        ID of the triggered action as returned by the
-        `nomad.actions.manager.start_action` method.
+        Provides the logic to trigger an action instance. To be implemented by
+        subclasses.
+
+        Based on the data available in the ELN, use this method to prepare the input
+        for the given action and trigger it using `nomad.actions.manager.start_action`.
+
+        The method should return the same instance ID of the triggered action as
+        returned by the `nomad.actions.manager.start_action` method.
+
+        Example implementation:
+
+        ```python
+        from nomad.actions import manager
+        from nomad_analysis.actions.schema import StartAction
+
+
+        class MyExtendedStartAction(StartAction):
+            def start_action(self, archive, logger) -> str:
+                # Prepare input for the action
+                action_input = MyActionInput(
+                    user_id=archive.metadata.authors[0].user_id,
+                    upload_id=archive.metadata.upload_id,
+                    # other necessary input data for the action
+                )
+
+                # Start the action using the NOMAD action manager
+                instance_id = manager.start_action(
+                    action_id='nomad_example.actions.myaction:my_action',
+                    data=action_input,
+                )
+
+                return instance_id
+        ```
 
         Returns:
             str: The instance ID of the triggered action.
         """
         raise NotImplementedError('Subclasses should implement this method.')
 
-    def get_action_status(self, archive: 'EntryArchive', logger: 'BoundLogger'):
-        """
-        Retrieves the status of the action using the action instance ID.
-        """
-        try:
-            if self.action_status == 'COMPLETED':
-                return
-            if not self.action_instance_id:
-                raise ValueError('Action instance ID not provided.')
-            status = manager.get_action_status(
-                self.action_instance_id, archive.metadata.authors[0].user_id
-            )
-            self.action_status = status.name
-        except Exception:
-            logger.error(
-                'Failed to get status for action instance ID '
-                f'"{self.action_instance_id}".',
-                exc_info=True,
-            )
-        finally:
-            self.trigger_get_action_status = False
 
-    def stop_action(self, archive: 'EntryArchive', logger: 'BoundLogger'):
+class StopAction(ArchiveSection):
+    """
+    Section to stop a running action instance. Comes with a method `stop_action` that
+    takes in action instance ID and schedules a cancellation of the action.
+
+    ### Using `stop_action` in normalize methods
+
+    How and when the `stop_action` method is triggered needs to be defined in the
+    `normalize` method of child sections.
+
+    Here's an example that uses `trigger_stop_action` quantity to trigger the action:
+
+    ```python
+    from nomad_analysis.actions.schema import StopAction
+
+
+    class MyExtendedStopAction(..., StopAction):
+        # Assuming quantity `action_instance_id` is already a property of the section.
+        # Can be defined in the section or inherited from the parent section.
+
+        def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger'):
+            super().normalize(archive, logger)
+
+            # Other normalization code...
+
+            if self.trigger_stop_action:
+                self.stop_action(self.action_instance_id, archive, logger)
+    ```
+    """
+
+    trigger_stop_action = Quantity(
+        type=bool,
+        default=False,
+        description='Schedule a cancellation of the action associated with the '
+        'action instance ID.',
+        a_eln=ELNAnnotation(
+            component=ELNComponentEnum.ActionEditQuantity, label='Stop Action'
+        ),
+    )
+
+    def stop_action(
+        self, action_instance_id: str, archive: 'EntryArchive', logger: 'BoundLogger'
+    ):
         """
-        Stops the action using the action instance ID.
+        Schedule a cancellation of the action associated with the action instance ID.
         """
         try:
-            if not self.action_instance_id:
-                raise ValueError('Action instance ID not provided.')
-            manager.stop_action(
-                self.action_instance_id, archive.metadata.authors[0].user_id
+            if not action_instance_id:
+                raise ValueError('No action ID found.')
+            manager.stop_action(action_instance_id, archive.metadata.authors[0].user_id)
+            logger.info(
+                f'Action with instance ID {action_instance_id} has been '
+                'scheduled for stopping.'
             )
         except Exception:
-            logger.error(
-                'Failed to stop the action with instance ID '
-                f'"{self.action_instance_id}".',
-                exc_info=True,
-            )
+            logger.warning('Failed to stop the action.', exc_info=True)
         finally:
             self.trigger_stop_action = False
+
+
+class ActionStatus(ArchiveSection):
+    """
+    Section to save and fetch the status of an action instance. Comes with a method
+    `get_action_status` that takes in action instance ID and gets the status.
+
+    ### Using `get_action_status` in normalize methods
+    How and when the `get_action_status` method is triggered needs to be defined in the
+    `normalize` method of child sections.
+
+    Here's an example that uses `trigger_get_action_status` quantity to trigger the
+    action status retrieval:
+
+    Example usage:
+
+    ```python
+    from nomad_analysis.actions.schema import ActionStatus
+
+
+    class MySection(..., ActionStatus):
+        # Assuming quantity `action_instance_id` is already a property of the section.
+        # Can be defined in the section or inherited from the parent section.
+
+        def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger'):
+            super().normalize(archive, logger)
+
+            # Other normalization code...
+
+            if self.trigger_get_action_status:
+                self.get_action_status(self.action_instance_id, archive, logger)
+    ```
+    """
+
+    action_status = Quantity(
+        type=str,
+        description='Status of the action instance.',
+        a_eln=ELNAnnotation(component=ELNComponentEnum.StringEditQuantity),
+        a_display=QuantityDisplayAnnotation(editable=False, visible=True),
+    )
+    trigger_get_action_status = Quantity(
+        type=bool,
+        default=False,
+        description='Retrieves the status of the action using action ID.',
+        a_eln=ELNAnnotation(
+            component=ELNComponentEnum.ActionEditQuantity, label='Get Action Status'
+        ),
+    )
+
+    def get_action_status(
+        self, action_instance_id: str, archive: 'EntryArchive', logger: 'BoundLogger'
+    ):
+        """
+        Retrieves the status of the action using the `action_instance_id`.
+        """
+        status = None
+        try:
+            if not action_instance_id:
+                raise ValueError('No action instance ID found.')
+            status = manager.get_action_status(
+                action_instance_id, archive.metadata.authors[0].user_id
+            )
+        except Exception:
+            logger.warning('Failed to get action status.', exc_info=True)
+        finally:
+            if status is not None:
+                self.action_status = status.name
+            self.trigger_get_action_status = False
+
+
+class Action(ActionStatus, StopAction, StartAction):
+    """
+    Base class for actions that can be triggered from the ELN interface. Comes with a
+    normalize method that handles the behavior of the trigger buttons for three
+    main functionalities: starting an action, stopping a running action, and retrieving
+    the status of an action.
+
+    Subclasses should implement the `start_action` method to provide the logic to
+    trigger an action instance.
+    """
+
+    m_def = Section(
+        description='Section for running NOMAD Actions.',
+        categories=[ActionCategory],
+        a_display=SectionDisplayAnnotation(
+            order=[
+                'trigger_start_action',
+                'action_instance_id',
+                'action_status',
+                'trigger_get_action_status',
+                'trigger_stop_action',
+            ]
+        ),
+    )
+
+    @abstractmethod
+    def start_action(self, archive, logger):
+        """
+        To be implemented by subclasses. Based on the data available in the ELN,
+        use this method to prepare the input for the given action and trigger it using
+        `nomad.actions.manager.start_action`.
+
+        The method should return the same instance ID of the triggered action as
+        returned by the `nomad.actions.manager.start_action` method.
+
+        Example implementation:
+
+        ```python
+        from nomad.actions import manager
+
+        def start_action(self, archive, logger) -> str:
+            # Prepare input for the action
+            action_input = MyActionInput(
+                user_id=archive.metadata.authors[0].user_id,
+                upload_id=archive.metadata.upload_id,
+                # other necessary input data for the action
+            )
+
+            # Start the action using the NOMAD action manager
+            instance_id = manager.start_action(
+                action_id='nomad_example.actions.myaction:my_action',
+                data=action_input,
+            )
+
+            return instance_id
+        ```
+
+        Returns:
+            str: The instance ID of the triggered action.
+        """
+        raise NotImplementedError('Subclasses should implement this method.')
 
     def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger'):
         """
@@ -169,37 +386,38 @@ class Action(ArchiveSection):
         """
         if self.action_status == 'RUNNING':
             # work with the latest status if last known status is RUNNING
-            self.get_action_status(archive, logger)
+            self.get_action_status(self.action_instance_id, archive, logger)
 
         if self.trigger_stop_action:
             if self.action_status != 'RUNNING':
                 self.trigger_stop_action = False
-                logger.error(
+                logger.warning(
                     'The action is not running. Cannot stop an action that '
                     'is not running.'
                 )
             else:
-                self.stop_action(archive, logger)
+                self.stop_action(self.action_instance_id, archive, logger)
                 self.trigger_get_action_status = True
 
         if self.trigger_start_action:
             if self.action_status == 'RUNNING':
                 self.trigger_start_action = False
-                logger.error(
+                logger.warning(
                     'The action is already running. Please wait for it to '
                     'complete before running the action again.'
                 )
             else:
                 try:
                     self.action_instance_id = self.start_action(archive, logger)
+                    self.action_status = None
                     self.trigger_get_action_status = True
                 except Exception:
-                    logger.error('Failed to start the action.', exc_info=True)
+                    logger.warning('Failed to start the action.', exc_info=True)
                 finally:
                     self.trigger_start_action = False
 
         if self.trigger_get_action_status:
-            self.get_action_status(archive, logger)
+            self.get_action_status(self.action_instance_id, archive, logger)
 
         super().normalize(archive, logger)
 
