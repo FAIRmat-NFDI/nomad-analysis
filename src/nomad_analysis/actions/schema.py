@@ -77,8 +77,7 @@ class StartAction(ArchiveSection):
     that should be implemented in the extended classes to provides the logic to trigger
     an action.
 
-    ### Using `start_action` in normalize methods
-
+    Using `start_action` in normalize methods:
     Implementing `start_action` method alone will not trigger the action. How and when
     it should be triggered needs to be defined in the `normalize` method of the child
     section.
@@ -108,7 +107,7 @@ class StartAction(ArchiveSection):
 
     action_instance_id = Quantity(
         type=str,
-        description='Instance ID of the action.',
+        description='Instance ID of the action started.',
         a_eln=ELNAnnotation(component=ELNComponentEnum.StringEditQuantity),
         a_display=QuantityDisplayAnnotation(editable=False, visible=True),
     )
@@ -169,8 +168,7 @@ class StopAction(ArchiveSection):
     Section to stop a running action instance. Comes with a method `stop_action` that
     takes in action instance ID and schedules a cancellation of the action.
 
-    ### Using `stop_action` in normalize methods
-
+    Using `stop_action` in normalize methods:
     How and when the `stop_action` method is triggered needs to be defined in the
     `normalize` method of child sections.
 
@@ -197,8 +195,7 @@ class StopAction(ArchiveSection):
     trigger_stop_action = Quantity(
         type=bool,
         default=False,
-        description='Schedule a cancellation of the action associated with the '
-        'action instance ID.',
+        description='Schedule cancellation of an action',
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.ActionEditQuantity, label='Stop Action'
         ),
@@ -285,7 +282,7 @@ class ActionStatus(ArchiveSection):
     trigger_get_action_status = Quantity(
         type=bool,
         default=False,
-        description='Retrieves the status of the action using action ID.',
+        description='Retrieves the status of an action.',
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.ActionEditQuantity, label='Get Action Status'
         ),
