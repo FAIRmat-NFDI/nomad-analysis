@@ -165,28 +165,6 @@ class StartAction(ArchiveSection):
         """
         raise NotImplementedError('Subclasses should implement this method.')
 
-    # def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger'):
-    #     """
-    #     Normalizes the action entry. If `trigger_start_action` is set to True, it calls
-    #     the `start_action` method to execute the action and sets
-    #     `trigger_get_action_status` to True to retrieve the action status. If
-    #     `trigger_get_action_status` is set to True, it calls the `_get_action_status`
-    #     method to update the `action_status`.
-
-    #     Args:
-    #         archive (Archive): A NOMAD archive.
-    #         logger (Logger): A structured logger.
-    #     """
-    #     if self.trigger_start_action:
-    #         try:
-    #             self.action_instance_id = self.start_action(archive, logger)
-    #         except Exception:
-    #             logger.warning('Failed to start the action.', exc_info=True)
-    #         finally:
-    #             self.trigger_start_action = False
-
-    #     super().normalize(archive, logger)
-
 
 class StopAction(ArchiveSection):
     """
