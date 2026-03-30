@@ -31,6 +31,7 @@ from nomad.datamodel.metainfo.annotations import (
 )
 from nomad.metainfo import (
     Category,
+    MEnum,
     Quantity,
     SchemaPackage,
     Section,
@@ -228,7 +229,17 @@ class ActionStatus(ArchiveSection):
     Section to save and fetch the status of an action instance. Comes with a method
     `get_action_status` that takes in action instance ID and gets the status.
 
-    ### Using `get_action_status` in normalize methods
+    The `action_status` field can have the following values:
+
+    | Status       | Description                              |
+    |--------------|------------------------------------------|
+    | `RUNNING`    | Action is currently executing            |
+    | `COMPLETED`  | Action finished successfully             |
+    | `FAILED`     | Action encountered an error              |
+    | `CANCELLED`  | Action was stopped by user               |
+    | `TERMINATED` | Action was terminated by system or admin |
+
+    Using `get_action_status` in normalize methods:
     How and when the `get_action_status` method is triggered needs to be defined in the
     `normalize` method of child sections.
 
@@ -256,9 +267,19 @@ class ActionStatus(ArchiveSection):
     """
 
     action_status = Quantity(
-        type=str,
-        description='Status of the action instance.',
-        a_eln=ELNAnnotation(component=ELNComponentEnum.StringEditQuantity),
+        type=MEnum('RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED', 'TERMINATED'),
+        description="""Status of an action instance. Can be one of the following:
+        The `action_status` field can have the following values:
+
+        | Status       | Description                              |
+        |--------------|------------------------------------------|
+        | `RUNNING`    | Action is currently executing            |
+        | `COMPLETED`  | Action finished successfully             |
+        | `FAILED`     | Action encountered an error              |
+        | `CANCELLED`  | Action was stopped by user               |
+        | `TERMINATED` | Action was terminated by system or admin |
+        """,
+        a_eln=ELNAnnotation(component=ELNComponentEnum.EnumEditQuantity),
         a_display=QuantityDisplayAnnotation(editable=False, visible=True),
     )
     trigger_get_action_status = Quantity(
@@ -367,16 +388,6 @@ class Action(ActionStatus, StopAction, StartAction):
 
         - If `trigger_get_action_status` is set to True, it calls the
         `get_action_status` method to update the `action_status`.
-
-        The `action_status` field can have the following values:
-
-        | Status       | Description                              |
-        |--------------|------------------------------------------|
-        | `RUNNING`    | Action is currently executing            |
-        | `COMPLETED`  | Action finished successfully             |
-        | `FAILED`     | Action encountered an error              |
-        | `CANCELLED`  | Action was stopped by user               |
-        | `TERMINATED` | Action was terminated by system or admin |
 
         The `start_action` method should be implemented by subclasses.
         It should prepare the input for the specific action and trigger it using the
