@@ -16,6 +16,7 @@
 # limitations under the License.
 #
 import json
+from abc import abstractmethod
 from typing import (
     TYPE_CHECKING,
 )
@@ -122,6 +123,7 @@ class StartAction(ArchiveSection):
         ),
     )
 
+    @abstractmethod
     def start_action(self, archive, logger) -> str:
         """
         Provides the logic to trigger an action instance. To be implemented by
@@ -330,6 +332,7 @@ class Action(ActionStatus, StopAction, StartAction):
         categories=[ActionCategory],
     )
 
+    @abstractmethod
     def start_action(self, archive, logger):
         """
         To be implemented by subclasses. Based on the data available in the ELN,
