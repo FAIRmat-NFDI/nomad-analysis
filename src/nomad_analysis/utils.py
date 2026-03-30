@@ -21,11 +21,9 @@
 Utility functions for the analysis plugin.
 """
 
-import html
 import importlib
 import inspect
 import json
-import re
 from typing import TYPE_CHECKING, Any
 
 import requests
