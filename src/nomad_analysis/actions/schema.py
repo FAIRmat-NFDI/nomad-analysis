@@ -305,6 +305,15 @@ class Action(ActionStatus, StopAction, StartAction):
     m_def = Section(
         description='Section for running NOMAD Actions.',
         categories=[ActionCategory],
+        a_display=SectionDisplayAnnotation(
+            order=[
+                'trigger_start_action',
+                'action_instance_id',
+                'action_status',
+                'trigger_get_action_status',
+                'trigger_stop_action',
+            ]
+        ),
     )
 
     @abstractmethod
