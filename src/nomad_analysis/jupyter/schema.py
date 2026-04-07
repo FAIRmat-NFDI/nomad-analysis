@@ -30,7 +30,7 @@ from nomad.datamodel.metainfo.annotations import (
     BrowserAnnotation,
     ELNAnnotation,
     ELNComponentEnum,
-    SectionProperties,
+    SectionDisplayAnnotation,
 )
 from nomad.datamodel.metainfo.basesections import (
     Analysis,
@@ -211,6 +211,23 @@ class JupyterAnalysisTemplate(Analysis, EntryData):
     m_def = Section(
         categories=[JupyterAnalysisCategory],
         label='Jupyter Analysis Template',
+        a_display=SectionDisplayAnnotation(
+            order=[
+                'name',
+                'datetime',
+                'lab_id',
+                'location',
+                'description',
+                'method',
+                'from_analysis',
+                'trigger_generate_template',
+                'template_notebook',
+            ]
+        ),
+    )
+    method = Quantity(
+        type=str,
+        default='Generic',
     )
     template_notebook = Quantity(
         type=str,
@@ -355,22 +372,20 @@ class JupyterAnalysis(Analysis, EntryData):
         Section for analysis using Jupyter notebooks.
         """,
         label='Jupyter Analysis',
-        a_eln=ELNAnnotation(
-            properties=SectionProperties(
-                order=[
-                    'name',
-                    'datetime',
-                    'lab_id',
-                    'location',
-                    'description',
-                    'method',
-                    'query_for_inputs',
-                    'template',
-                    'notebook',
-                    'trigger_generate_notebook',
-                    'trigger_reset_inputs',
-                ],
-            ),
+        a_display=SectionDisplayAnnotation(
+            order=[
+                'name',
+                'datetime',
+                'lab_id',
+                'location',
+                'description',
+                'method',
+                'template',
+                'notebook',
+                'trigger_generate_notebook',
+                'query_for_inputs',
+                'trigger_reset_inputs',
+            ],
         ),
     )
     method = Quantity(
@@ -751,21 +766,20 @@ class XRDJupyterAnalysis(JupyterAnalysis, EntryData):
         description="""
         Section for XRD analysis using Jupyter notebooks.
         """,
-        a_eln=ELNAnnotation(
-            properties=SectionProperties(
-                order=[
-                    'name',
-                    'datetime',
-                    'lab_id',
-                    'location',
-                    'description',
-                    'method',
-                    'query_for_inputs',
-                    'notebook',
-                    'trigger_generate_notebook',
-                    'trigger_reset_inputs',
-                ],
-            ),
+        a_display=SectionDisplayAnnotation(
+            order=[
+                'name',
+                'datetime',
+                'lab_id',
+                'location',
+                'description',
+                'method',
+                'template',
+                'notebook',
+                'trigger_generate_notebook',
+                'query_for_inputs',
+                'trigger_reset_inputs',
+            ],
         ),
     )
 
