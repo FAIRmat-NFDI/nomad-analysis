@@ -65,7 +65,9 @@ class ArchiveMetadata(BaseModel):
     A data model for storing metadata of a NOMAD entry archive.
     """
 
-    entry_id: str = Field(description='The unique identifier of the entry.')
+    entry_id: str | None = Field(
+        default=None, description='The unique identifier of the entry.'
+    )
     m_def: str | None = Field(
         default=None, description='The definition path of the entry schema.'
     )
