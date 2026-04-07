@@ -89,8 +89,7 @@ def replace_header_cells(
     cells = []
     for cell in notebook.cells:
         if (
-            cell.cell_type == 'code'
-            and cell.metadata
+            cell.metadata
             and cell.metadata.tags
             and 'nomad-analysis-header' in cell.metadata.tags
         ):
