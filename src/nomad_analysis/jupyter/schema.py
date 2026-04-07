@@ -222,24 +222,43 @@ class JupyterAnalysisTemplate(Analysis, EntryData):
     )
     from_analysis = Quantity(
         type=Reference(SectionProxy('JupyterAnalysis')),
+        description='Reference to a `JupyterAnalysis` entry from which the template '
+        'notebook can be generated.',
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.ReferenceEditQuantity,
         ),
     )
     trigger_generate_template = Quantity(
         type=bool,
-        description='Generate a template Jupyter notebook',
+        description='Generate a template Jupyter notebook from the notebook in the '
+        'referenced analysis in `from_analysis` quantity.',
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.ActionEditQuantity,
-            label='Generate Template',
+            label='Generate From Analysis',
         ),
     )
 
-    def copy_from_analysis(self, archive: 'EntryArchive', logger: 'BoundLogger') -> str:
+    def generate_from_analysis(
+        self, archive: 'EntryArchive', logger: 'BoundLogger'
+    ) -> str:
         """
         Creates a template notebook by copying the notebook from the referenced
         analysis in `from_analysis` quantity.
         """
+        if self.template_notebook:
+            logger.warning(
+                '`template_notebook` field has an existing value: '
+                f'{self.template_notebook}. Clear it to generate a new template'
+                'notebook.'
+            )
+            return
+        if not self.from_analysis or not self.from_analysis.notebook:
+            logger.warning(
+                'No notebook found in the referenced analysis. Please connect an '
+                'analysis with a notebook to `from_analysis` quantity.'
+            )
+            return
+
         new_notebook_path = archive.metadata.mainfile.split('.')[0] + '.ipynb'
         if archive.m_context.raw_path_exists(new_notebook_path):
             logger.warn(
@@ -263,11 +282,10 @@ class JupyterAnalysisTemplate(Analysis, EntryData):
         replace_header_cells(
             template_notebook,
             write_header_cells(
-                notebook_heading='Template for %s'
-                % (
+                notebook_heading=f'Template for {
                     self.from_analysis.name
                     or self.from_analysis.m_parent.metadata.mainfile
-                ),
+                }',
                 archive_metadata=archive_metadata,
             ),
         )
@@ -275,17 +293,13 @@ class JupyterAnalysisTemplate(Analysis, EntryData):
         with archive.m_context.raw_file(new_notebook_path, 'w') as dest_file:
             nbf.write(template_notebook, dest_file)
 
-        return new_notebook_path
+        self.template_notebook = new_notebook_path
 
     def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:
         super().normalize(archive, logger)
-        if (
-            self.trigger_generate_template
-            and self.from_analysis
-            and self.from_analysis.notebook
-        ):
+        if self.trigger_generate_template:
             try:
-                self.template_notebook = self.copy_from_analysis(archive, logger)
+                self.generate_from_analysis(archive, logger)
             except Exception as e:
                 logger.warning(f'Error in generating template notebook: {e}.')
             finally:
