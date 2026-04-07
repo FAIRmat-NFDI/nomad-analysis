@@ -299,10 +299,11 @@ class JupyterAnalysisTemplate(Analysis, EntryData):
         replace_header_cells(
             template_notebook,
             write_header_cells(
-                notebook_heading=f'Template for {
+                notebook_heading='Template for '
+                + (
                     self.from_analysis.name
                     or self.from_analysis.m_parent.metadata.mainfile
-                }',
+                ),
                 archive_metadata=archive_metadata,
             ),
         )
