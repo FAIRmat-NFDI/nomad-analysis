@@ -12,7 +12,7 @@ create, share, and run analysis on NOMAD entries.
 ## Features
 
 - **Jupyter Analysis**: Create analysis ELNs linked with Jupyter Notebooks, with seamless access to NOMAD entries.
-- **Jupyter Analysis Templates**: Define reusable notebook structures to standardize analyses across entries. (coming soon)
+- **Jupyter Analysis Templates**: Define reusable notebook structures to standardize analyses across entries.
 - **NOMAD Actions from ELN**: Run specialized processing pipelines directly from the ELN.
 - **Extensible Schemas**: Easily extend the provided schemas to fit your specific analysis needs.
 
