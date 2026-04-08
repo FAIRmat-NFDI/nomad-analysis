@@ -11,7 +11,7 @@ workflows or a developer interested in extending its capabilities, you'll find
 everything you need here.
 
 <div markdown="block" class="home-grid">
-<div markdown="block">
+<!-- <div markdown="block">
 
 ### Tutorial
 
@@ -19,7 +19,7 @@ TODO
 
 - [Tutorial](tutorial/tutorial.md)
 
-</div>
+</div> -->
 <div markdown="block">
 
 ### How-to guides
@@ -34,13 +34,13 @@ How-to guides provide step-by-step instructions for a wide range of tasks, with 
 
 </div>
 
-<div markdown="block">
+<!-- <div markdown="block">
 
 ### Explanation
 
 The explanation [section](explanation/explanation.md) provides background knowledge on this plugin.
 
-</div>
+</div> -->
 <div markdown="block">
 
 ### Reference
