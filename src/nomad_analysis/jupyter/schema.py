@@ -210,6 +210,10 @@ class JupyterAnalysisCategory(EntryDataCategory):
 
 
 class JupyterAnalysisTemplate(Analysis, EntryData):
+    """
+    Section for creating template notebooks for Jupyter Analysis.
+    """
+
     m_def = Section(
         categories=[JupyterAnalysisCategory],
         label='Jupyter Analysis Template',
@@ -316,6 +320,10 @@ class JupyterAnalysisTemplate(Analysis, EntryData):
         self.template_notebook = new_notebook_path
 
     def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:
+        """
+        Handles the generation of the template notebook when `trigger_generate_template`
+        is set to True.
+        """
         super().normalize(archive, logger)
         if self.trigger_generate_template:
             try:
