@@ -89,11 +89,13 @@ def replace_header_cells(
     cells = []
     for cell in notebook.cells:
         if (
-            cell.metadata
-            and cell.metadata.tags
+            cell.get('metadata')
+            and cell.metadata.get('tags')
             and 'nomad-analysis-header' in cell.metadata.tags
         ):
             continue
+        # reset the execution count of the existing cells
+        cell.execution_count = None
         cells.append(cell)
 
     if header_cells:
@@ -304,10 +306,7 @@ class JupyterAnalysisTemplate(Analysis, EntryData):
 
         archive_metadata = ArchiveMetadata(
             entry_id=archive.metadata.entry_id,
-            m_def=self.m_def.qualified_name(),
-            main_author_name=archive.metadata.main_author.name
-            if archive.metadata.main_author
-            else None,
+            base_url=archive.m_context.installation_url,
         )
 
         replace_header_cells(
@@ -682,10 +681,7 @@ class JupyterAnalysis(Analysis, EntryData):
 
         archive_metadata = ArchiveMetadata(
             entry_id=archive.metadata.entry_id,
-            m_def=self.m_def.qualified_name(),
-            main_author_name=archive.metadata.main_author.name
-            if archive.metadata.main_author
-            else None,
+            base_url=archive.m_context.installation_url,
         )
         header_cells = write_header_cells(
             notebook_heading=self.name or 'Jupyter Analysis',
