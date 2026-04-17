@@ -48,8 +48,12 @@ def test_jupyter_analysis_schema(test_file, caplog, clean_up):
     total_cells = 4
     assert len(notebook.cells) == total_cells
     assert notebook.cells[2].source == (
-        'from nomad_analysis.utils import get_entry_data\n\n'
-        'analysis = get_entry_data(entry_id=_NOMAD_ANALYSIS_ENTRY_ID)\n'
+        'from nomad_analysis.utils import get_entry_data\n'
+        '\n'
+        'analysis = await get_entry_data(\n'
+        '    entry_id=NOMAD_ANALYSIS_ENTRY_ID,\n'
+        '    url=NOMAD_ANALYSIS_BASE_URL,\n'
+        ')'
     )
 
 
