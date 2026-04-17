@@ -170,7 +170,7 @@ def write_header_cells(
     get_entry_data_source = [
         'from nomad_analysis.utils import get_entry_data\n',
         '\n',
-        'analysis = get_entry_data(\n',
+        'analysis = await get_entry_data(\n',
         '    entry_id=NOMAD_ANALYSIS_ENTRY_ID,\n',
         '    url=NOMAD_ANALYSIS_BASE_URL,\n',
         ')',
