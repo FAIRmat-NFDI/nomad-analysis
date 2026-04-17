@@ -158,13 +158,26 @@ def write_header_cells(
     )
 
     nomad_metadata_source = ['# NOMAD Analysis Metadata - DO NOT EDIT\n']
-
     for k, v in archive_metadata:
         nomad_metadata_source.append(f'NOMAD_ANALYSIS_{k.upper()} = {v!r}\n')
-
     cells.append(
         nbf.v4.new_code_cell(
             source=nomad_metadata_source,
+            metadata={'tags': ['nomad-analysis-header']},
+        )
+    )
+
+    get_entry_data_source = [
+        'from nomad_analysis.utils import get_entry_data\n',
+        '\n',
+        'analysis = get_entry_data(\n',
+        '    entry_id=NOMAD_ANALYSIS_ENTRY_ID,\n',
+        '    url=NOMAD_ANALYSIS_BASE_URL,\n',
+        ')',
+    ]
+    cells.append(
+        nbf.v4.new_code_cell(
+            source=get_entry_data_source,
             metadata={'tags': ['nomad-analysis-header']},
         )
     )
@@ -639,23 +652,10 @@ class JupyterAnalysis(Analysis, EntryData):
                 # add more cells as needed
                 # ...
 
-
                 return cells
         ```
         """
         cells = []
-
-        source = [
-            'from nomad_analysis.utils import get_entry_data\n',
-            '\n',
-            'analysis = get_entry_data(entry_id=_NOMAD_ANALYSIS_ENTRY_ID)\n',
-        ]
-        cells.append(
-            nbf.v4.new_code_cell(
-                source=source,
-                metadata={'tags': ['nomad-analysis-predefined']},
-            )
-        )
 
         return cells
 
