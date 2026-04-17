@@ -294,7 +294,7 @@ class JupyterAnalysisTemplate(Analysis, EntryData):
 
         new_notebook_path = archive.metadata.mainfile.split('.')[0] + '.ipynb'
         if archive.m_context.raw_path_exists(new_notebook_path):
-            logger.warn(
+            logger.warning(
                 f'Notebook {new_notebook_path} already exists. Delete it from the '
                 'upload folder to generate a new one.'
             )
@@ -336,7 +336,9 @@ class JupyterAnalysisTemplate(Analysis, EntryData):
             try:
                 self.generate_from_analysis(archive, logger)
             except Exception as e:
-                logger.warning(f'Error in generating template notebook: {e}.')
+                logger.warning(
+                    f'Error in generating template notebook: {e!r}.', exc_info=True
+                )
             finally:
                 self.trigger_generate_template = False
 
@@ -504,7 +506,8 @@ class JupyterAnalysis(Analysis, EntryData):
         except Exception as e:
             logger.warning(
                 f'Could not resolve the entry with upload_id "{upload_id}" and '
-                f'entry_id "{entry_id}".\n Encountered {e}.'
+                f'entry_id "{entry_id}".\n Encountered {e!r}.',
+                exc_info=True,
             )
 
         return None
@@ -577,7 +580,8 @@ class JupyterAnalysis(Analysis, EntryData):
                     return f'{entry_path}#/{section_path}'
             except Exception as e:
                 logger.warning(
-                    f'Error in normalizing the m_proxy_value "{m_proxy_value}".\n{e}'
+                    f'Error in normalizing the m_proxy_value "{m_proxy_value}".\n{e!r}',
+                    exc_info=True,
                 )
             return m_proxy_value
 
@@ -673,7 +677,7 @@ class JupyterAnalysis(Analysis, EntryData):
             + '.ipynb'
         )
         if archive.m_context.raw_path_exists(new_notebook_path):
-            logger.warn(
+            logger.warning(
                 f'Notebook {new_notebook_path} already exists. Delete it from '
                 'the upload folder to generate a new one.'
             )
@@ -742,7 +746,7 @@ class JupyterAnalysis(Analysis, EntryData):
             try:
                 self.generate_notebook(archive, logger)
             except Exception as e:
-                logger.warning(f'Error in generating notebook: {e}.')
+                logger.warning(f'Error in generating notebook: {e!r}.', exc_info=True)
             finally:
                 self.trigger_generate_notebook = False
         if self.trigger_reset_inputs:
