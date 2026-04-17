@@ -627,20 +627,17 @@ class JupyterAnalysis(Analysis, EntryData):
         self, archive: 'EntryArchive', logger: 'BoundLogger'
     ) -> list:
         """
-        A function to be overridden in the subclasses for extending pre-defined cells
+        A function to be implemented in the subclasses for adding pre-defined cells
         in the generated Jupyter notebook.
 
-        Note: we use `nomad-analysis-predefined` tag in the metadata of the code
+        Hint: use `nomad-analysis-predefined` tag in the metadata of the code
         cells to identify them as pre-defined cells.
 
         Here's an example:
         ```
         class MyJupyterAnalysis(JupyterAnalysis):
             def write_predefined_cells(self, archive, logger):
-                cells = self.write_predefined_cells(archive, logger)
-                # or if you want to start with a fresh set of pre-defined cells,
-                # you can simply do
-                # cells = []
+                cells = []
 
                 # add your own pre-defined cells
                 source = '''\nimport pprint\npprint("Hello World!")\n'''
@@ -655,9 +652,7 @@ class JupyterAnalysis(Analysis, EntryData):
                 return cells
         ```
         """
-        cells = []
-
-        return cells
+        raise NotImplementedError()
 
     def generate_notebook(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:
         """
@@ -705,7 +700,10 @@ class JupyterAnalysis(Analysis, EntryData):
         else:
             new_notebook = nbf.v4.new_notebook()
             new_notebook.cells.extend(header_cells)
-            new_notebook.cells.extend(self.write_predefined_cells(archive, logger))
+            try:
+                new_notebook.cells.extend(self.write_predefined_cells(archive, logger))
+            except NotImplementedError:
+                pass
             new_notebook.cells.append(nbf.v4.new_code_cell())
 
         new_notebook['metadata']['trusted'] = True
@@ -736,8 +734,7 @@ class JupyterAnalysis(Analysis, EntryData):
         The normalize method orchestrates:
 
         - `generate_notebook`: If triggered, generates a Jupyter notebook file. The
-           `write_predefined_cells` method is used to write the pre-defined cells in
-           the notebook.
+           `write_predefined_cells` method to add pre-defined cells in the notebook.
         - `reset_inputs`: If triggered, resets the existing input references and
            creates new references based on the `query_for_inputs` quantity.
         - `process_query_for_inputs`: Processes the `query_for_inputs` quantity to get
@@ -794,7 +791,7 @@ class XRDJupyterAnalysis(JupyterAnalysis, EntryData):
         Extends the pre-defined cells with XRD specific analysis functions.
         """
 
-        cells = super().write_predefined_cells(archive, logger)
+        cells = []
 
         comment = '# Analysis functions specific to XRD.\n\n'
         analysis_functions = get_function_source(category_name='XRD')
