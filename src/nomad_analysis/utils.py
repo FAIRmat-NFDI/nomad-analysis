@@ -107,7 +107,7 @@ def list_to_string(list_instance: list) -> str:
     return string
 
 
-def get_entry_data(
+async def get_entry_data(
     entry_id: str,
     url: str = config.client.url,
     username: str = config.client.user,
@@ -135,7 +135,7 @@ def get_entry_data(
             username=username,
             password=password,
         )
-        entry_list.extend(a_query.download(1))
+        entry_list = await a_query.async_download(1)
     except Exception as e:
         print(f'Encountered error: {e}')
 

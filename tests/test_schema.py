@@ -45,11 +45,15 @@ def test_jupyter_analysis_schema(test_file, caplog, clean_up):
     # open the notebook and test the pre-defined cells blocks
     with entry_archive.m_context.raw_file(entry_archive.data.notebook, 'r') as nb_file:
         notebook = nbf.read(nb_file, as_version=nbf.NO_CONVERT)
-    total_cells = 3
+    total_cells = 4
     assert len(notebook.cells) == total_cells
-    assert notebook.cells[1].source == (
-        'from nomad_analysis.utils import get_entry_data\n\n'
-        'analysis = get_entry_data(entry_id="None")\n'
+    assert notebook.cells[2].source == (
+        'from nomad_analysis.utils import get_entry_data\n'
+        '\n'
+        'analysis = await get_entry_data(\n'
+        '    entry_id=NOMAD_ANALYSIS_ENTRY_ID,\n'
+        '    url=NOMAD_ANALYSIS_BASE_URL,\n'
+        ')'
     )
 
 
@@ -76,9 +80,9 @@ def test_jupyter_analysis_xrd_schema(test_file, caplog, clean_up):
     # open the notebook and test the extended pre-defined cells blocks
     with entry_archive.m_context.raw_file(entry_archive.data.notebook, 'r') as nb_file:
         notebook = nbf.read(nb_file, as_version=nbf.NO_CONVERT)
-    total_cells = 5
+    total_cells = 6
     assert len(notebook.cells) == total_cells
-    assert notebook.cells[3].source == 'xrd_voila_analysis(analysis.data.inputs)\n'
+    assert notebook.cells[4].source == 'xrd_voila_analysis(analysis.data.inputs)\n'
 
 
 @pytest.mark.parametrize(

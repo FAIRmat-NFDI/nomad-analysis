@@ -60,17 +60,27 @@ A notebook can be uploaded manually and connected to the entry. For this, simply
 You can also generate a notebook automatically by clicking the **Generate Notebook** button. This will:
 
 - Create a Jupyter notebook "`<entry archive name>.ipynb`" in the same upload
-- Pre-populate it with header cells and data loading code
+- Pre-populate it with header cells (tagged with `nomad-analysis-header`) and
+data loading code cell (tagged with `nomad-analysis-predefined`) that loads the
+analysis entry and its inputs
 - Link it with the `notebook` quantity
 
 The name of the generated notebook will match the analysis entry's archive file
-name. It contains a header with the analysis name and a pre-defined code cell
-that loads the analysis entry and its inputs:
+name. It contains a header with description text, metadata variables, and code
+to load the analysis entry:
 
+```python
+# NOMAD Analysis Metadata - DO NOT EDIT
+NOMAD_ANALYSIS_ENTRY_ID = # <ID of analysis entry>
+NOMAD_ANALYSIS_BASE_URL = # <Base URL of NOMAD deployment containing the entry>
+```
 ```python
 from nomad_analysis.utils import get_entry_data
 
-analysis = get_entry_data(entry_id=<NOMAD_ANALYSIS_ENTRY_ID>)
+analysis = get_entry_data(
+    entry_id=NOMAD_ANALYSIS_ENTRY_ID,
+    url=NOMAD_ANALYSIS_BASE_URL,
+)
 ```
 
 In the code above, `analysis` is an instance of the `JupyterAnalysis` section
@@ -80,6 +90,21 @@ results back to the entry.
 
 !!! warning
     If the `notebook` field is already populated with a notebook that was uploaded before, the **Generate Notebook** button will **not** overwrite it. Clear the `notebook` field and click the button again. Also, the automated generation creates a notebook with the same name as the entry. If you try to generate a notebook multiple times, it will **not** overwrite it. In this case, delete the existing notebook from the upload and click the button again.
+
+### Using Templates
+
+Templates allow you to reuse a notebook structure across multiple analyses. If you have a `JupyterAnalysisTemplate` entry with a template notebook, you can use it when generating notebooks:
+
+1. In your `JupyterAnalysis` entry, find the `template` field
+2. Search for and select your template entry
+3. Click **Generate Notebook**
+
+The generated notebook will use the template's structure instead of the default
+pre-defined cells. Header cells are added/updated to reflect the current
+analysis entry's metadata, while the rest of the template content is preserved.
+
+For details on creating and managing templates, see the
+[Templates in Jupyter Analysis](templates_in_jupyter_analysis.md) guide.
 
 ### Open and Run the Notebook
 

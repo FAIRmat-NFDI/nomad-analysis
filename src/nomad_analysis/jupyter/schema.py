@@ -26,10 +26,11 @@ from nomad.datamodel.data import (
     Query,
 )
 from nomad.datamodel.metainfo.annotations import (
+    BrowserAdaptors,
     BrowserAnnotation,
     ELNAnnotation,
     ELNComponentEnum,
-    SectionProperties,
+    SectionDisplayAnnotation,
 )
 from nomad.datamodel.metainfo.basesections import (
     Analysis,
@@ -41,6 +42,7 @@ from nomad.metainfo import (
     SchemaPackage,
     Section,
 )
+from nomad.metainfo.metainfo import Reference, SectionProxy
 from pydantic import BaseModel, Field
 
 from nomad_analysis.utils import (
@@ -56,6 +58,134 @@ if TYPE_CHECKING:
     from structlog.stdlib import (
         BoundLogger,
     )
+
+
+class ArchiveMetadata(BaseModel):
+    """
+    A data model for storing metadata of a NOMAD entry archive.
+    """
+
+    entry_id: str | None = Field(
+        default=None, description='The unique identifier of the entry.'
+    )
+    base_url: str | None = Field(
+        default=None,
+        description='The base url of the NOMAD instance where the entry is stored.',
+    )
+
+
+def replace_header_cells(
+    notebook: nbf.notebooknode.NotebookNode, header_cells: list
+) -> None:
+    """
+    Replaces the pre-defined header cells containing 'nomad-analysis-header' tag from
+    the notebook.
+
+    Args:
+        notebook (nbf.notebooknode.NotebookNode): The notebook in which the header
+            cells need to be replaced.
+        header_cells (list): The list of new header cells to be added.
+    """
+    cells = []
+    for cell in notebook.cells:
+        if (
+            cell.get('metadata')
+            and cell.metadata.get('tags')
+            and 'nomad-analysis-header' in cell.metadata.tags
+        ):
+            continue
+        # reset the execution count of the existing cells
+        cell.execution_count = None
+        cells.append(cell)
+
+    if header_cells:
+        cells = header_cells + cells
+
+    notebook.cells = cells
+
+
+def write_header_cells(
+    notebook_heading: str,
+    archive_metadata: ArchiveMetadata,
+) -> list:
+    """
+    Returns the header cells in the notebook based on the given heading and
+    linked archive metadata.
+
+    Args:
+        notebook_heading (str): The heading to be displayed in the header cell.
+        archive_metadata (ArchiveMetadata): The metadata of the linked analysis archive.
+
+    Returns:
+        list: The list of header cells to be added in the notebook.
+    """
+
+    cells = []
+
+    header_md_source = [
+        '<div style="\n',
+        '    background-color: #f7f7f7;\n',
+        "    background-image: url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcKICAgd2lkdGg9IjcyIgogICBoZWlnaHQ9IjczIgogICB2aWV3Qm94PSIwIDAgNzIgNzMiCiAgIGZpbGw9Im5vbmUiCiAgIHZlcnNpb249IjEuMSIKICAgaWQ9InN2ZzEzMTkiCiAgIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgeG1sbnM6c3ZnPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGRlZnMKICAgICBpZD0iZGVmczEzMjMiIC8+CiAgPHBhdGgKICAgICBkPSJNIC0wLjQ5OTk4NSwxNDUgQyAzOS41MzMsMTQ1IDcyLDExMi41MzIgNzIsNzIuNSA3MiwzMi40Njc4IDM5LjUzMywwIC0wLjQ5OTk4NSwwIC00MC41MzI5LDAgLTczLDMyLjQ2NzggLTczLDcyLjUgYyAwLDQwLjAzMiAzMi40NjcxLDcyLjUgNzIuNTAwMDE1LDcyLjUgeiIKICAgICBmaWxsPSIjMDA4YTY3IgogICAgIGZpbGwtb3BhY2l0eT0iMC4yNSIKICAgICBpZD0icGF0aDEzMTciIC8+Cjwvc3ZnPgo='), url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcKICAgd2lkdGg9IjIxNyIKICAgaGVpZ2h0PSIyMjMiCiAgIHZpZXdCb3g9IjAgMCAyMTcgMjIzIgogICBmaWxsPSJub25lIgogICB2ZXJzaW9uPSIxLjEiCiAgIGlkPSJzdmcxMTA3IgogICB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiAgIHhtbG5zOnN2Zz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxkZWZzCiAgICAgaWQ9ImRlZnMxMTExIiAvPgogIDxwYXRoCiAgICAgZD0ibSAyMi4wNDIsNDUuMDEwOSBjIDIxLjM2MjUsMjEuMjc1NyA1NS45NzYsMjEuMjc1NyA3Ny41MTkyLDAgQyAxMTkuNTU4LDI1LjA4IDE1MS41MDIsMjMuNzM1MiAxNzIuODY0LDQxLjM3OCBjIDEuMzQ1LDEuNTI1NCAyLjY5LDMuMjUxNiA0LjIzNiw0Ljc5NzEgMjEuMzYzLDIxLjI3NTYgMjEuMzYzLDU1Ljc5ODkgMCw3Ny4yNTQ5IC0yMS4zNjIsMjEuMjc2IC0yMS4zNjIsNTUuNzk4IDAsNzcuMjU1IDIxLjM2MywyMS40NTYgNTUuOTc2LDIxLjI3NSA3Ny41MiwwIDIxLjU0MywtMjEuMjc2IDIxLjM2MiwtNTUuNzk5IDAsLTc3LjI1NSAtMjEuMzYzLC0yMS4yNzYgLTIxLjM2MywtNTUuNzk4NiAwLC03Ny4yNTQ5IDEyLjY4OSwtMTIuNjQ1IDE3Ljg4OSwtMzAuMTA3MSAxNS4zOTksLTQ2LjU4NTc2IC0xLjU0NiwtMTEuNTAwOTQgLTYuNzI2LC0yMi44MjExNCAtMTUuNTgsLTMxLjYzMjU0IC0yMS4zNjMsLTIxLjI3NTYgLTU1Ljk3NiwtMjEuMjc1NiAtNzcuNTE5LDAgLTIxLjM2MywyMS4yNzU3IC01NS45NzYsMjEuMjc1NyAtNzcuNTE5NCwwIC0yMS4zNjI1LC0yMS4yNzU2IC01NS45NzYxLC0yMS4yNzU2IC03Ny41MTkyLDAgQyAwLjY3OTU2NSwtMTAuNzg3NiAwLjY3OTU5NiwyMy43MzUyIDIyLjA0Miw0NS4wMTA5IFoiCiAgICAgZmlsbD0iIzJhNGNkZiIKICAgICBzdHJva2U9IiMyYTRjZGYiCiAgICAgc3Ryb2tlLXdpZHRoPSIxMiIKICAgICBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiCiAgICAgaWQ9InBhdGgxMTA1IiAvPgogIDxwYXRoCiAgICAgZD0ibSA1MS45OTUyMTIsMjIyLjczMDEzIGMgMjguMzU5MSwwIDUxLjM1ODM5OCwtMjIuOTk5OSA1MS4zNTgzOTgsLTUxLjM1ODQgMCwtMjguMzU4NiAtMjIuOTk5Mjk4LC01MS4zNTg1OSAtNTEuMzU4Mzk4LC01MS4zNTg1OSAtMjguMzU5MSwwIC01MS4zNTg2MDIsMjIuOTk5OTkgLTUxLjM1ODYwMiw1MS4zNTg1OSAwLDI4LjM1ODUgMjIuOTk5NTAyLDUxLjM1ODQgNTEuMzU4NjAyLDUxLjM1ODQgeiIKICAgICBmaWxsPSIjMTkyZTg2IgogICAgIGZpbGwtb3BhY2l0eT0iMC4zNSIKICAgICBpZD0icGF0aDE5MzciIC8+Cjwvc3ZnPgo=') ;\n",  # noqa: E501
+        '    background-position: left bottom, right top;\n',
+        '    background-repeat: no-repeat,  no-repeat;\n',
+        '    background-size: auto 60px, auto 160px;\n',
+        '    border-radius: 5px;\n',
+        '    box-shadow: 0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0,0,0,.12);">\n',  # noqa: E501
+        '\n',
+        '<h1 style="\n',
+        '    color: #2a4cdf;\n',
+        '    font-style: normal;\n',
+        '    font-size: 2.25rem;\n',
+        '    line-height: 1.4em;\n',
+        '    font-weight: 600;\n',
+        '    padding: 30px 200px 0px 30px;"\n',
+        f'>{notebook_heading}</h1>\n',
+        '</div>\n',
+        '\n',
+        'This notebook was generated by and is linked to a NOMAD `JupyterAnalysis`\n',
+        'ELN entry.\n',
+        '\n',
+        'Run the next two cells to load the linked ELN entry into the variable:\n',
+        '`analysis`. The analysis inputs can be accessed by `analysis.inputs`. \n',
+        '\n',
+        'For more information on using `JupyterAnalysis`, such as adding back \n'
+        'results to the analysis entry, see the NOMAD Analysis plugin \n',
+        '[documentation](https://fairmat-nfdi.github.io/nomad-analysis/).\n',
+    ]
+    cells.append(
+        nbf.v4.new_markdown_cell(
+            source=header_md_source,
+            metadata={'tags': ['nomad-analysis-header']},
+        )
+    )
+
+    nomad_metadata_source = ['# NOMAD Analysis Metadata - DO NOT EDIT\n']
+    for k, v in archive_metadata:
+        nomad_metadata_source.append(f'NOMAD_ANALYSIS_{k.upper()} = {v!r}\n')
+    cells.append(
+        nbf.v4.new_code_cell(
+            source=nomad_metadata_source,
+            metadata={'tags': ['nomad-analysis-header']},
+        )
+    )
+
+    get_entry_data_source = [
+        'from nomad_analysis.utils import get_entry_data\n',
+        '\n',
+        'analysis = await get_entry_data(\n',
+        '    entry_id=NOMAD_ANALYSIS_ENTRY_ID,\n',
+        '    url=NOMAD_ANALYSIS_BASE_URL,\n',
+        ')',
+    ]
+    cells.append(
+        nbf.v4.new_code_cell(
+            source=get_entry_data_source,
+            metadata={'tags': ['nomad-analysis-header']},
+        )
+    )
+
+    return cells
+
 
 m_package = SchemaPackage(
     aliases=[
@@ -89,6 +219,130 @@ class JupyterAnalysisCategory(EntryDataCategory):
     )
 
 
+class JupyterAnalysisTemplate(Analysis, EntryData):
+    """
+    Section for creating template notebooks for Jupyter Analysis.
+    """
+
+    m_def = Section(
+        categories=[JupyterAnalysisCategory],
+        label='Jupyter Analysis Template',
+        a_display=SectionDisplayAnnotation(
+            order=[
+                'name',
+                'datetime',
+                'lab_id',
+                'location',
+                'description',
+                'method',
+                'from_analysis',
+                'trigger_generate_template',
+                'template_notebook',
+            ]
+        ),
+    )
+    method = Quantity(
+        type=str,
+        default='Generic',
+    )
+    template_notebook = Quantity(
+        type=str,
+        description='A Jupyter notebook file that serves as a template.',
+        a_eln=ELNAnnotation(
+            component=ELNComponentEnum.FileEditQuantity,
+        ),
+        a_browser=BrowserAnnotation(adaptor=BrowserAdaptors.RawFileAdaptor),
+    )
+    from_analysis = Quantity(
+        type=Reference(SectionProxy('JupyterAnalysis')),
+        description='Reference to a `JupyterAnalysis` entry from which the template '
+        'notebook can be generated.',
+        a_eln=ELNAnnotation(
+            component=ELNComponentEnum.ReferenceEditQuantity,
+        ),
+    )
+    trigger_generate_template = Quantity(
+        type=bool,
+        description='Generate a template Jupyter notebook from the notebook in the '
+        'referenced analysis in `from_analysis` quantity.',
+        a_eln=ELNAnnotation(
+            component=ELNComponentEnum.ActionEditQuantity,
+            label='Generate From Analysis',
+        ),
+    )
+
+    def generate_from_analysis(
+        self, archive: 'EntryArchive', logger: 'BoundLogger'
+    ) -> str:
+        """
+        Creates a template notebook by copying the notebook from the referenced
+        analysis in `from_analysis` quantity.
+        """
+        if self.template_notebook:
+            logger.warning(
+                '`template_notebook` field has an existing value: '
+                f'{self.template_notebook}. Clear it to generate a new template'
+                'notebook.'
+            )
+            return
+        if not self.from_analysis or not self.from_analysis.notebook:
+            logger.warning(
+                'No notebook found in the referenced analysis. Please connect an '
+                'analysis with a notebook to `from_analysis` quantity.'
+            )
+            return
+
+        new_notebook_path = archive.metadata.mainfile.split('.')[0] + '.ipynb'
+        if archive.m_context.raw_path_exists(new_notebook_path):
+            logger.warning(
+                f'Notebook {new_notebook_path} already exists. Delete it from the '
+                'upload folder to generate a new one.'
+            )
+            return
+
+        context = self.from_analysis.m_context
+        with context.raw_file(self.from_analysis.notebook, 'r') as src_file:
+            template_notebook = nbf.read(src_file, as_version=4)
+
+        archive_metadata = ArchiveMetadata(
+            entry_id=archive.metadata.entry_id,
+            base_url=archive.m_context.installation_url,
+        )
+
+        replace_header_cells(
+            template_notebook,
+            write_header_cells(
+                notebook_heading='Template for '
+                + (
+                    self.from_analysis.name
+                    or self.from_analysis.m_parent.metadata.mainfile
+                ),
+                archive_metadata=archive_metadata,
+            ),
+        )
+
+        with archive.m_context.raw_file(new_notebook_path, 'w') as dest_file:
+            nbf.write(template_notebook, dest_file)
+
+        self.template_notebook = new_notebook_path
+
+    def normalize(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:
+        """
+        Handles the generation of the template notebook when `trigger_generate_template`
+        is set to True.
+        """
+        super().normalize(archive, logger)
+        if self.trigger_generate_template:
+            try:
+                self.generate_from_analysis(archive, logger)
+            except Exception as e:
+                logger.warning(
+                    f'Error in generating template notebook: {e!r}.', exc_info=True
+                )
+            finally:
+                self.trigger_generate_template = False
+
+
 class JupyterAnalysis(Analysis, EntryData):
     """
     Base section for analysis that connects a Jupyter notebook to the entry. The
@@ -97,6 +351,8 @@ class JupyterAnalysis(Analysis, EntryData):
     The section allows the user to:
     - Build queries to search and connect the input entries for the analysis.
     - Generate and connect a Jupyter notebook with pre-defined cell blocks.
+    - Optionally, use a JupyterAnalysisTemplate to generate the notebook based on
+        a template notebook.
     - Optionally, upload a Jupyter notebook from your local system and connect
       to the entry.
 
@@ -110,7 +366,7 @@ class JupyterAnalysis(Analysis, EntryData):
     ```
     class MyJupyterAnalysis(JupyterAnalysis):
         def write_predefined_cells(self, archive, logger):
-            cells = super().write_predefined_cells(archive, logger)
+            cells = []
 
             # add your own pre-defined cells
             source = [
@@ -136,21 +392,20 @@ class JupyterAnalysis(Analysis, EntryData):
         Section for analysis using Jupyter notebooks.
         """,
         label='Jupyter Analysis',
-        a_eln=ELNAnnotation(
-            properties=SectionProperties(
-                order=[
-                    'name',
-                    'datetime',
-                    'lab_id',
-                    'location',
-                    'description',
-                    'method',
-                    'query_for_inputs',
-                    'notebook',
-                    'trigger_generate_notebook',
-                    'trigger_reset_inputs',
-                ],
-            ),
+        a_display=SectionDisplayAnnotation(
+            order=[
+                'name',
+                'datetime',
+                'lab_id',
+                'location',
+                'description',
+                'method',
+                'template',
+                'notebook',
+                'trigger_generate_notebook',
+                'query_for_inputs',
+                'trigger_reset_inputs',
+            ],
         ),
     )
     method = Quantity(
@@ -180,13 +435,19 @@ class JupyterAnalysis(Analysis, EntryData):
             label='Reset Inputs',
         ),
     )
+    template = Quantity(
+        type=JupyterAnalysisTemplate,
+        a_eln=ELNAnnotation(
+            component=ELNComponentEnum.ReferenceEditQuantity,
+        ),
+    )
     notebook = Quantity(
         type=str,
         description='Generated Jupyter notebook file.',
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.FileEditQuantity,
         ),
-        a_browser=BrowserAnnotation(adaptor='RawFileAdaptor'),
+        a_browser=BrowserAnnotation(adaptor=BrowserAdaptors.RawFileAdaptor),
     )
     query_for_inputs = Quantity(
         type=Query,
@@ -245,7 +506,8 @@ class JupyterAnalysis(Analysis, EntryData):
         except Exception as e:
             logger.warning(
                 f'Could not resolve the entry with upload_id "{upload_id}" and '
-                f'entry_id "{entry_id}".\n Encountered {e}.'
+                f'entry_id "{entry_id}".\n Encountered {e!r}.',
+                exc_info=True,
             )
 
         return None
@@ -318,7 +580,8 @@ class JupyterAnalysis(Analysis, EntryData):
                     return f'{entry_path}#/{section_path}'
             except Exception as e:
                 logger.warning(
-                    f'Error in normalizing the m_proxy_value "{m_proxy_value}".\n{e}'
+                    f'Error in normalizing the m_proxy_value "{m_proxy_value}".\n{e!r}',
+                    exc_info=True,
                 )
             return m_proxy_value
 
@@ -367,123 +630,89 @@ class JupyterAnalysis(Analysis, EntryData):
         self, archive: 'EntryArchive', logger: 'BoundLogger'
     ) -> list:
         """
-        Writes the pre-defined Jupyter notebook cells.
+        A function to be implemented in the subclasses for adding pre-defined cells
+        in the generated Jupyter notebook.
 
-        Args:
-            archive (EntryArchive): The archive containing the section.
-            logger (BoundLogger): A structlog logger.
+        Hint: use `nomad-analysis-predefined` tag in the metadata of the code
+        cells to identify them as pre-defined cells.
 
-        Returns:
-            list: The list of pre-defined code cells.
+        Here's an example:
+        ```
+        class MyJupyterAnalysis(JupyterAnalysis):
+            def write_predefined_cells(self, archive, logger):
+                cells = []
+
+                # add your own pre-defined cells
+                source = '''\nimport pprint\npprint("Hello World!")\n'''
+                cells.append(
+                    nbf.v4.new_code_cell(
+                        source=source, metadata={'tags': ['nomad-analysis-predefined']}
+                    )
+                )
+                # add more cells as needed
+                # ...
+
+                return cells
+        ```
         """
-        user = 'Unknown user'
-        if archive.metadata.main_author:
-            user = archive.metadata.main_author.name
-        notebook_heading = self.name
-        if not notebook_heading:
-            notebook_heading = archive.metadata.mainfile.split('.')[0].replace('_', ' ')
-
-        cells = []
-
-        source = [
-            '<div style="\n',
-            '    background-color: #f7f7f7;\n',
-            "    background-image: url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcKICAgd2lkdGg9IjcyIgogICBoZWlnaHQ9IjczIgogICB2aWV3Qm94PSIwIDAgNzIgNzMiCiAgIGZpbGw9Im5vbmUiCiAgIHZlcnNpb249IjEuMSIKICAgaWQ9InN2ZzEzMTkiCiAgIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgeG1sbnM6c3ZnPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGRlZnMKICAgICBpZD0iZGVmczEzMjMiIC8+CiAgPHBhdGgKICAgICBkPSJNIC0wLjQ5OTk4NSwxNDUgQyAzOS41MzMsMTQ1IDcyLDExMi41MzIgNzIsNzIuNSA3MiwzMi40Njc4IDM5LjUzMywwIC0wLjQ5OTk4NSwwIC00MC41MzI5LDAgLTczLDMyLjQ2NzggLTczLDcyLjUgYyAwLDQwLjAzMiAzMi40NjcxLDcyLjUgNzIuNTAwMDE1LDcyLjUgeiIKICAgICBmaWxsPSIjMDA4YTY3IgogICAgIGZpbGwtb3BhY2l0eT0iMC4yNSIKICAgICBpZD0icGF0aDEzMTciIC8+Cjwvc3ZnPgo='), url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcKICAgd2lkdGg9IjIxNyIKICAgaGVpZ2h0PSIyMjMiCiAgIHZpZXdCb3g9IjAgMCAyMTcgMjIzIgogICBmaWxsPSJub25lIgogICB2ZXJzaW9uPSIxLjEiCiAgIGlkPSJzdmcxMTA3IgogICB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiAgIHhtbG5zOnN2Zz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxkZWZzCiAgICAgaWQ9ImRlZnMxMTExIiAvPgogIDxwYXRoCiAgICAgZD0ibSAyMi4wNDIsNDUuMDEwOSBjIDIxLjM2MjUsMjEuMjc1NyA1NS45NzYsMjEuMjc1NyA3Ny41MTkyLDAgQyAxMTkuNTU4LDI1LjA4IDE1MS41MDIsMjMuNzM1MiAxNzIuODY0LDQxLjM3OCBjIDEuMzQ1LDEuNTI1NCAyLjY5LDMuMjUxNiA0LjIzNiw0Ljc5NzEgMjEuMzYzLDIxLjI3NTYgMjEuMzYzLDU1Ljc5ODkgMCw3Ny4yNTQ5IC0yMS4zNjIsMjEuMjc2IC0yMS4zNjIsNTUuNzk4IDAsNzcuMjU1IDIxLjM2MywyMS40NTYgNTUuOTc2LDIxLjI3NSA3Ny41MiwwIDIxLjU0MywtMjEuMjc2IDIxLjM2MiwtNTUuNzk5IDAsLTc3LjI1NSAtMjEuMzYzLC0yMS4yNzYgLTIxLjM2MywtNTUuNzk4NiAwLC03Ny4yNTQ5IDEyLjY4OSwtMTIuNjQ1IDE3Ljg4OSwtMzAuMTA3MSAxNS4zOTksLTQ2LjU4NTc2IC0xLjU0NiwtMTEuNTAwOTQgLTYuNzI2LC0yMi44MjExNCAtMTUuNTgsLTMxLjYzMjU0IC0yMS4zNjMsLTIxLjI3NTYgLTU1Ljk3NiwtMjEuMjc1NiAtNzcuNTE5LDAgLTIxLjM2MywyMS4yNzU3IC01NS45NzYsMjEuMjc1NyAtNzcuNTE5NCwwIC0yMS4zNjI1LC0yMS4yNzU2IC01NS45NzYxLC0yMS4yNzU2IC03Ny41MTkyLDAgQyAwLjY3OTU2NSwtMTAuNzg3NiAwLjY3OTU5NiwyMy43MzUyIDIyLjA0Miw0NS4wMTA5IFoiCiAgICAgZmlsbD0iIzJhNGNkZiIKICAgICBzdHJva2U9IiMyYTRjZGYiCiAgICAgc3Ryb2tlLXdpZHRoPSIxMiIKICAgICBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiCiAgICAgaWQ9InBhdGgxMTA1IiAvPgogIDxwYXRoCiAgICAgZD0ibSA1MS45OTUyMTIsMjIyLjczMDEzIGMgMjguMzU5MSwwIDUxLjM1ODM5OCwtMjIuOTk5OSA1MS4zNTgzOTgsLTUxLjM1ODQgMCwtMjguMzU4NiAtMjIuOTk5Mjk4LC01MS4zNTg1OSAtNTEuMzU4Mzk4LC01MS4zNTg1OSAtMjguMzU5MSwwIC01MS4zNTg2MDIsMjIuOTk5OTkgLTUxLjM1ODYwMiw1MS4zNTg1OSAwLDI4LjM1ODUgMjIuOTk5NTAyLDUxLjM1ODQgNTEuMzU4NjAyLDUxLjM1ODQgeiIKICAgICBmaWxsPSIjMTkyZTg2IgogICAgIGZpbGwtb3BhY2l0eT0iMC4zNSIKICAgICBpZD0icGF0aDE5MzciIC8+Cjwvc3ZnPgo=') ;\n",  # noqa: E501
-            '    background-position: left bottom, right top;\n',
-            '    background-repeat: no-repeat,  no-repeat;\n',
-            '    background-size: auto 60px, auto 160px;\n',
-            '    border-radius: 5px;\n',
-            '    box-shadow: 0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0,0,0,.12);">\n',  # noqa: E501
-            '\n',
-            '<h1 style="\n',
-            '    color: #2a4cdf;\n',
-            '    font-style: normal;\n',
-            '    font-size: 2.25rem;\n',
-            '    line-height: 1.4em;\n',
-            '    font-weight: 600;\n',
-            '    padding: 30px 200px 0px 30px;"\n',
-            f'>{notebook_heading}</h1>\n',
-            '<p style="font-size: 1.25em; font-style: italic; padding: 5px 200px 30px 30px;"\n',  # noqa: E501
-            f'>{user}</p>\n',
-            '</div>\n',
-            '\n',
-            'This notebook has been generated by a NOMAD Analysis entry with the\n',
-            f'definition path: `{self.m_def.qualified_name()}`.\n',
-            '\n',
-            'Running the following code cell loads the entry in the local Jupyter\n',
-            'environment allowing you to update it based on your analysis. Once the\n',
-            'entry has been modified, use `analysis.save()` method to pass on the\n',
-            'changes back into NOMAD.\n',
-        ]
-        cells.append(
-            nbf.v4.new_markdown_cell(
-                source=source, metadata={'tags': ['nomad-analysis-predefined']}
-            )
-        )
-
-        source = [
-            'from nomad_analysis.utils import get_entry_data\n',
-            '\n',
-            f'analysis = get_entry_data(entry_id="{archive.entry_id}")\n',
-        ]
-        cells.append(
-            nbf.v4.new_code_cell(
-                source=source,
-                metadata={
-                    'tags': [
-                        'nomad-analysis-predefined',
-                        'nomad-analysis-get-analysis-entry',
-                    ]
-                },
-            )
-        )
-
-        return cells
+        raise NotImplementedError()
 
     def generate_notebook(self, archive: 'EntryArchive', logger: 'BoundLogger') -> None:
         """
         Generates the notebook and saves it in the upload folder. If a notebook already
-        exists, the cells containing `nomad-analysis-predefined` tag will be reset. All
-        other cells and their outputs will be preserved.
+        exists, the method does nothing.
 
         Args:
             archive (EntryArchive): The archive containing the section.
             logger (BoundLogger): A structlog logger.
         """
-        file_name = (
+        if self.notebook:
+            logger.warning(
+                f'`notebook` field has an existing value: {self.notebook}. Clear it to '
+                'generate a new notebook.'
+            )
+            return
+        new_notebook_path = (
             os.path.basename(archive.metadata.mainfile).rsplit('.archive.', 1)[0]
             + '.ipynb'
         )
+        if archive.m_context.raw_path_exists(new_notebook_path):
+            logger.warning(
+                f'Notebook {new_notebook_path} already exists. Delete it from '
+                'the upload folder to generate a new one.'
+            )
+            return
 
-        new_notebook = nbf.v4.new_notebook()
+        archive_metadata = ArchiveMetadata(
+            entry_id=archive.metadata.entry_id,
+            base_url=archive.m_context.installation_url,
+        )
+        header_cells = write_header_cells(
+            notebook_heading=self.name or 'Jupyter Analysis',
+            archive_metadata=archive_metadata,
+        )
 
-        # add the pre-defined cells
-        new_notebook.cells.extend(self.write_predefined_cells(archive, logger))
-
-        if archive.m_context.raw_path_exists(file_name):
-            # add the existing cells
-            with archive.m_context.raw_file(file_name, 'r') as nb_file:
-                old_notebook = nbf.read(nb_file, as_version=nbf.NO_CONVERT)
-
-            for cell in old_notebook.cells:
-                if (
-                    cell.metadata
-                    and cell.metadata.tags
-                    and 'nomad-analysis-predefined' in cell.metadata.tags
-                ):
-                    continue
-                new_notebook.cells.append(cell)
+        if self.template and self.template.template_notebook:
+            context = self.template.m_context
+            with context.raw_file(self.template.template_notebook, 'r') as src_file:
+                new_notebook = nbf.read(src_file, as_version=4)
+            replace_header_cells(new_notebook, header_cells)
         else:
-            # add an empty cell
+            new_notebook = nbf.v4.new_notebook()
+            new_notebook.cells.extend(header_cells)
+            try:
+                new_notebook.cells.extend(self.write_predefined_cells(archive, logger))
+            except NotImplementedError:
+                pass
             new_notebook.cells.append(nbf.v4.new_code_cell())
 
         new_notebook['metadata']['trusted'] = True
 
-        with archive.m_context.raw_file(file_name, 'w') as nb_file:
+        with archive.m_context.raw_file(new_notebook_path, 'w') as nb_file:
             nbf.write(new_notebook, nb_file)
-        archive.m_context.process_updated_raw_file(file_name, allow_modify=True)
+        archive.m_context.process_updated_raw_file(new_notebook_path, allow_modify=True)
 
-        self.notebook = file_name
+        self.notebook = new_notebook_path
 
     def save(self):
         """
@@ -505,8 +734,7 @@ class JupyterAnalysis(Analysis, EntryData):
         The normalize method orchestrates:
 
         - `generate_notebook`: If triggered, generates a Jupyter notebook file. The
-           `write_predefined_cells` method is used to write the pre-defined cells in
-           the notebook.
+           `write_predefined_cells` method to add pre-defined cells in the notebook.
         - `reset_inputs`: If triggered, resets the existing input references and
            creates new references based on the `query_for_inputs` quantity.
         - `process_query_for_inputs`: Processes the `query_for_inputs` quantity to get
@@ -515,8 +743,12 @@ class JupyterAnalysis(Analysis, EntryData):
            filters duplicates by `m_proxy_value` and `lab_id`, and updates the `inputs`.
         """
         if self.trigger_generate_notebook:
-            self.generate_notebook(archive, logger)
-            self.trigger_generate_notebook = False
+            try:
+                self.generate_notebook(archive, logger)
+            except Exception as e:
+                logger.warning(f'Error in generating notebook: {e!r}.', exc_info=True)
+            finally:
+                self.trigger_generate_notebook = False
         if self.trigger_reset_inputs:
             self.inputs = []
             self.trigger_reset_inputs = False
@@ -537,21 +769,20 @@ class XRDJupyterAnalysis(JupyterAnalysis, EntryData):
         description="""
         Section for XRD analysis using Jupyter notebooks.
         """,
-        a_eln=ELNAnnotation(
-            properties=SectionProperties(
-                order=[
-                    'name',
-                    'datetime',
-                    'lab_id',
-                    'location',
-                    'description',
-                    'method',
-                    'query_for_inputs',
-                    'notebook',
-                    'trigger_generate_notebook',
-                    'trigger_reset_inputs',
-                ],
-            ),
+        a_display=SectionDisplayAnnotation(
+            order=[
+                'name',
+                'datetime',
+                'lab_id',
+                'location',
+                'description',
+                'method',
+                'template',
+                'notebook',
+                'trigger_generate_notebook',
+                'query_for_inputs',
+                'trigger_reset_inputs',
+            ],
         ),
     )
 
@@ -560,7 +791,7 @@ class XRDJupyterAnalysis(JupyterAnalysis, EntryData):
         Extends the pre-defined cells with XRD specific analysis functions.
         """
 
-        cells = super().write_predefined_cells(archive, logger)
+        cells = []
 
         comment = '# Analysis functions specific to XRD.\n\n'
         analysis_functions = get_function_source(category_name='XRD')
