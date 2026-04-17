@@ -66,13 +66,21 @@ analysis entry and its inputs
 - Link it with the `notebook` quantity
 
 The name of the generated notebook will match the analysis entry's archive file
-name. It contains a header with the analysis name and a pre-defined code cell
-that loads the analysis entry and its inputs:
+name. It contains a header with description text, metadata variables, and code
+to load the analysis entry:
 
+```python
+# NOMAD Analysis Metadata - DO NOT EDIT
+NOMAD_ANALYSIS_ENTRY_ID = # <ID of analysis entry>
+NOMAD_ANALYSIS_BASE_URL = # <Base URL of NOMAD deployment containing the entry>
+```
 ```python
 from nomad_analysis.utils import get_entry_data
 
-analysis = get_entry_data(entry_id=<NOMAD_ANALYSIS_ENTRY_ID>)
+analysis = get_entry_data(
+    entry_id=NOMAD_ANALYSIS_ENTRY_ID,
+    url=NOMAD_ANALYSIS_BASE_URL,
+)
 ```
 
 In the code above, `analysis` is an instance of the `JupyterAnalysis` section

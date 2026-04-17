@@ -59,7 +59,7 @@ class MyCustomAnalysis(JupyterAnalysis, EntryData):
 
 ### Customize pre-defined notebook cells
 
-When a notebook is generated from a Jupyter Analysis entry, it contains some pre-defined code cell (for example, for data loading). To add more pre-defined cells, override the `write_predefined_cells` method, which defines the code cells added to generated notebooks:
+When a notebook is generated from a Jupyter Analysis entry, it contains data loading code as part of the header. To add more pre-defined cells, implement the `write_predefined_cells` method, which defines the code cells added to generated notebooks:
 
 ```python
 class MyCustomAnalysis(JupyterAnalysis, EntryData):
@@ -69,8 +69,7 @@ class MyCustomAnalysis(JupyterAnalysis, EntryData):
         """
         Add custom pre-defined cells to the generated notebook.
         """
-        # Start with the base cells (data loading, etc.)
-        cells = super().write_predefined_cells(archive, logger)
+        cells = []
 
         # Add analysis function cell
         analysis_source = [
