@@ -16,7 +16,7 @@
 # limitations under the License.
 #
 
-from nomad.datamodel.metainfo.basesections import (
+from nomad.datamodel.metainfo.basesections.v2 import (
     ActivityStep,
     Entity,
 )

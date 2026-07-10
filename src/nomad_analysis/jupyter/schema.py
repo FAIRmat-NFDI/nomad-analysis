@@ -32,7 +32,7 @@ from nomad.datamodel.metainfo.annotations import (
     ELNComponentEnum,
     SectionDisplayAnnotation,
 )
-from nomad.datamodel.metainfo.basesections import (
+from nomad.datamodel.metainfo.basesections.v2 import (
     Analysis,
     SectionReference,
 )
